@@ -1,78 +1,133 @@
-# Agent_Workfolw 项目
+# Agent_Workflow 项目
 
+<div align="center">
 
-## 目录
+![Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Python](https://img.shields.io/badge/python-3.10-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-- [项目需知](#项目需知)
-- [项目简介](#项目简介)
-- [功能](#功能)
-- [使用说明](#使用说明)
-- [安装](#安装)
-- [许可证](#许可证)
-- [感谢](#感谢)
+</div>
 
-## 项目需知
-目前还属于开发中，很多功能后续陆续进行完善
+## 📑 目录
 
-## 项目简介
+- [项目状态](#-项目状态)
+- [项目简介](#-项目简介)
+- [核心功能](#-核心功能)
+- [快速开始](#-快速开始)
+- [许可证](#-许可证)
+- [鸣谢](#-鸣谢)
 
-本项目<Agent_Workfolw>是基于langchain/Ollama实现快速创建 单agent智能体/多agent智能体
+## 🚧 项目状态
 
-## 功能
-- (已完成)工具支持(描述信息可以使用 工具.get_description查看功能)
-    - 天气（高德API）：需要在config中填入GAODE_WEATHER_API_KEY的值即可 [控制台输出结果](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/weathertool_result.png)
-    - 联网搜索（Perplexica）：使用docker部署的Perplexica工具，安装方法：[Perplexica](https://github.com/ItzCrazyKns/Perplexica) [控制台输出结果](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/searchtool_result1.png)
-    - pdf文件转换工具:支持url_to_pdf... [控制台输出结果](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdftool_console_output.png) [pdf转换结果](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdf_converter_result.png)
-    - 图像识别（llama3.2vision/MiniCPM）：基于ollama中的llama3.2 vision实现图像识别，也支持接入MiniCPM v2.6 [控制台输出结果](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/imagetool_result.png)
-    - 提示词模板工具(支持搜索模板和模板设置):[模板参考地址](https://github.com/panxingfeng/awesome-chatgpt-prompts) [控制台输出结果1](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/prompt_result1.png)[控制台输出结果2](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/prompt_result2.png)(需完善)
-    - URL工具：支持动态参数设置，设置提取的输出值(put="content")即可输出返回值中content的值(需完善)
-    - 代码工具：使用ollama部署的qwen2.5-coder:32b，也可修改其他的版本(需完善)
-- (近期完成)启动方式
-    - 基于fastapi，启动服务后，使用api进行接入其他的服务
-    - (已完成)通过vchat接入微信(暂时只支持文本内容)
-    - ![输出展示](./images/vchat_demo.png)
-    - 接入飞书机器人
-    - ...
-## 使用说明
-- Perplexica开源项目是支持本项目的搜索工具实现，推荐docker安装 [安装地址](https://github.com/ItzCrazyKns/Perplexica)
-- 天气工具使用的是高德API，需要进行申请并填入config.py中
+> **Note:** 项目正处于积极开发阶段，更多功能正在持续完善中。
 
-## 安装
+## 📖 项目简介
 
-1.克隆仓库
+Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮助开发者快速构建单/多智能体系统。项目提供了丰富的工具集成和便捷的部署方式。
+
+## 🚀 核心功能
+
+### 📌 工具支持
+
+<details>
+<summary><b>天气查询</b> - 基于高德API</summary>
+
+- 需配置 `GAODE_WEATHER_API_KEY`
+- [查看示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/weathertool_result.png)
+</details>
+
+<details>
+<summary><b>智能搜索</b> - 基于Perplexica</summary>
+
+- 使用Docker部署
+- [配置说明](https://github.com/ItzCrazyKns/Perplexica)
+- [查看示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/searchtool_result1.png)
+</details>
+
+<details>
+<summary><b>PDF转换工具</b></summary>
+
+- 支持URL转PDF等功能
+- [控制台输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdftool_console_output.png)
+- [转换结果示例](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdf_converter_result.png)
+</details>
+
+<details>
+<summary><b>图像识别</b> - 支持多种模型</summary>
+
+- 支持 llama3.2vision/MiniCPM
+- 基于 ollama 部署
+- [查看示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/imagetool_result.png)
+</details>
+
+<details>
+<summary><b>提示词模板</b></summary>
+
+- 支持模板搜索与设置
+- [模板参考](https://github.com/panxingfeng/awesome-chatgpt-prompts)
+- [示例输出1](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/prompt_result1.png)
+- [示例输出2](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/prompt_result2.png)
+</details>
+
+### 🔌 启动方式
+
+- ✅ vchat微信接入（支持文本）
+  ```
+  ![微信演示](./images/vchat_demo.png)
+  ```
+- 🚧 FastAPI服务（开发中）
+- 🚧 飞书机器人接入（计划中）
+
+## 🚀 快速开始
+
+### 环境准备
+
 ```bash
-    git clone https://github.com/panxingfeng/agent_workflow.git
-    cd <agent_workflow>
+# 1. 克隆项目
+git clone https://github.com/panxingfeng/agent_workflow.git
+cd agent_workflow
+
+# 2. 创建虚拟环境
+conda create --name agent_workflow python=3.10
+conda activate agent_workflow
+
+# 3. 安装依赖
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 ```
 
-2.创建并激活虚拟环境：
+### 配置说明
+
+1. Perplexica 搜索工具
+   - 推荐使用Docker安装
+   - [详细安装说明](https://github.com/ItzCrazyKns/Perplexica)
+
+2. 天气工具
+   - 需申请高德API密钥
+   - 配置于 `config.py`
+
+### 运行示例
+
 ```bash
-    conda create --name agent_workflow python=3.10
-    conda activate agent_workflow
+python main.py
 ```
 
-3.安装依赖(使用清华源):
-```bash
-    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
-```
+![运行示例](./images/main_result.png)
 
-4.运行：
-```bash
-    python main.py
-```
+## 📄 许可证
 
-5.main方法测试结果
-![main方法测试结果](./images/main_result.png)
+本项目基于 MIT 协议开源，使用时请保留作者信息。
 
-## 许可证
+## 🙏 鸣谢
 
-基于MIT协议开源本项目，禁止修改项目中本作者信息。
+- [langchain](https://github.com/langchain-ai/langchain) - 提供项目框架基础
+- [VChat](https://github.com/z2z63/VChat) - 提供微信客户端接入支持
+- [ollama](https://github.com/ollama/ollama) - 提供本地模型部署支持
+- [Perplexica](https://github.com/ItzCrazyKns/Perplexica) - 提供搜索工具支持
 
-## 感谢
-感谢langchain[项目地址](https://github.com/langchain-ai/langchain)提供项目整体的框架
+---
 
-感谢vchat框架作者[项目地址](https://github.com/z2z63/VChat)提供微信客户端接入
+<div align="center">
 
-感谢ollama[项目地址](https://github.com/ollama/ollama)提供本地模型的部署
+如果觉得项目有帮助，欢迎 Star ⭐️
 
-感谢Perplexica[项目地址](https://github.com/ItzCrazyKns/Perplexica)提供搜索工具的支持
+</div>
