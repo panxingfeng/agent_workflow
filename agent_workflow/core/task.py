@@ -140,11 +140,14 @@ class Task:
                 self.result_formatter.format_weather_results(query, result, output)
             elif tool_name == "FileConverterTool":
                 self.result_formatter.format_file_converter_results(result, output)
-            elif tool_name == "XHSTool":
-                self.result_formatter.format_xhs_results(result, output)
             elif tool_name == "ImageTool":
                 self.result_formatter.format_image_results(result, output)
-            elif tool_name != "ChatTool":
+            elif tool_name == "ChatTool":
+                output.extend([
+                    "---------------ChatTool---------------",
+                    f"回答：{str(result)}"
+                ])
+            else:
                 output.extend([f"---------------{tool_name}---------------", str(result)])
         except Exception as e:
             output.extend([
@@ -180,7 +183,8 @@ class Task:
     {json.dumps(tool_params, ensure_ascii=False, indent=2)}
 
     识别用户的问题需求，按照工具设置的要求填入相应的参数值
-
+    用户输入问候语/自我介绍之类的直接使用"ChatTool",参数内容就是用户输入的内容
+    
     返回格式:
     {{
        "known_facts": "用户意图描述",
@@ -199,7 +203,6 @@ class Task:
             ))
 
             result = json.loads(response)
-            print("llm初步回复结构内容:" + str(result))
 
             # 补充文件路径
             for tool_name in result.get("tools_needed", []):
@@ -217,7 +220,7 @@ class Task:
                 "parameters": {"ChatTool": {"message": "解析错误,请重试"}}
             }
 
-    async def process(self, query: UserQuery) -> str:
+    async def process(self, query: UserQuery, printInfo: bool = False) -> str:
         """
         处理用户查询的主方法
 
@@ -226,6 +229,7 @@ class Task:
 
         Returns:
             处理结果的字符串
+            :param printInfo:控制台输出结果
         """
         # 初始化任务状态
         self.init_task_state(query)
@@ -247,16 +251,16 @@ class Task:
         query_text = self.state['messages'][0]['content']
         tool_results = self.state['tool_results']
 
-        # 处理ChatTool特殊情况
-        if len(tool_results) == 1 and "ChatTool" in tool_results:
-            return str(tool_results["ChatTool"])
-
-        # 处理其他工具结果
+        # 统一处理所有工具结果
         output = [f"问题：{query_text}\n"]
         for tool_name, result in tool_results.items():
             self._process_tool_result(tool_name, result, query_text, output)
 
         result = "\n".join(str(item) for item in output)
+        if printInfo:
+            print("\n=============== 处理结果 =============== ")
+            print(result)
+            print("=======================================\n")
         return result
 
     async def vchat_demo(self):

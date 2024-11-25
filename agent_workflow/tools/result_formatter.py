@@ -105,27 +105,6 @@ class ResultFormatter:
         except Exception:
             output.append("\n无法生成搜索总结\n")
 
-    def format_url_results(self, result: Dict[str, Any], output: List[str]) -> None:
-        """
-        格式化URL请求结果
-
-        Args:
-            result: URL请求返回的结果
-            output: 输出列表
-        """
-        content = str(result)
-        output.extend([
-            "---------------URLTool---------------",
-            "🌐 请求结果：",
-            content
-        ])
-
-        try:
-            summary = self._generate_summary(content, "URLTool")
-            output.extend(["\n💡 结果解析：", summary, "\n"])
-        except Exception:
-            output.append("\n无法生成解析\n")
-
     def format_image_results(self, result: str, output: List[str]) -> None:
         """
         格式化图像分析结果
@@ -190,32 +169,6 @@ class ResultFormatter:
             "转换成功" if result else "转换失败",
             f"\n输出路径：{result if result else '未生成'}\n"
         ])
-
-    def format_xhs_results(self, result: str, output: List[str]) -> None:
-        """
-        格式化小红书文案结果
-
-        Args:
-            result: 小红书文案结果
-            output: 输出列表
-
-        功能：
-        1. 展示原始文案
-        2. 提供专业点评
-        """
-        output.extend([
-            "---------------XHSTool---------------",
-            result
-        ])
-
-        try:
-            summary = self._generate_summary(result, "XHSTool")
-            output.extend([
-                "\n💡 专业点评：",
-                f"{summary}\n"
-            ])
-        except Exception as e:
-            output.append(f"\n无法生成点评: {str(e)}\n")
 
     def _generate_summary(self, content: str, tool_name: str) -> str:
         """
