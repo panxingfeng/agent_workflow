@@ -20,7 +20,7 @@
 4. 灵活配置：支持自定义输出和批量处理
 5. 错误处理：完善的异常捕获和错误恢复机制
 
-Copyright (c) 2024 [湖北峰创科技服务有限公司]
+Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
 import base64
