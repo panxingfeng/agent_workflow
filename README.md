@@ -3,11 +3,16 @@
 
 ## 目录
 
+- [项目需知](#项目需知)
 - [项目简介](#项目简介)
 - [功能](#功能)
 - [使用说明](#使用说明)
+- [安装](#安装)
 - [许可证](#许可证)
 - [感谢](#感谢)
+
+## 项目需知
+目前还属于开发中，很多功能后续陆续进行完善
 
 ## 项目简介
 
@@ -32,7 +37,29 @@
 - Perplexica开源项目是支持本项目的搜索工具实现，推荐docker安装 [安装地址](https://github.com/ItzCrazyKns/Perplexica)
 - 天气工具使用的是高德API，需要进行申请并填入config.py中
 
-目前软件还在编写中，后续可以使用 pip install agent_workflow
+## 安装
+
+1.克隆仓库
+```bash
+    git clone https://github.com/panxingfeng/agent_workflow.git
+    cd <agent_workflow>
+```
+
+2.创建并激活虚拟环境：
+```bash
+    conda create --name agent_workflow python=3.10
+    conda activate agent_workflow
+```
+
+3.安装依赖(使用清华源):
+```bash
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+```
+
+4.运行：
+```bash
+    python main.py
+```
 
 ## 许可证
 
