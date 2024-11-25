@@ -61,6 +61,9 @@
     python main.py
 ```
 
+5.main方法测试结果
+[main方法测试结果](./images/main_result.png)
+
 ## 许可证
 
 基于MIT协议开源本项目，禁止修改项目中本作者信息。
