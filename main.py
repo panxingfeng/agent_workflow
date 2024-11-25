@@ -20,7 +20,7 @@ if __name__ == '__main__':
             )
         ).process(
             MessageInput(
-                query="你好啊"
+                query="你是谁"
             ).process_input(),
             printInfo=True  # 打印结果信息
         ))  # 控制台启动

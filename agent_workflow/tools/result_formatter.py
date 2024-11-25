@@ -85,7 +85,7 @@ class ResultFormatter:
 
         # 格式化搜索结果
         output.extend([
-            "---------------SearchTool---------------",
+            "---------- SearchTool ----------",
             "🔍 搜索结果：",
             answer
         ])
@@ -114,7 +114,7 @@ class ResultFormatter:
             output: 输出列表
         """
         output.extend([
-            "---------------ImageTool---------------",
+            "---------- ImageTool ----------",
             "📷 图像分析结果：",
             result
         ])
@@ -139,7 +139,7 @@ class ResultFormatter:
         2. 生成天气分析和建议
         """
         output.extend([
-            "---------------WeatherTool---------------",
+            "---------- WeatherTool ----------",
             str(weather_data)
         ])
 
@@ -164,7 +164,7 @@ class ResultFormatter:
             output: 输出列表
         """
         output.extend([
-            "---------------FileConverterTool---------------",
+            "---------- FileConverterTool ----------",
             "📄 转换状态：",
             "转换成功" if result else "转换失败",
             f"\n输出路径：{result if result else '未生成'}\n"

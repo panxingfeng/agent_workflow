@@ -134,7 +134,7 @@ class VChat:
                 )
 
                 # 处理消息并获取结果
-                result = self.task_processor.process(query)
+                result = await self.task_processor.process(query)
                 self.logger.info(f"处理结果: {result}")
 
                 # 发送回复

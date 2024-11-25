@@ -98,7 +98,7 @@ class Task:
             if self.tool_manager.get_tool(tool)
         ]
 
-    def execute_tools(self) -> None:
+    async def execute_tools(self) -> None:
         """
         执行工具任务
 
@@ -113,9 +113,8 @@ class Task:
             try:
                 tool = self.tool_manager.get_tool(tool_name)
                 if tool:
-                    # 获取工具参数并执行
                     tool_params = parameters.get(tool_name, {})
-                    result = self.tool_manager.execute_tool(tool_name, **tool_params)
+                    result = await self.tool_manager.execute_tool(tool_name, **tool_params)
                     self.state["tool_results"][tool_name] = result
                 else:
                     self.state["tool_results"][tool_name] = f"工具 {tool_name} 未找到"
@@ -144,14 +143,14 @@ class Task:
                 self.result_formatter.format_image_results(result, output)
             elif tool_name == "ChatTool":
                 output.extend([
-                    "---------------ChatTool---------------",
+                    "----------ChatTool----------",
                     f"回答：{str(result)}"
                 ])
             else:
-                output.extend([f"---------------{tool_name}---------------", str(result)])
+                output.extend([f"----------{tool_name}----------", str(result)])
         except Exception as e:
             output.extend([
-                f"---------------{tool_name}---------------",
+                f"----------{tool_name}----------",
                 f"处理结果出错: {str(e)}",
                 f"原始结果: {str(result)}"
             ])
@@ -234,7 +233,6 @@ class Task:
         # 初始化任务状态
         self.init_task_state(query)
 
-        # 处理附件信息
         if query.attachments:
             attachment_info = "\n附加信息:\n" + "\n".join(
                 f"{att.type.name.lower()}: {att.content}"
@@ -242,17 +240,14 @@ class Task:
             )
             self.state["messages"][0]["content"] += attachment_info
 
-        # 创建任务账本并执行
         self.state["task_ledger"] = self.create_task_ledger()
         self.state["task_plan"] = self.generate_task_plan()
-        self.execute_tools()
+        await self.execute_tools()  # 添加await
 
-        # 获取查询和结果
         query_text = self.state['messages'][0]['content']
         tool_results = self.state['tool_results']
 
-        # 统一处理所有工具结果
-        output = [f"问题：{query_text}\n"]
+        output = [f"问题：{query_text}"]
         for tool_name, result in tool_results.items():
             self._process_tool_result(tool_name, result, query_text, output)
 

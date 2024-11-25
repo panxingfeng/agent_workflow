@@ -305,31 +305,17 @@ class SearchTool(BaseTool):
             loading.stop()
             return {"error": f"发生错误: {str(e)}"}
 
-    def run(self, **kwargs) -> str | dict[str, Any]:
-        """运行入口"""
+    async def run(self, **kwargs) -> str | dict[str, Any]:
         try:
-            # 获取参数
             query = kwargs.get("query", self.query)
             focus_mode = kwargs.get("focus_mode", self.focusMode)
             optimization_mode = kwargs.get("optimization_mode", self.optimizationMode)
 
-            # 使用同步方式执行异步函数
-            loop = asyncio.get_event_loop()
-            try:
-                response = loop.run_until_complete(self._async_search(
-                    query=query,
-                    focus_mode=focus_mode,
-                    optimization_mode=optimization_mode
-                ))
-            except RuntimeError:
-                # 如果没有运行中的事件循环，创建一个新的
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                response = loop.run_until_complete(self._async_search(
-                    query=query,
-                    focus_mode=focus_mode,
-                    optimization_mode=optimization_mode
-                ))
+            response = await self._async_search(
+                query=query,
+                focus_mode=focus_mode,
+                optimization_mode=optimization_mode
+            )
 
             if response is None:
                 return "搜索请求失败"
