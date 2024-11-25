@@ -30,6 +30,8 @@ import re
 import os
 from enum import Enum
 from typing import Optional, Tuple, List
+
+import httpx
 import requests
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -300,7 +302,7 @@ class WeatherTool(BaseTool):
 {format_line("🕒", "发布时间", weather_data.reporttime)}
 {border}"""
 
-    def query_weather(self) -> str:
+    async def query_weather(self) -> str:
         """
         查询指定地点的天气信息
 
@@ -314,25 +316,21 @@ class WeatherTool(BaseTool):
             str: 格式化的天气信息
         """
         try:
-            # 获取地区编码
             adcode, matched_name, level = self._get_adcode(self.location)
             if not adcode:
-                print(f"未找到{self.location}的区域编码")
-                return ""
+                return f"未找到{self.location}的区域编码"
 
-            # 构建API请求
             params = {
                 "city": adcode,
                 "key": self.api_key
             }
 
-            # 发送请求
-            response = requests.get(self.base_url, params=params, timeout=self.timeout)
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(self.base_url, params=params)
 
             if response.status_code == 200:
                 data = response.json()
                 if data["status"] == "1" and data["info"] == "OK" and data["lives"]:
-                    # 构建天气响应对象
                     weather_data = WeatherResponse(
                         province=data["lives"][0]["province"],
                         city=data["lives"][0]["city"],
@@ -346,22 +344,17 @@ class WeatherTool(BaseTool):
                         administrative_level=level,
                         matched_region=matched_name
                     )
-                    # 格式化显示结果
                     result = self._format_weather_display(weather_data)
                     if self.printInfo:
                         print(result)
                     return result
 
-            return "None"
+            return "获取天气信息失败"
 
-        except requests.exceptions.RequestException as e:
-            print(f"天气查询请求错误：{str(e)}")
-            return "None"
         except Exception as e:
-            print(f"天气查询发生错误：{str(e)}")
-            return "None"
+            return f"天气查询失败：{str(e)}"
 
-    def run(self, **kwargs) -> str:
+    async def run(self, **kwargs) -> str:
         """
         工具执行入口
 
@@ -372,14 +365,9 @@ class WeatherTool(BaseTool):
             str: 查询结果或错误信息
         """
         self.location = kwargs.get('location', self.location)
-
         if not self.location:
             return "错误：未提供位置参数"
-
-        try:
-            return self.query_weather()
-        except Exception as e:
-            return f"天气查询失败: {str(e)}"
+        return await self.query_weather()
 
 
     def get_parameter_rules(self) -> str:

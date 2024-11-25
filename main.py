@@ -20,7 +20,14 @@ if __name__ == '__main__':
             )
         ).process(
             MessageInput(
-                query="你是谁"
+                query="武汉天气"
             ).process_input(),
             printInfo=True  # 打印结果信息
         ))  # 控制台启动
+
+    # asyncio_run(
+    #     demo=Task(
+    #         tool_manager=ToolManager(
+    #             tools=tools
+    #         )
+    #     ).vchat_demo())  # 微信启动
