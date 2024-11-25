@@ -7,6 +7,7 @@
 - [功能](#功能)
 - [使用说明](#使用说明)
 - [许可证](#许可证)
+- [感谢](#感谢)
 
 ## 项目简介
 
@@ -36,3 +37,12 @@
 ## 许可证
 
 基于MIT协议开源本项目，禁止修改项目中本作者信息。
+
+## 感谢
+感谢langchain[项目地址](https://github.com/langchain-ai/langchain)提供项目整体的框架
+
+感谢vchat框架作者[项目地址](https://github.com/z2z63/VChat)提供微信客户端接入
+
+感谢ollama[项目地址](https://github.com/ollama/ollama)提供本地模型的部署
+
+感谢Perplexica[项目地址](https://github.com/ItzCrazyKns/Perplexica)提供搜索工具的支持
