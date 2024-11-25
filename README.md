@@ -26,7 +26,7 @@
     - 图像识别（llama3.2vision/MiniCPM）：基于ollama中的llama3.2 vision实现图像识别，也支持接入MiniCPM v2.6 [控制台输出结果](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/imagetool_result.png)
     - 提示词模板工具(支持搜索模板和模板设置):[模板参考地址](https://github.com/panxingfeng/awesome-chatgpt-prompts) [控制台输出结果1](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/prompt_result1.png)[控制台输出结果2](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/prompt_result2.png)(需完善)
     - URL工具：支持动态参数设置，设置提取的输出值(put="content")即可输出返回值中content的值(需完善)
-    - 代码工具：使用ollama部署的qwen2.5-coder:32b，也可修改其他的版本
+    - 代码工具：使用ollama部署的qwen2.5-coder:32b，也可修改其他的版本(需完善)
 - (近期完成)启动方式
     - 基于fastapi，启动服务后，使用api进行接入其他的服务
     - (已完成)通过vchat接入微信(暂时只支持文本内容)
