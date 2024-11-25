@@ -18,14 +18,6 @@ if __name__ == '__main__':
             tool_manager=ToolManager(
                 tools=tools
             )
-        ).vchat_demo()
-    )  # 接入微信
-
-    asyncio_run(
-        demo=Task(
-            tool_manager=ToolManager(
-                tools=tools
-            )
         ).process(
             MessageInput(
                 query="你好啊"
