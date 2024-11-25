@@ -62,7 +62,7 @@
 ```
 
 5.main方法测试结果
-[main方法测试结果](./images/main_result.png)
+![main方法测试结果](./images/main_result.png)
 
 ## 许可证
 
