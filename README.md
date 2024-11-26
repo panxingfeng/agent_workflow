@@ -1,5 +1,7 @@
 # Agent_Workflow 项目
 
+如果觉得项目有帮助，欢迎 Star ⭐️
+
 <div align="center">
 
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
@@ -148,7 +150,5 @@ python main.py
 ---
 
 <div align="center">
-
-如果觉得项目有帮助，欢迎 Star ⭐️
 
 </div>
