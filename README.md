@@ -143,7 +143,7 @@ python main.py
 - [VChat](https://github.com/z2z63/VChat) - 提供微信客户端接入支持
 - [ollama](https://github.com/ollama/ollama) - 提供本地模型部署支持
 - [Perplexica](https://github.com/ItzCrazyKns/Perplexica) - 提供搜索工具支持
-- [F5-TTS](https://github.com/SWivid/F5-TTS) [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) -提供语音工具的支持
+- [F5-TTS](https://github.com/SWivid/F5-TTS)、[GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) - 提供语音工具的支持
 ---
 
 <div align="center">
