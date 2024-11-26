@@ -14,24 +14,26 @@ if __name__ == '__main__':
         AudioTool()
     ]
 
-    asyncio_run(
-        demo=Task(
-            tool_manager=ToolManager(
-                tools=tools
-            )
-        ).process(
-            MessageInput(
-                query="你好啊",
-                images=[],
-                urls=[],
-                files=["特朗普.mp3"]
-            ).process_input(),
-            printInfo=True  # 打印结果信息
-        ))  # 控制台启动
+    ##################### 打开其中一种方式运行即可 #####################
 
-    asyncio_run(
-        demo=Task(
-            tool_manager=ToolManager(
-                tools=tools
-            )
-        ).vchat_demo())  # 微信启动
+    # asyncio_run(
+    #     demo=Task(
+    #         tool_manager=ToolManager(
+    #             tools=tools
+    #         )
+    #     ).process(
+    #         MessageInput(
+    #             query="你好啊",
+    #             images=[],
+    #             urls=[],
+    #             files=[]
+    #         ).process_input(),
+    #         printInfo=True  # 打印结果信息
+    #     ))  # 控制台启动
+
+    # asyncio_run(
+    #     demo=Task(
+    #         tool_manager=ToolManager(
+    #             tools=tools
+    #         )
+    #     ).vchat_demo())  # 微信启动
