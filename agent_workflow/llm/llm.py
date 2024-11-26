@@ -168,7 +168,7 @@ class ChatTool(BaseTool):
         }
         return json.dumps(tool_info, ensure_ascii=False)
 
-    def run(self, **kwargs) -> str:
+    async def run(self, **kwargs) -> str:
         try:
             message = kwargs.get("message", "")
             is_gpt = kwargs.get("is_gpt", False)

@@ -23,12 +23,11 @@
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
-import base64
+import asyncio
 import json
 import os
 import platform
 import traceback
-from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 import tempfile
@@ -36,7 +35,6 @@ import zipfile
 import subprocess
 import sys
 import requests
-import camelot
 from pptx import Presentation
 from pdf2image import convert_from_path
 from pptx.util import Inches
@@ -59,8 +57,6 @@ class ConversionType(str, Enum):
     - PDF_TO_TEXT: PDF转文本
     - PDF_TO_HTML: PDF转HTML
     - PDF_TO_IMAGE: PDF转图片
-    - PDF_TO_CSV: PDF转CSV
-    - PDF_TO_XML: PDF转XML
     - PDF_TO_PPT: PDF转PPT
     - PDF_TO_MARKDOWN: PDF转Markdown
     - FILE_TO_PDF: 其他格式转PDF
@@ -71,8 +67,6 @@ class ConversionType(str, Enum):
     PDF_TO_TEXT = "pdf_to_text"
     PDF_TO_HTML = "pdf_to_html"
     PDF_TO_IMAGE = "pdf_to_image"
-    PDF_TO_CSV = "pdf_to_csv"
-    PDF_TO_XML = "pdf_to_xml"
     PDF_TO_PPT = "pdf_to_ppt"
     PDF_TO_MARKDOWN = "pdf_to_markdown"
     FILE_TO_PDF = "file_to_pdf"
@@ -126,15 +120,12 @@ class FileConverterTool(BaseTool):
             output_directory: 输出目录路径
             printInfo: 是否打印详细信息
         """
+        self.upload_dir = "upload"
+        self.output_dir = "output"
         self.output_directory = output_directory
         self.printInfo = printInfo
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.poppler_path = os.path.join(self.base_dir, "poppler", "bin")
-
-        # 初始化检查
-        if not self.check_dependencies():
-            print("\nPlease install all required dependencies before continuing.")
-            return
 
         # 初始化目录
         self._ensure_directories()
@@ -160,8 +151,6 @@ class FileConverterTool(BaseTool):
                         {"name": "pdf_to_text", "description": "PDF转文本"},
                         {"name": "pdf_to_html", "description": "PDF转HTML"},
                         {"name": "pdf_to_image", "description": "PDF转图片"},
-                        {"name": "pdf_to_csv", "description": "PDF转CSV"},
-                        {"name": "pdf_to_xml", "description": "PDF转XML"},
                         {"name": "pdf_to_ppt", "description": "PDF转PPT"},
                         {"name": "pdf_to_markdown", "description": "PDF转Markdown"},
                         {"name": "file_to_pdf", "description": "其他格式转PDF"},
@@ -209,46 +198,6 @@ class FileConverterTool(BaseTool):
         except:
             pass  # 如果注册失败，使用默认字体
 
-    def check_dependencies(self) -> bool:
-        """
-        检查必要的依赖是否已安装
-
-        Returns:
-            bool: 所有依赖是否都已安装
-
-        功能：
-        1. 检查必要的Python包
-        2. 提供安装建议
-        3. 支持详细的错误报告
-        """
-        # 定义需要检查的依赖
-        dependencies = {
-            'playwright': 'playwright',
-            'pdf2docx': 'pdf2docx',
-            'pdfminer': 'pdfminer.six',
-            'pdf2image': 'pdf2image',
-            'reportlab': 'reportlab',
-            'markdown': 'markdown',
-            'camelot': 'camelot-py',
-            'pypdf': 'pypdf'
-        }
-
-        # 检查每个依赖
-        missing = []
-        for name, package in dependencies.items():
-            try:
-                __import__(name.lower().split('.')[0])
-            except ImportError:
-                missing.append(package)
-
-        # 报告缺失的依赖
-        if missing:
-            print("\nMissing dependencies:")
-            print("Please install the following packages:")
-            for package in missing:
-                print(f"pip install {package}")
-            return False
-        return True
 
     def _ensure_directories(self):
         """
@@ -331,9 +280,9 @@ class FileConverterTool(BaseTool):
             print("Please download manually from: https://github.com/oschwartz10612/poppler-windows/releases")
             print(f"And extract to: {self.poppler_path}")
 
-    def url_to_pdf(self, url: str) -> Optional[str]:
+    async def url_to_pdf(self, url: str) -> Optional[str]:
         """
-        将网页转换为PDF文件
+        将网页转换为PDF文件（异步版本）
 
         Args:
             url: 待转换的网页URL
@@ -342,57 +291,68 @@ class FileConverterTool(BaseTool):
             str: 生成的PDF文件路径，失败时返回None
 
         功能：
-        1. 使用Playwright进行网页渲染
+        1. 使用异步Playwright进行网页渲染
         2. 自动处理动态内容
         3. 支持自定义PDF参数
         4. 提供详细的转换状态
         """
         try:
-            from playwright.sync_api import sync_playwright
+            from playwright.async_api import async_playwright
+            import asyncio
 
-            # 安装浏览器
+            # 生成输出路径
+            output_path = self._generate_output_path("url_converted", "pdf")
+
+            # 安装浏览器（如果需要）
             try:
-                subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"],
-                               check=True, capture_output=True)
-            except subprocess.CalledProcessError as e:
+                process = await asyncio.create_subprocess_exec(
+                    sys.executable, "-m", "playwright", "install", "chromium",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                await process.communicate()
+            except Exception as e:
                 print(f"Failed to install browsers: {e}")
                 return None
 
-            output_path = self._generate_output_path("url_converted", "pdf")
-
-            with sync_playwright() as p:
-                # 配置浏览器
-                browser = p.chromium.launch(
+            async with async_playwright() as p:
+                # 启动浏览器
+                browser = await p.chromium.launch(
                     headless=True,
                     args=['--no-sandbox']
                 )
 
-                # 配置页面参数
-                context = browser.new_context(
+                # 创建上下文和页面
+                context = await browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
                     device_scale_factor=1.5
                 )
-                page = context.new_page()
+                page = await context.new_page()
 
                 # 加载页面
                 outputData(f"Loading URL: {url}", self.printInfo)
-                page.goto(url, wait_until="networkidle", timeout=60000)
+                await page.goto(url, wait_until="networkidle", timeout=60000)
 
-                # PDF生成配置
+                # PDF设置
                 pdf_options = {
                     "path": output_path,
                     "format": "a4",
-                    "margin": {"top": "1cm", "right": "1cm", "bottom": "1cm", "left": "1cm"},
+                    "margin": {
+                        "top": "1cm",
+                        "right": "1cm",
+                        "bottom": "1cm",
+                        "left": "1cm"
+                    },
                     "print_background": True,
                     "scale": 0.8
                 }
 
                 # 生成PDF
-                page.pdf(**pdf_options)
+                await page.pdf(**pdf_options)
 
                 # 清理资源
-                context.close()
-                browser.close()
+                await context.close()
+                await browser.close()
 
                 outputData(f"PDF saved to: {output_path}", self.printInfo)
                 return output_path
@@ -402,7 +362,7 @@ class FileConverterTool(BaseTool):
             print(f"Detailed error: {traceback.format_exc()}")
             return None
 
-    def pdf_to_word(self, pdf_path: str, output_format: str = 'docx') -> Optional[str]:
+    async def pdf_to_word(self, pdf_path: str, output_format: str = 'docx') -> Optional[str]:
         """
         将PDF转换为Word文档
 
@@ -412,27 +372,75 @@ class FileConverterTool(BaseTool):
 
         Returns:
             str: 生成的Word文档路径，失败时返回None
-
-        功能：
-        1. 使用pdf2docx进行转换
-        2. 保持原始格式
-        3. 支持表格和图片
         """
         try:
             from pdf2docx import Converter
+            import asyncio
+            import os
+
+            # 获取当前工作目录
+            current_dir = os.getcwd()
+            print(f"当前工作目录: {current_dir}")
+
+            # 构建完整的PDF路径，使用提供的路径直接拼接
+            full_pdf_path = os.path.join(current_dir, pdf_path)
+            print(f"PDF完整路径: {full_pdf_path}")
+
+            # 规范化路径（处理斜杠/反斜杠）
+            full_pdf_path = os.path.normpath(full_pdf_path)
+
+            # 验证文件是否存在
+            if not os.path.exists(full_pdf_path):
+                # 列出upload目录中的所有文件
+                upload_dir = os.path.join(current_dir, 'upload')
+                if os.path.exists(upload_dir):
+                    files = os.listdir(upload_dir)
+                    print(f"Upload目录中的文件: {files}")
+                raise FileNotFoundError(f"PDF文件未找到: {full_pdf_path}")
+
+            if os.path.getsize(full_pdf_path) == 0:
+                raise ValueError(f"PDF文件为空: {full_pdf_path}")
+
+            # 确保output目录存在
+            output_dir = os.path.join(current_dir, self.output_dir)
+            os.makedirs(output_dir, exist_ok=True)
+
+            # 生成输出路径
             output_path = self._generate_output_path("converted", output_format)
 
-            cv = Converter(pdf_path)
-            cv.convert(output_path)
-            cv.close()
+            # 创建转换器对象
+            cv = Converter(full_pdf_path)
 
-            outputData(f"Word document saved to: {output_path}", self.printInfo)
+            try:
+                # 执行转换
+                await asyncio.to_thread(cv.convert, output_path)
+            finally:
+                # 确保在转换完成后关闭转换器
+                await asyncio.to_thread(cv.close)
+
+            # 验证输出文件
+            if not os.path.exists(output_path):
+                raise RuntimeError("转换完成但输出文件未生成")
+
+            if os.path.getsize(output_path) == 0:
+                raise RuntimeError("转换完成但输出文件为空")
+
+            outputData(f"Word文档已保存至: {output_path}", self.printInfo)
             return output_path
+
+        except FileNotFoundError as e:
+            print(f"PDF转Word失败: {str(e)}")
+            return None
+        except ValueError as e:
+            print(f"PDF转Word失败: {str(e)}")
+            return None
         except Exception as e:
-            print(f"PDF to Word conversion failed: {str(e)}")
+            print(f"PDF转Word失败: {str(e)}")
+            import traceback
+            print(f"详细错误: {traceback.format_exc()}")
             return None
 
-    def pdf_to_text(self, pdf_path: str) -> Optional[str]:
+    async def pdf_to_text(self, pdf_path: str) -> Optional[str]:
         """
         将PDF转换为文本文件
 
@@ -449,107 +457,24 @@ class FileConverterTool(BaseTool):
         """
         try:
             import pymupdf4llm
+            import aiofiles
+            import asyncio
+
+            # 生成输出路径
             output_path = self._generate_output_path("converted", "txt")
 
-            # 转换为markdown格式
-            text = pymupdf4llm.to_markdown(pdf_path)
+            # 在线程池中执行PDF转换
+            text = await asyncio.to_thread(pymupdf4llm.to_markdown, pdf_path)
 
-            # 保存文本
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(text)
+            # 异步写入文件
+            async with aiofiles.open(output_path, 'w', encoding='utf-8') as f:
+                await f.write(text)
 
             outputData(f"Text file saved to: {output_path}", self.printInfo)
             return output_path
+
         except Exception as e:
             print(f"PDF to text conversion failed: {str(e)}")
-            return None
-
-    def pdf_to_xml(self, pdf_path: str) -> Optional[str]:
-        """
-        将PDF文档转换为XML格式
-
-        Args:
-            pdf_path: PDF文件路径
-
-        Returns:
-            str: 生成的XML文件路径，失败时返回None
-
-        功能特点：
-        1. 保持文档结构
-        2. 支持Unicode编码
-        3. 提取文本布局信息
-        4. 支持分页处理
-
-        XML结构：
-        <pdf>
-            <page number="1">
-                <text font="Times" bbox="[x0, y0, x1, y1]">内容</text>
-                <figure>...</figure>
-                <textline>...</textline>
-            </page>
-        </pdf>
-        """
-        try:
-            # 导入必要的pdfminer组件
-            from pdfminer.converter import XMLConverter  # XML转换器
-            from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter  # PDF解释器
-            from pdfminer.pdfpage import PDFPage  # PDF页面处理
-            from pdfminer.layout import LAParams  # 布局参数
-
-            # 生成输出文件路径
-            output_path = self._generate_output_path("converted", "xml")
-
-            # 创建PDF资源管理器
-            # 用于管理共享资源（如字体、图片等）
-            rsrcmgr = PDFResourceManager()
-
-            # 设置布局分析参数
-            laparams = LAParams(
-                # 可以添加以下参数进行自定义：
-                # char_margin=2.0,        # 字符间距
-                # line_margin=0.5,        # 行间距
-                # word_margin=0.1,        # 词间距
-                # boxes_flow=0.5,         # 文本流方向
-                # detect_vertical=False    # 是否检测垂直文本
-            )
-
-            # 打开输出文件并进行转换
-            with open(output_path, 'wb') as outfp:
-                # 创建XML转换器
-                device = XMLConverter(
-                    rsrcmgr,  # 资源管理器
-                    outfp,  # 输出文件对象
-                    codec='utf-8',  # 使用UTF-8编码
-                    laparams=laparams  # 布局参数
-                )
-
-                # 创建PDF页面解释器
-                interpreter = PDFPageInterpreter(rsrcmgr, device)
-
-                # 打开PDF文件并逐页处理
-                with open(pdf_path, 'rb') as fp:
-                    # 遍历每一页
-                    for page in PDFPage.get_pages(
-                            fp,
-                            # 可选参数：
-                            # pagenos=None,         # 指定页码列表
-                            # maxpages=0,           # 最大页数限制
-                            # password='',          # PDF密码
-                            # caching=True,         # 缓存开关
-                            # check_extractable=True # 检查是否可提取
-                    ):
-                        # 处理当前页面
-                        interpreter.process_page(page)
-
-                # 关闭转换器，释放资源
-                device.close()
-
-            # 输出成功信息
-            outputData(data=f"XML文件已保存至: {output_path}", printInfo=self.printInfo)
-            return output_path
-
-        except Exception as e:
-            print(f"PDF转换XML失败: {str(e)}")
             return None
 
     def pdf_to_presentation(self, pdf_path: str, output_format: str = 'pptx') -> Optional[str]:
@@ -705,12 +630,6 @@ class FileConverterTool(BaseTool):
 
         Returns:
             str: 生成的图片文件或ZIP文件路径
-
-        功能：
-        1. 支持单页/多页转换
-        2. 自定义输出格式和质量
-        3. 自动打包多页结果
-        4. 清理临时文件
         """
         try:
             if not self._check_poppler():
@@ -726,39 +645,49 @@ class FileConverterTool(BaseTool):
             # 确保Poppler在环境变量中
             os.environ['PATH'] = f"{self.poppler_path};{os.environ['PATH']}"
 
-            with tempfile.mkdtemp() as temp_dir:
+            # 构建完整的PDF路径
+            full_pdf_path = os.path.normpath(os.path.join(os.getcwd(), pdf_path))
+            print(f"PDF完整路径: {full_pdf_path}")
+
+            # 检查文件是否存在
+            if not os.path.exists(full_pdf_path):
+                print(f"文件不存在: {full_pdf_path}")
+                return None
+
+            # 创建临时目录
+            temp_dir = tempfile.mkdtemp()
+            try:
+                # 转换PDF页面
+                images = convert_from_path(
+                    full_pdf_path,
+                    dpi=int(dpi),
+                    fmt=image_format.lower(),
+                    output_folder=temp_dir,
+                    poppler_path=self.poppler_path
+                )
+
+                if single_or_multiple == 'multiple':
+                    # 创建ZIP包含所有页面
+                    output_path = self._generate_output_path("converted", "zip")
+                    with zipfile.ZipFile(output_path, 'w') as zf:
+                        for i, image in enumerate(images):
+                            image_path = os.path.join(temp_dir, f'page_{i + 1}.{image_format}')
+                            image.save(image_path, format=image_format.upper())
+                            zf.write(image_path, f'page_{i + 1}.{image_format}')
+                else:
+                    # 仅保存第一页
+                    output_path = self._generate_output_path("converted", image_format)
+                    images[0].save(output_path, format=image_format.upper())
+
+                outputData(f"Images saved to: {output_path}", self.printInfo)
+                return output_path
+
+            finally:
+                # 清理临时文件
                 try:
-                    # 转换PDF页面
-                    images = convert_from_path(
-                        pdf_path,
-                        dpi=int(dpi),
-                        fmt=image_format.lower(),
-                        output_folder=temp_dir,
-                        poppler_path=self.poppler_path
-                    )
-
-                    if single_or_multiple == 'multiple':
-                        # 创建ZIP包含所有页面
-                        output_path = self._generate_output_path("converted", "zip")
-                        with zipfile.ZipFile(output_path, 'w') as zf:
-                            for i, image in enumerate(images):
-                                image_path = os.path.join(temp_dir, f'page_{i + 1}.{image_format}')
-                                image.save(image_path, format=image_format.upper())
-                                zf.write(image_path, f'page_{i + 1}.{image_format}')
-                    else:
-                        # 仅保存第一页
-                        output_path = self._generate_output_path("converted", image_format)
-                        images[0].save(output_path, format=image_format.upper())
-
-                    outputData(f"Images saved to: {output_path}", self.printInfo)
-                    return output_path
-
-                finally:
-                    # 清理临时文件
-                    try:
-                        shutil.rmtree(temp_dir)
-                    except Exception as e:
-                        print(f"Warning: Failed to clean up temporary directory: {e}")
+                    shutil.rmtree(temp_dir)
+                except Exception as e:
+                    print(f"Warning: Failed to clean up temporary directory: {e}")
 
         except Exception as e:
             print(f"\nPDF to image conversion failed: {str(e)}")
@@ -847,240 +776,6 @@ class FileConverterTool(BaseTool):
 
         except Exception as e:
             print(f"PDF to Markdown conversion failed: {str(e)}")
-            return None
-
-    def pdf_to_csv(self, pdf_path: str, page_id: int = 1) -> Optional[str]:
-        """
-        从PDF中提取表格并转换为CSV
-
-        Args:
-            pdf_path: PDF文件路径
-            page_id: 要提取的页码
-
-        Returns:
-            str: 生成的CSV文件路径，失败时返回None
-
-        功能：
-        1. 智能表格识别
-        2. 保持表格结构
-        3. 支持复杂表格处理
-        4. 详细的错误报告
-        """
-        try:
-            output_path = self._generate_output_path("extracted", "csv")
-
-            # 读取PDF表格
-            tables = camelot.read_pdf(pdf_path, pages=str(page_id))
-
-            if len(tables) > 0:
-                # 导出第一个识别到的表格
-                tables[0].to_csv(output_path)
-                outputData(f"CSV file saved to: {output_path}", self.printInfo)
-                return output_path
-            else:
-                print("No tables found in the PDF.")
-                return None
-
-        except FileNotFoundError:
-            print(f"PDF file not found: {pdf_path}")
-            return None
-        except Exception as e:
-            print(f"PDF to CSV conversion failed: {str(e)}")
-            print("\n可能的问题和解决方案:")
-            print("- 确保已安装Ghostscript并添加到系统PATH")
-            print("- 下载Ghostscript: https://www.ghostscript.com/releases/gsdnld.html")
-            print("- 安装camelot: pip install camelot-py[cv]")
-            print("- 安装完Ghostscript后重启IDE")
-            print("- 检查PDF文件格式，复杂或扫描的PDF可能无法正确处理")
-            return None
-
-    def html_to_pdf(self, html_path: str, zoom: float = 1.0) -> Optional[str]:
-        """
-        将HTML文件或ZIP压缩的HTML文件转换为PDF
-
-        Args:
-            html_path: HTML文件或ZIP文件的路径
-            zoom: 缩放比例，默认为1.0
-                  - 大于1：放大
-                  - 小于1：缩小
-                  - 等于1：原始大小
-
-        Returns:
-            str: 生成的PDF文件路径，失败时返回None
-
-        功能特点：
-        1. 支持单个HTML文件转换
-        2. 支持ZIP压缩包中的HTML转换
-        3. 自定义页面设置
-        4. 统一的边距控制
-
-        使用示例：
-            # 单个HTML文件转换
-            converter.html_to_pdf('page.html', zoom=1.2)
-
-            # ZIP包中的HTML转换
-            converter.html_to_pdf('pages.zip', zoom=1.0)
-        """
-        try:
-            # 导入pdfkit工具
-            import pdfkit
-
-            # 生成输出文件路径
-            output_path = self._generate_output_path("converted", "pdf")
-
-            # PDF生成配置选项
-            options = {
-                'zoom': zoom,  # 页面缩放比例
-                'page-size': 'A4',  # 页面大小：A4纸
-                # 统一设置1厘米页边距
-                'margin-top': '1cm',
-                'margin-right': '1cm',
-                'margin-bottom': '1cm',
-                'margin-left': '1cm'
-            }
-
-            # 根据输入文件类型处理
-            if html_path.endswith('.html'):
-                # 直接处理单个HTML文件
-                pdfkit.from_file(html_path, output_path, options=options)
-            else:
-                # 处理ZIP压缩包
-                with tempfile.TemporaryDirectory() as tmpdir:
-                    # 解压ZIP文件到临时目录
-                    with zipfile.ZipFile(html_path, 'r') as zip_ref:
-                        zip_ref.extractall(tmpdir)
-
-                    # 查找所有HTML文件
-                    html_files = [f for f in os.listdir(tmpdir) if f.endswith('.html')]
-
-                    if html_files:
-                        # 使用找到的第一个HTML文件
-                        main_html = os.path.join(tmpdir, html_files[0])
-                        pdfkit.from_file(main_html, output_path, options=options)
-                    else:
-                        # 未找到HTML文件时抛出异常
-                        raise Exception("No HTML file found in ZIP archive")
-
-            # 输出成功信息
-            outputData(data=f"PDF saved to: {output_path}", printInfo=self.printInfo)
-            return output_path
-
-        except Exception as e:
-            # 错误处理和日志记录
-            print(f"HTML to PDF conversion failed: {str(e)}")
-            return None
-
-    def images_to_pdf(self, image_paths: List[str], fit_option: str = 'maintainAspectRatio',
-                      color_type: str = 'color', auto_rotate: bool = True) -> Optional[str]:
-        """
-        将多个图片文件合并转换为PDF文档
-
-        Args:
-            image_paths: 图片文件路径列表
-            fit_option: 图片适配选项
-                - 'maintainAspectRatio': 保持原始比例（默认）
-                - 'fillPage': 填充整个页面
-                - 'fitDocumentToImage': 使用原始尺寸
-            color_type: 颜色模式
-                - 'color': 彩色（默认）
-                - 'greyscale': 灰度
-                - 'blackwhite': 黑白
-            auto_rotate: 是否根据EXIF信息自动旋转图片
-
-        Returns:
-            str: 生成的PDF文件路径，失败时返回None
-
-        功能特点：
-        1. 支持多种图片格式转换
-        2. 智能页面布局调整
-        3. 自动处理图片方向
-        4. 支持多种颜色模式
-        """
-        try:
-            # 导入必要的库
-            from PIL import Image  # 处理图片
-            import io  # 内存流处理
-            from reportlab.pdfgen import canvas  # PDF生成
-            from reportlab.lib.pagesizes import A4  # 标准A4尺寸
-
-            # 生成输出文件路径
-            output_path = self._generate_output_path("combined", "pdf")
-
-            # 创建PDF画布，使用A4尺寸
-            c = canvas.Canvas(output_path, pagesize=A4)
-            width, height = A4  # A4尺寸（单位：点，1点=1/72英寸）
-
-            # 处理每张图片
-            for img_path in image_paths:
-                # 打开并加载图片
-                img = Image.open(img_path)
-
-                # 根据选择的颜色模式转换图片
-                if color_type == 'greyscale':
-                    img = img.convert('L')  # L模式：灰度图像
-                elif color_type == 'blackwhite':
-                    img = img.convert('1')  # 1模式：二值图像
-
-                # 处理图片旋转
-                # 根据EXIF信息自动调整图片方向
-                if auto_rotate and hasattr(img, '_getexif'):
-                    try:
-                        exif = img._getexif()
-                        if exif:
-                            orientation = exif.get(274)  # 274是方向标签的标准代码
-                            if orientation:
-                                # 根据EXIF方向信息旋转图片
-                                if orientation == 3:  # 180度
-                                    img = img.rotate(180, expand=True)
-                                elif orientation == 6:  # 顺时针90度
-                                    img = img.rotate(270, expand=True)
-                                elif orientation == 8:  # 逆时针90度
-                                    img = img.rotate(90, expand=True)
-                    except:
-                        pass  # 如果无法读取EXIF信息，保持原样
-
-                # 计算图片尺寸和缩放比例
-                img_width, img_height = img.size
-                if fit_option == 'fillPage':
-                    # 填充整个页面，可能裁剪部分内容
-                    ratio = max(width / img_width, height / img_height)
-                elif fit_option == 'fitDocumentToImage':
-                    # 使用原始尺寸
-                    ratio = 1
-                else:  # maintainAspectRatio
-                    # 保持宽高比，确保完整显示
-                    ratio = min(width / img_width, height / img_height)
-
-                # 计算新的尺寸
-                new_width = img_width * ratio
-                new_height = img_height * ratio
-
-                # 计算居中位置
-                x = (width - new_width) / 2  # 水平居中
-                y = (height - new_height) / 2  # 垂直居中
-
-                # 调整图片大小，使用LANCZOS重采样算法获得最佳质量
-                img = img.resize(
-                    (int(new_width), int(new_height)),
-                    Image.Resampling.LANCZOS  # 高质量重采样
-                )
-
-                # 将图片转换为PDF可用的格式
-                img_buffer = io.BytesIO()  # 创建内存缓冲区
-                img.save(img_buffer, format='PNG')  # 保存为PNG格式
-                img_buffer.seek(0)  # 重置缓冲区指针
-
-                # 将图片添加到PDF页面
-                c.drawImage(img_buffer, x, y, new_width, new_height)
-                c.showPage()  # 结束当前页面
-
-            # 保存最终的PDF文件
-            c.save()
-            outputData(data=f"PDF saved to: {output_path}", printInfo=self.printInfo)
-            return output_path
-
-        except Exception as e:
-            print(f"Images to PDF conversion failed: {str(e)}")
             return None
 
     def markdown_to_pdf(self, markdown_path: str) -> Optional[str]:
@@ -1213,26 +908,12 @@ class FileConverterTool(BaseTool):
             print(f"Detailed error: {traceback.format_exc()}")
             return None
 
-    def _generate_output_path(self, prefix: str, ext: str) -> str:
-        """
-        生成输出文件路径
-
-        Args:
-            prefix: 文件名前缀
-            ext: 文件扩展名
-
-        Returns:
-            str: 生成的完整文件路径
-
-        功能：
-        1. 自动创建目录
-        2. 生成唯一文件名
-        3. 时间戳命名
-        """
+    def _generate_output_path(self, prefix: str, extension: str) -> str:
+        """生成输出文件路径"""
+        from datetime import datetime
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = "output"
-        os.makedirs(output_dir, exist_ok=True)
-        return os.path.join(output_dir, f"{prefix}_{timestamp}.{ext}")
+        filename = f"{prefix}_{timestamp}.{extension}"
+        return os.path.join(self.output_dir, filename)
 
     def convert_with_libreoffice(self, input_file: str, output_file: str) -> bool:
         """
@@ -1392,32 +1073,28 @@ class FileConverterTool(BaseTool):
 
         return info
 
-    def run(self, **kwargs) -> str:
+    async def run(self, **kwargs) -> str:
         """
         执行文件转换的统一入口
 
         Args:
             **kwargs: 关键字参数
                 - conversion_type: 转换类型
-                - input_path: 输入文件路径
+                - input_path/url: 输入文件路径或URL
 
         Returns:
             str: 转换结果或错误信息
-
-        功能：
-        1. 参数验证
-        2. 类型分发
-        3. 错误处理
-        4. 结果返回
         """
         try:
             # 获取参数
             conversion_type = kwargs.get("conversion_type")
-            input_path = kwargs.get("input_path")
+            input_path = kwargs.get("input_path") or kwargs.get("url")  # 支持 url 参数
 
             # 参数验证
-            if not all([conversion_type, input_path]):
-                return "转换失败: 缺少必需参数"
+            if not conversion_type:
+                return "转换失败: 缺少转换类型参数"
+            if not input_path:
+                return "转换失败: 缺少输入路径参数"
 
             # 根据类型调用相应方法
             conversion_methods = {
@@ -1426,8 +1103,6 @@ class FileConverterTool(BaseTool):
                 "pdf_to_text": self.pdf_to_text,
                 "pdf_to_html": self.pdf_to_html,
                 "pdf_to_image": lambda x: self.pdf_to_image(x, single_or_multiple='multiple'),
-                "pdf_to_csv": self.pdf_to_csv,
-                "pdf_to_xml": self.pdf_to_xml,
                 "pdf_to_ppt": self.pdf_to_presentation,
                 "pdf_to_markdown": self.pdf_to_markdown,
                 "markdown_to_pdf": self.markdown_to_pdf,
@@ -1435,10 +1110,20 @@ class FileConverterTool(BaseTool):
             }
 
             converter = conversion_methods.get(conversion_type)
-            if converter:
-                return converter(input_path)
-            else:
+            if not converter:
                 return f"不支持的转换类型: {conversion_type}"
+
+            # 根据方法是否是协程决定调用方式
+            if asyncio.iscoroutinefunction(converter):
+                result = await converter(input_path)
+            else:
+                result = converter(input_path)
+
+            # 处理转换结果
+            if result:
+                return f"📄 转换状态：\n转换成功\n输出路径：{result}"
+            else:
+                return "📄 转换状态：\n转换失败\n输出路径：未生成"
 
         except Exception as e:
             return f"转换失败: {str(e)}"

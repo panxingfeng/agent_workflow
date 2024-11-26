@@ -170,6 +170,25 @@ class ResultFormatter:
             f"\n输出路径：{result if result else '未生成'}\n"
         ])
 
+    def format_audio_results(self, result: str, output: List[str]) -> None:
+        """
+        格式化音频处理结果
+
+        Args:
+            result: 音频处理结果（通常是输出路径）
+            output: 输出列表
+        """
+        # 从路径中提取文件名
+        file_name = result.split('\\')[-1] if '\\' in result else result.split('/')[-1]
+
+        output.extend([
+            "---------- AudioTool ----------",
+            "🔊 音频处理结果：",
+            "✅ 处理成功" if result else "❌ 处理失败",
+            f"📂 输出文件：{file_name}",
+            f"📁 完整路径：{result if result else '未生成'}\n"
+        ])
+
     def _generate_summary(self, content: str, tool_name: str) -> str:
         """
         生成内容总结

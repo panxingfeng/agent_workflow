@@ -1,7 +1,7 @@
 from agent_workflow import Task, ToolManager
 from agent_workflow.llm.llm import ChatTool
 from agent_workflow.tools.base import MessageInput
-from agent_workflow.tools.tool import WeatherTool, FileConverterTool, ImageTool, SearchTool
+from agent_workflow.tools.tool import WeatherTool, FileConverterTool, ImageTool, SearchTool, AudioTool
 from agent_workflow.utils.func import asyncio_run
 
 if __name__ == '__main__':
@@ -10,7 +10,8 @@ if __name__ == '__main__':
         FileConverterTool(),
         ChatTool(),
         ImageTool(),
-        SearchTool()
+        SearchTool(),
+        AudioTool()
     ]
 
     asyncio_run(
@@ -20,7 +21,10 @@ if __name__ == '__main__':
             )
         ).process(
             MessageInput(
-                query="武汉天气"
+                query="你好啊",
+                images=[],
+                urls=[],
+                files=[]
             ).process_input(),
             printInfo=True  # 打印结果信息
         ))  # 控制台启动

@@ -141,6 +141,8 @@ class Task:
                 self.result_formatter.format_file_converter_results(result, output)
             elif tool_name == "ImageTool":
                 self.result_formatter.format_image_results(result, output)
+            elif tool_name == "AudioTool":
+                self.result_formatter.format_audio_results(result, output)
             elif tool_name == "ChatTool":
                 output.extend([
                     "----------ChatTool----------",
@@ -242,7 +244,7 @@ class Task:
 
         self.state["task_ledger"] = self.create_task_ledger()
         self.state["task_plan"] = self.generate_task_plan()
-        await self.execute_tools()  # 添加await
+        await self.execute_tools()
 
         query_text = self.state['messages'][0]['content']
         tool_results = self.state['tool_results']
