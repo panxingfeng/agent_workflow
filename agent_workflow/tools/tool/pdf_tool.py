@@ -280,6 +280,222 @@ class FileConverterTool(BaseTool):
             print("Please download manually from: https://github.com/oschwartz10612/poppler-windows/releases")
             print(f"And extract to: {self.poppler_path}")
 
+    def _generate_output_path(self, prefix: str, extension: str) -> str:
+        """生成输出文件路径"""
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{prefix}_{timestamp}.{extension}"
+        return os.path.join(self.output_dir, filename)
+
+    def convert_with_libreoffice(self, input_file: str, output_file: str) -> bool:
+        """
+        使用LibreOffice进行文件转换
+
+        Args:
+            input_file: 输入文件路径
+            output_file: 输出文件路径
+
+        Returns:
+            bool: 转换是否成功
+
+        功能：
+        1. 自动检测LibreOffice安装
+        2. 支持多平台
+        3. 命令行参数优化
+        4. 错误处理和重试
+        """
+        try:
+            # 检测LibreOffice路径
+            if platform.system() == 'Windows':
+                soffice_path = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe'
+                if not os.path.exists(soffice_path):
+                    soffice_path = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe'
+            else:
+                soffice_path = 'soffice'
+
+            # 构建转换命令
+            cmd = [
+                soffice_path,
+                '--headless',
+                '--convert-to', 'pdf',
+                '--outdir', os.path.dirname(output_file),
+                input_file
+            ]
+
+            # 执行转换
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+
+            # 检查输出文件
+            expected_output = os.path.join(
+                os.path.dirname(output_file),
+                os.path.splitext(os.path.basename(input_file))[0] + '.pdf'
+            )
+
+            if os.path.exists(expected_output):
+                # 重命名到目标路径
+                os.rename(expected_output, output_file)
+                return True
+            return False
+
+        except Exception as e:
+            print(f"LibreOffice conversion failed: {str(e)}")
+            return False
+
+    def convert_with_unoconv(self, input_file: str, output_file: str) -> bool:
+        """
+        使用Unoconv进行文件转换
+
+        Args:
+            input_file: 输入文件路径
+            output_file: 输出文件路径
+
+        Returns:
+            bool: 转换是否成功
+        """
+        try:
+            cmd = ['unoconv', '-f', 'pdf', '-o', output_file, input_file]
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+
+            return os.path.exists(output_file)
+        except Exception as e:
+            print(f"Unoconv conversion failed: {str(e)}")
+            return False
+
+    def convert_with_pandoc(self, input_file: str, output_file: str) -> bool:
+        """
+        使用Pandoc进行文件转换
+
+        Args:
+            input_file: 输入文件路径
+            output_file: 输出文件路径
+
+        Returns:
+            bool: 转换是否成功
+        """
+        try:
+            cmd = ['pandoc', input_file, '-o', output_file]
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+
+            return os.path.exists(output_file)
+        except Exception as e:
+            print(f"Pandoc conversion failed: {str(e)}")
+            return False
+
+    @staticmethod
+    def get_system_info() -> dict:
+        """
+        获取系统环境信息
+
+        Returns:
+            dict: 系统信息字典，包含：
+            - 平台信息
+            - 系统架构
+            - 可用转换器列表
+
+        功能：
+        1. 检测系统环境
+        2. 检查可用转换器
+        3. 提供系统兼容性信息
+        """
+        info = {
+            'platform': platform.system(),
+            'architecture': platform.architecture(),
+            'available_converters': []
+        }
+
+        # 检查LibreOffice
+        try:
+            if platform.system() == 'Windows':
+                libreoffice_paths = [
+                    'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+                    'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe'
+                ]
+                if any(os.path.exists(path) for path in libreoffice_paths):
+                    info['available_converters'].append('LibreOffice')
+            else:
+                process = subprocess.Popen(['which', 'soffice'], stdout=subprocess.PIPE)
+                if process.communicate()[0]:
+                    info['available_converters'].append('LibreOffice')
+        except:
+            pass
+
+        # 检查其他转换器
+        for converter in ['unoconv', 'pandoc']:
+            try:
+                process = subprocess.Popen(['which', converter], stdout=subprocess.PIPE)
+                if process.communicate()[0]:
+                    info['available_converters'].append(converter.title())
+            except:
+                pass
+
+        return info
+
+    def pdf_to_pdfa(self, pdf_path: str) -> Optional[str]:
+        """
+        将PDF转换为PDF/A格式（存档级PDF）
+
+        Args:
+            pdf_path: 源PDF文件路径
+
+        Returns:
+            str: 生成的PDF/A文件路径，失败时返回None
+
+        功能特点：
+        1. 符合PDF/A-2标准
+        2. 支持颜色转换
+        3. 确保长期保存
+        4. 保持文档完整性
+
+        注意事项：
+        - 需要安装Ghostscript
+        - 确保颜色配置正确
+        - 验证PDF/A兼容性
+        """
+        try:
+            import pypdf
+            # 生成输出路径
+            output_path = self._generate_output_path("converted", "pdf")
+
+            # 配置Ghostscript命令行参数
+            gs_command = [
+                'gs',  # Ghostscript命令
+                '-dPDFA=2',  # PDF/A-2标准
+                '-dBATCH',  # 批处理模式
+                '-dNOPAUSE',  # 不暂停
+                '-sColorConversionStrategy=UseDeviceIndependentColor',  # 颜色转换策略
+                '-sDEVICE=pdfwrite',  # 输出设备
+                '-dPDFACompatibilityPolicy=1',  # PDF/A兼容性策略
+                f'-sOutputFile={output_path}',  # 输出文件
+                pdf_path  # 输入文件
+            ]
+
+            # 执行转换命令
+            result = subprocess.run(gs_command, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise Exception(f"Ghostscript错误: {result.stderr}")
+
+            outputData(data=f"PDF/A文件已保存至: {output_path}", printInfo=self.printInfo)
+            return output_path
+
+        except Exception as e:
+            print(f"Failed to convert PDF to PDF/A: {str(e)}")
+            return None
+
     async def url_to_pdf(self, url: str) -> Optional[str]:
         """
         将网页转换为PDF文件（异步版本）
@@ -429,15 +645,15 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except FileNotFoundError as e:
-            print(f"PDF转Word失败: {str(e)}")
+            print(f"Failed to convert PDF to Word: {str(e)}")
             return None
         except ValueError as e:
-            print(f"PDF转Word失败: {str(e)}")
+            print(f"Failed to convert PDF to Word: {str(e)}")
             return None
         except Exception as e:
-            print(f"PDF转Word失败: {str(e)}")
+            print(f"Failed to convert PDF to Word: {str(e)}")
             import traceback
-            print(f"详细错误: {traceback.format_exc()}")
+            print(f"Detailed error: {traceback.format_exc()}")
             return None
 
     async def pdf_to_text(self, pdf_path: str) -> Optional[str]:
@@ -561,59 +777,9 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except Exception as e:
-            print(f"PDF转换为演示文稿失败: {str(e)}")
+            print(f"Failed to convert PDF to presentation: {str(e)}")
             return None
 
-    def pdf_to_pdfa(self, pdf_path: str) -> Optional[str]:
-        """
-        将PDF转换为PDF/A格式（存档级PDF）
-
-        Args:
-            pdf_path: 源PDF文件路径
-
-        Returns:
-            str: 生成的PDF/A文件路径，失败时返回None
-
-        功能特点：
-        1. 符合PDF/A-2标准
-        2. 支持颜色转换
-        3. 确保长期保存
-        4. 保持文档完整性
-
-        注意事项：
-        - 需要安装Ghostscript
-        - 确保颜色配置正确
-        - 验证PDF/A兼容性
-        """
-        try:
-            import pypdf
-            # 生成输出路径
-            output_path = self._generate_output_path("converted", "pdf")
-
-            # 配置Ghostscript命令行参数
-            gs_command = [
-                'gs',  # Ghostscript命令
-                '-dPDFA=2',  # PDF/A-2标准
-                '-dBATCH',  # 批处理模式
-                '-dNOPAUSE',  # 不暂停
-                '-sColorConversionStrategy=UseDeviceIndependentColor',  # 颜色转换策略
-                '-sDEVICE=pdfwrite',  # 输出设备
-                '-dPDFACompatibilityPolicy=1',  # PDF/A兼容性策略
-                f'-sOutputFile={output_path}',  # 输出文件
-                pdf_path  # 输入文件
-            ]
-
-            # 执行转换命令
-            result = subprocess.run(gs_command, capture_output=True, text=True)
-            if result.returncode != 0:
-                raise Exception(f"Ghostscript错误: {result.stderr}")
-
-            outputData(data=f"PDF/A文件已保存至: {output_path}", printInfo=self.printInfo)
-            return output_path
-
-        except Exception as e:
-            print(f"PDF转换为PDF/A失败: {str(e)}")
-            return None
 
     def pdf_to_image(self, pdf_path: str, image_format: str = 'png',
                      single_or_multiple: str = 'multiple',
@@ -900,178 +1066,13 @@ class FileConverterTool(BaseTool):
                 except Exception:
                     continue
 
-            print("所有转换方法均失败")
+            print("File to PDF conversion failed")
             return None
 
         except Exception as e:
             print(f"File to PDF conversion failed: {str(e)}")
             print(f"Detailed error: {traceback.format_exc()}")
             return None
-
-    def _generate_output_path(self, prefix: str, extension: str) -> str:
-        """生成输出文件路径"""
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{prefix}_{timestamp}.{extension}"
-        return os.path.join(self.output_dir, filename)
-
-    def convert_with_libreoffice(self, input_file: str, output_file: str) -> bool:
-        """
-        使用LibreOffice进行文件转换
-
-        Args:
-            input_file: 输入文件路径
-            output_file: 输出文件路径
-
-        Returns:
-            bool: 转换是否成功
-
-        功能：
-        1. 自动检测LibreOffice安装
-        2. 支持多平台
-        3. 命令行参数优化
-        4. 错误处理和重试
-        """
-        try:
-            # 检测LibreOffice路径
-            if platform.system() == 'Windows':
-                soffice_path = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe'
-                if not os.path.exists(soffice_path):
-                    soffice_path = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe'
-            else:
-                soffice_path = 'soffice'
-
-            # 构建转换命令
-            cmd = [
-                soffice_path,
-                '--headless',
-                '--convert-to', 'pdf',
-                '--outdir', os.path.dirname(output_file),
-                input_file
-            ]
-
-            # 执行转换
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            stdout, stderr = process.communicate()
-
-            # 检查输出文件
-            expected_output = os.path.join(
-                os.path.dirname(output_file),
-                os.path.splitext(os.path.basename(input_file))[0] + '.pdf'
-            )
-
-            if os.path.exists(expected_output):
-                # 重命名到目标路径
-                os.rename(expected_output, output_file)
-                return True
-            return False
-
-        except Exception as e:
-            print(f"LibreOffice conversion failed: {str(e)}")
-            return False
-
-    def convert_with_unoconv(self, input_file: str, output_file: str) -> bool:
-        """
-        使用Unoconv进行文件转换
-
-        Args:
-            input_file: 输入文件路径
-            output_file: 输出文件路径
-
-        Returns:
-            bool: 转换是否成功
-        """
-        try:
-            cmd = ['unoconv', '-f', 'pdf', '-o', output_file, input_file]
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            stdout, stderr = process.communicate()
-
-            return os.path.exists(output_file)
-        except Exception as e:
-            print(f"Unoconv conversion failed: {str(e)}")
-            return False
-
-    def convert_with_pandoc(self, input_file: str, output_file: str) -> bool:
-        """
-        使用Pandoc进行文件转换
-
-        Args:
-            input_file: 输入文件路径
-            output_file: 输出文件路径
-
-        Returns:
-            bool: 转换是否成功
-        """
-        try:
-            cmd = ['pandoc', input_file, '-o', output_file]
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            stdout, stderr = process.communicate()
-
-            return os.path.exists(output_file)
-        except Exception as e:
-            print(f"Pandoc conversion failed: {str(e)}")
-            return False
-
-    @staticmethod
-    def get_system_info() -> dict:
-        """
-        获取系统环境信息
-
-        Returns:
-            dict: 系统信息字典，包含：
-            - 平台信息
-            - 系统架构
-            - 可用转换器列表
-
-        功能：
-        1. 检测系统环境
-        2. 检查可用转换器
-        3. 提供系统兼容性信息
-        """
-        info = {
-            'platform': platform.system(),
-            'architecture': platform.architecture(),
-            'available_converters': []
-        }
-
-        # 检查LibreOffice
-        try:
-            if platform.system() == 'Windows':
-                libreoffice_paths = [
-                    'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
-                    'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe'
-                ]
-                if any(os.path.exists(path) for path in libreoffice_paths):
-                    info['available_converters'].append('LibreOffice')
-            else:
-                process = subprocess.Popen(['which', 'soffice'], stdout=subprocess.PIPE)
-                if process.communicate()[0]:
-                    info['available_converters'].append('LibreOffice')
-        except:
-            pass
-
-        # 检查其他转换器
-        for converter in ['unoconv', 'pandoc']:
-            try:
-                process = subprocess.Popen(['which', converter], stdout=subprocess.PIPE)
-                if process.communicate()[0]:
-                    info['available_converters'].append(converter.title())
-            except:
-                pass
-
-        return info
 
     async def run(self, **kwargs) -> str:
         """
