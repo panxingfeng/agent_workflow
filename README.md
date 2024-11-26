@@ -1,12 +1,16 @@
 # Agent_Workflow 项目
 
-如果觉得项目有帮助，欢迎 Star ⭐️
-
 <div align="center">
 
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![Python](https://img.shields.io/badge/python-3.10-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+</div>
+
+<div align="center">
+
+如果觉得项目有帮助，欢迎 Star ⭐️
 
 </div>
 
@@ -21,7 +25,7 @@
 
 ## 🚧 项目状态
 
-> **Note:** 项目正处于积极开发阶段，更多功能正在持续增加中。
+> **Note:** 项目正处于积极开发阶段，更多功能正在持续完善中。
 
 ## 📖 项目简介
 
@@ -148,7 +152,3 @@ python main.py
 - [Perplexica](https://github.com/ItzCrazyKns/Perplexica) - 提供搜索工具支持
 - [F5-TTS](https://github.com/SWivid/F5-TTS)、[GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) - 提供语音工具的支持
 ---
-
-<div align="center">
-
-</div>
