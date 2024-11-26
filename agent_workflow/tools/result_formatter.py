@@ -22,6 +22,7 @@
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
+import os
 from typing import Dict, Any, List
 import re
 
@@ -163,14 +164,24 @@ class ResultFormatter:
             result: 文件转换结果（通常是输出路径）
             output: 输出列表
         """
+        import os
+
+        # 获取项目的根目录
+        root_dir = os.getcwd()
+
+        # 拼接完整的输出路径
+        full_path = os.path.join(root_dir, result) if result else "未生成"
+
+        # 添加格式化内容到输出列表
         output.extend([
             "---------- FileConverterTool ----------",
             "📄 转换状态：",
             "转换成功" if result else "转换失败",
-            f"\n输出路径：{result if result else '未生成'}\n"
+            f"\n输出路径：{full_path}\n"
         ])
 
-    def format_audio_results(self, result: str, output: List[str]) -> None:
+
+    def format_audio_results(self, result: str, output: List[str]) -> list[str]:
         """
         格式化音频处理结果
 
@@ -186,7 +197,7 @@ class ResultFormatter:
             "🔊 音频处理结果：",
             "✅ 处理成功" if result else "❌ 处理失败",
             f"📂 输出文件：{file_name}",
-            f"📁 完整路径：{result if result else '未生成'}\n"
+            f"📁 输出路径：{result if result else '未生成'}\n"
         ])
 
     def _generate_summary(self, content: str, tool_name: str) -> str:

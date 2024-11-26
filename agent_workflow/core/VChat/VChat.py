@@ -8,10 +8,16 @@
 import asyncio
 import logging
 import os
+import re
+import time
+from pathlib import Path
+from typing import List
 
 from vchat import Core
 from vchat.model import ContentTypes, ContactTypes
-from agent_workflow.tools.base import UserQuery
+
+from agent_workflow.utils.handler import ImageHandler, VoiceHandler, FileHandler, VideoHandler
+from agent_workflow.tools.base import WeChatUserQuery
 
 
 class VChat:
@@ -108,42 +114,149 @@ class VChat:
         设置消息处理器
         配置接收到不同类型消息时的处理方法
         """
+        # 初始化附件管理器和处理器
+        self.upload_dir = Path("upload")
+        self.upload_dir.mkdir(exist_ok=True)
+
+        self.image_handler = ImageHandler(str(self.upload_dir))
+        self.voice_handler = VoiceHandler(str(self.upload_dir))
+        self.file_handler = FileHandler(str(self.upload_dir))
+        self.video_handler = VideoHandler(str(self.upload_dir))
+
+        # 用于存储用户上传的文件 {user_id: Path}
+        self.user_attachments = {}
 
         @self.core.msg_register(msg_types=ContentTypes.TEXT, contact_type=ContactTypes.USER)
+        @self.core.msg_register(msg_types=ContentTypes.ATTACH, contact_type=ContactTypes.USER)
+        @self.core.msg_register(msg_types=ContentTypes.IMAGE, contact_type=ContactTypes.USER)
+        @self.core.msg_register(msg_types=ContentTypes.VOICE, contact_type=ContactTypes.USER)
+        @self.core.msg_register(msg_types=ContentTypes.VIDEO, contact_type=ContactTypes.USER)
         async def handle_message(msg):
-            """
-            处理接收到的文本消息
-
-            Args:
-                msg: 接收到的消息对象，包含发送者信息和消息内容
-
-            Returns:
-                处理结果或None（处理失败时）
-            """
             try:
-                # 提取消息信息
                 user_id = msg.from_.username
                 user_name = msg.from_.nickname
-                message_content = msg.content.content
-                self.logger.info(f"收到好友<{user_name}>消息<{message_content}>")
+                attachments: List[Path] = []
 
-                # 创建查询对象
-                query = UserQuery(
-                    text=message_content,
-                    attachments=[]  # 目前仅处理文本，不包含附件
-                )
+                if msg.content.type == ContentTypes.TEXT:
+                    message_content = msg.content.content
+                    self.logger.info(f"收到好友<{user_name}>文本消息<{message_content}>")
+                    # 如果存在以前的附件，则包含在查询中
+                    if user_id in self.user_attachments:
+                        attachments.append(self.user_attachments[user_id])
 
-                # 处理消息并获取结果
-                result = await self.task_processor.process(query)
-                self.logger.info(f"处理结果: {result}")
+                    print(attachments)
 
-                # 发送回复
-                if result:
-                    await self.core.send_msg(str(result), to_username=user_id)
-                return result
+                    # 创建查询对象
+                    query = WeChatUserQuery(
+                        text=message_content,
+                        attachments=attachments
+                    )
+
+                    # 处理消息并获取结果
+                    result = await self.task_processor.process(query)
+                    self.logger.info(f"处理结果: {result}")
+                    match = re.search(r"输出路径：(.+)", result)
+                    # 发送处理结果
+                    if match:
+                        file_path = match.group(1).strip()  # 提取出的文件路径
+                        result_path = Path(file_path)
+
+                        # 根据文件后缀进行发送
+                        suffix = result_path.suffix.lower()
+                        if suffix in ['.jpg', '.jpeg', '.png', '.gif']:
+                            await self.core.send_image(to_username=user_id, file_path=result_path)
+                        elif suffix in ['.mp4', '.avi', '.mov']:
+                            await self.core.send_video(to_username=user_id, file_path=result_path)
+                        elif suffix in ['.mp3', '.wav']:
+                            await self.core.send_file(to_username=user_id, file_path=result_path)
+                        else:
+                            await self.core.send_msg(str(result), to_username=user_id)
+
+                    return result
+
+                elif msg.content.type == ContentTypes.IMAGE:
+                    self.logger.info(f"收到好友{user_name}的图片消息")
+                    file_data = await msg.content.download_fn()
+                    if file_data:
+                        tmp_file_path = await self.image_handler.save_image(file_data)
+                        if tmp_file_path:
+                            self.user_attachments[user_id] = Path(tmp_file_path)
+                            attachments.append(Path(tmp_file_path))
+                            await self.core.send_msg("图片已保存", to_username=user_id)
+                        else:
+                            await self.core.send_msg("图片保存失败", to_username=user_id)
+                    else:
+                        await self.core.send_msg("图片下载失败", to_username=user_id)
+
+                elif msg.content.type == ContentTypes.VOICE:
+                    self.logger.info(f"收到好友{user_name}的语音消息")
+                    file_data = await msg.content.download_fn()
+                    if file_data:
+                        tmp_file_path = await self.voice_handler.save_voice(file_data)
+                        if tmp_file_path:
+                            self.user_attachments[user_id] = Path(tmp_file_path)
+                            attachments.append(Path(tmp_file_path))
+                            await self.core.send_msg("语音已保存", to_username=user_id)
+                        else:
+                            await self.core.send_msg("语音保存失败", to_username=user_id)
+                    else:
+                        await self.core.send_msg("语音下载失败", to_username=user_id)
+
+
+                elif msg.content.type in [ContentTypes.ATTACH, ContentTypes.VIDEO]:
+                    self.logger.info(f"收到好友{user_name}的文件消息")
+                    file_data = await msg.content.download_fn()
+                    # 获取原始文件名
+                    original_filename = getattr(msg.content, 'file_name', None)
+                    try:
+                        # 尝试从content中获取原始文件名
+                        if not original_filename and hasattr(msg.content, 'content'):
+                            content_info = msg.content.content
+                            if isinstance(content_info, dict) and 'file_name' in content_info:
+                                original_filename = content_info['file_name']
+                    except:
+                        pass
+                    # 如果还是没有文件名，使用一个临时名称
+                    if not original_filename:
+                        original_filename = f"file_{int(time.time())}.mp3"  # 默认为mp3，稍后会根据内容检测
+                    try:
+                        # 确保文件名是UTF-8编码
+                        original_filename = original_filename.encode('utf-8').decode('utf-8')
+                    except UnicodeError:
+                        original_filename = f"file_{int(time.time())}.mp3"
+                    if file_data:
+                        # 检查文件头部特征来判断实际文件类型
+                        file_header = file_data[:4] if len(file_data) > 4 else file_data
+                        # 识别MP3文件的特征 (常见的MP3文件头：ID3 或 MPEG ADTS)
+                        is_mp3 = (file_header.startswith(b'ID3') or
+                                  file_header.startswith(b'\xFF\xFB') or
+                                  file_header.startswith(b'\xFF\xF3') or
+                                  file_header.startswith(b'\xFF\xF2'))
+                        if is_mp3 or original_filename.lower().endswith('.mp3'):
+                            # 确保文件扩展名是.mp3
+                            if not original_filename.lower().endswith('.mp3'):
+                                original_filename = os.path.splitext(original_filename)[0] + '.mp3'
+                            tmp_file_path = await self.voice_handler.save_voice(
+                                file_data,
+                                file_extension='.mp3'
+                            )
+                            file_type = "音频"
+                        else:
+                            tmp_file_path = await self.file_handler.save_file(file_data, original_filename)
+                            file_type = "文件"
+                        if tmp_file_path:
+                            file_path = tmp_file_path.replace("upload/", "")
+                            self.user_attachments[user_id] = Path(file_path)
+                            attachments.append(Path(file_path))
+                            await self.core.send_msg(f"{file_type}已保存", to_username=user_id)
+                        else:
+                            await self.core.send_msg(f"{file_type}保存失败", to_username=user_id)
+                    else:
+                        await self.core.send_msg("文件下载失败", to_username=user_id)
+
+                return
 
             except Exception as e:
-                # 错误处理
                 error_msg = f"处理消息时出错: {str(e)}"
                 self.logger.error(error_msg, exc_info=True)
                 await self.core.send_msg(error_msg, to_username=msg.from_.username)

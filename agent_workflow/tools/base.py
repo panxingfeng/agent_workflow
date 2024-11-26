@@ -1,7 +1,8 @@
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, TypedDict, Dict, Any, Tuple
+from pathlib import Path
+from typing import List, TypedDict, Dict, Any, Tuple, Union
 
 import validators
 
@@ -19,6 +20,29 @@ class Input:
     type: InputType
     content: str
 
+
+@dataclass
+class WeChatUserQuery:
+    def __init__(self, text: str, attachments: List[Union[str, Path]]):
+        self.text = text
+        self.attachments: List[Input] = []
+
+        # 转换所有附件为 Input 对象
+        for attachment in attachments:
+            path = Path(attachment)
+            # 根据文件扩展名判断类型
+            ext = path.suffix.lower()
+            if ext in ['.jpg', '.jpeg', '.png', '.gif']:
+                input_type = InputType.IMAGE
+            elif ext in ['.mp3', '.wav']:
+                input_type = InputType.AUDIO
+            else:
+                input_type = InputType.FILE
+
+            self.attachments.append(Input(
+                type=input_type,
+                content=str(path)
+            ))
 
 @dataclass
 class UserQuery:

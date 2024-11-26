@@ -1122,7 +1122,7 @@ class FileConverterTool(BaseTool):
 
             # 处理转换结果
             if result:
-                return f"📄 转换状态：\n转换成功\n输出路径：{result}"
+                return result
             else:
                 return "📄 转换状态：\n转换失败\n输出路径：未生成"
 
