@@ -2,7 +2,7 @@
 微信机器人实现类
 负责处理微信消息的接收、处理和回复
 包括登录认证、消息处理和状态管理等功能
-感谢vchat作者<z2z63>,框架地址<https://github.com/z2z63/VChat>, 框架itchat-uos原作者<LittleCoder(https://github.com/littlecodersh)>
+感谢vchat作者<z2z63>,框架地址<https://github.com/z2z63/VChat>, 框架itchat原作者<LittleCoder(https://github.com/littlecodersh)>
 """
 
 import asyncio
