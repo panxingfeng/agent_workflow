@@ -97,7 +97,7 @@ class MessageInput:
             bool: 验证结果
         """
         # 检查文件是否存在
-        if not os.path.exists(file_path):
+        if not os.path.exists("upload/" + file_path):
             raise ValueError(f"文件不存在: {file_path}")
 
         # 检查文件类型是否匹配

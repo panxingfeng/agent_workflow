@@ -24,7 +24,7 @@ if __name__ == '__main__':
                 query="你好啊",
                 images=[],
                 urls=[],
-                files=[]
+                files=["特朗普.mp3"]
             ).process_input(),
             printInfo=True  # 打印结果信息
         ))  # 控制台启动
