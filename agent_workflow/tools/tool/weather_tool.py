@@ -281,7 +281,7 @@ class WeatherTool(BaseTool):
     def _format_weather_display(self, weather_data: WeatherResponse) -> str:
         """格式化天气信息显示，实现右侧对齐"""
         # 定义常量
-        width = 45  # 总宽度
+        width = 20  # 总宽度
         border = "=" * width
 
         def format_line(icon: str, label: str, value: str) -> str:

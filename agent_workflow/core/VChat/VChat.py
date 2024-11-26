@@ -10,6 +10,7 @@ import logging
 import os
 import re
 import time
+import whisper
 from pathlib import Path
 from typing import List
 
@@ -136,16 +137,9 @@ class VChat:
                 user_id = msg.from_.username
                 user_name = msg.from_.nickname
                 attachments: List[Path] = []
-
-                if msg.content.type == ContentTypes.TEXT:
-                    message_content = msg.content.content
-                    self.logger.info(f"收到好友<{user_name}>文本消息<{message_content}>")
-                    # 如果存在以前的附件，则包含在查询中
+                async def handle_text(message_content):
                     if user_id in self.user_attachments:
                         attachments.append(self.user_attachments[user_id])
-
-                    print(attachments)
-
                     # 创建查询对象
                     query = WeChatUserQuery(
                         text=message_content,
@@ -165,14 +159,21 @@ class VChat:
                         suffix = result_path.suffix.lower()
                         if suffix in ['.jpg', '.jpeg', '.png', '.gif']:
                             await self.core.send_image(to_username=user_id, file_path=result_path)
+                            return
                         elif suffix in ['.mp4', '.avi', '.mov']:
                             await self.core.send_video(to_username=user_id, file_path=result_path)
+                            return
                         elif suffix in ['.mp3', '.wav']:
                             await self.core.send_file(to_username=user_id, file_path=result_path)
-                        else:
-                            await self.core.send_msg(str(result), to_username=user_id)
+                            return
 
+                    await self.core.send_msg(str(result), to_username=user_id)
                     return result
+
+                if msg.content.type == ContentTypes.TEXT:
+                    message_content = msg.content.content
+                    self.logger.info(f"收到好友<{user_name}>文本消息<{message_content}>")
+                    await handle_text(message_content)
 
                 elif msg.content.type == ContentTypes.IMAGE:
                     self.logger.info(f"收到好友{user_name}的图片消息")
@@ -193,12 +194,12 @@ class VChat:
                     file_data = await msg.content.download_fn()
                     if file_data:
                         tmp_file_path = await self.voice_handler.save_voice(file_data)
-                        if tmp_file_path:
-                            self.user_attachments[user_id] = Path(tmp_file_path)
-                            attachments.append(Path(tmp_file_path))
-                            await self.core.send_msg("语音已保存", to_username=user_id)
+                        model = whisper.load_model("turbo")
+                        result = model.transcribe(tmp_file_path)
+                        if result is not None:
+                            await handle_text(result["text"])
                         else:
-                            await self.core.send_msg("语音保存失败", to_username=user_id)
+                            await self.core.send_msg("语音识别失败", to_username=user_id)
                     else:
                         await self.core.send_msg("语音下载失败", to_username=user_id)
 
