@@ -137,6 +137,7 @@ class VChat:
                 user_id = msg.from_.username
                 user_name = msg.from_.nickname
                 attachments: List[Path] = []
+
                 async def handle_text(message_content):
                     if user_id in self.user_attachments:
                         attachments.append(self.user_attachments[user_id])
@@ -163,7 +164,7 @@ class VChat:
                         elif suffix in ['.mp4', '.avi', '.mov']:
                             await self.core.send_video(to_username=user_id, file_path=result_path)
                             return
-                        elif suffix in ['.mp3', '.wav']:
+                        elif suffix in ['.mp3', '.wav', '.pdf', '.md', '.txt', '.docs', '.pptx']:
                             await self.core.send_file(to_username=user_id, file_path=result_path)
                             return
 
