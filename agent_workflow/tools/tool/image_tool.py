@@ -384,7 +384,7 @@ class ImageTool(BaseTool):
 
         try:
             # 编码图像
-            image_data = self.encode_image(image_path)
+            image_data = self.encode_image("upload/" + image_path)
 
             # 获取任务提示词
             prompt = self.PROMPT_TEMPLATES[task_type]
@@ -405,7 +405,7 @@ class ImageTool(BaseTool):
         except Exception as e:
             return {"error": str(e)}
 
-    def run(self, **kwargs) -> str:
+    async def run(self, **kwargs) -> str:
         """
         执行图像分析任务的统一接口
 

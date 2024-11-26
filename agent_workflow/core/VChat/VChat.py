@@ -181,9 +181,10 @@ class VChat:
                     file_data = await msg.content.download_fn()
                     if file_data:
                         tmp_file_path = await self.image_handler.save_image(file_data)
-                        if tmp_file_path:
-                            self.user_attachments[user_id] = Path(tmp_file_path)
-                            attachments.append(Path(tmp_file_path))
+                        file_name = Path(tmp_file_path).name
+                        if file_name:
+                            self.user_attachments[user_id] = Path(file_name)
+                            attachments.append(Path(file_name))
                             await self.core.send_msg("图片已保存", to_username=user_id)
                         else:
                             await self.core.send_msg("图片保存失败", to_username=user_id)
