@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 
 from agent_workflow.tools.tool.base import BaseTool
 from agent_workflow.utils.loading import LoadingIndicator
+from config.config import SEARCH_TOOL_OLLAMA_CONFIG, SEARCH_TOOL_EMBEDDING_CONFIG
 
 
 class FocusMode(str, Enum):
@@ -155,14 +156,8 @@ class SearchTool(BaseTool):
         self.optimizationMode = optimizationMode or OptimizationMode.SPEED
         self.focusMode = focusMode or FocusMode.WEB_SEARCH
         self.query = query
-        self.chat_model = chat_model or {
-            "provider": "ollama",
-            "model": "qwen2.5:latest"
-        }
-        self.embedding_model = embedding_model or {
-            "provider": "ollama",
-            "model": "bge-m3:latest"
-        }
+        self.chat_model = chat_model or SEARCH_TOOL_OLLAMA_CONFIG
+        self.embedding_model = embedding_model or SEARCH_TOOL_EMBEDDING_CONFIG
 
     def get_description(self) -> str:
         """

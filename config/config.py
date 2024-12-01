@@ -12,6 +12,7 @@ OLLAMA_DATA = {
     'use': True,
     'model': 'qwen2.5',  # ollama运行的模型名称
     'code_model': 'qwen2.5',
+    'embedding_model': 'bge-m3',
     'key': 'EMPTY',
     'url': 'http://localhost:11434/api/chat',  # 本地 Ollama 服务地址
     'api_url': "http://localhost:11434/v1/"
@@ -77,7 +78,7 @@ FEISHU_DATA = {
 
 #########################################  工具API信息  #########################################
 
-GAODE_WEATHER_API_KEY = ""
+GAODE_WEATHER_API_KEY = "f278c03fc29fe6d697585178d43604cc"
 
 #########################################  其他信息  #########################################
 
@@ -94,4 +95,14 @@ SUMMARY_PROMPTS = {
    'ImageTool': "专业解读图像分析结果：\n{content}",
    'URLTool': "分析API响应状态和关键信息：\n{content}",
    'FileConverterTool': "总结文件转换结果：\n{content}"
+}
+
+
+SEARCH_TOOL_OLLAMA_CONFIG = {
+    "provider": "ollama",
+    "model": "qwen2.5:latest"
+}
+SEARCH_TOOL_EMBEDDING_CONFIG = {
+    "provider": "ollama",
+    "model": "bge-m3:latest"
 }
