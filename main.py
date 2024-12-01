@@ -23,7 +23,7 @@ if __name__ == '__main__':
             )
         ).process(
             MessageInput(
-                query="你好啊",
+                query="你是谁",
                 images=[],
                 urls=[],
                 files=[]
