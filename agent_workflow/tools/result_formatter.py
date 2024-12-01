@@ -52,15 +52,7 @@ class ResultFormatter:
         self.summary_prompts = {
             'SearchTool': "分析以下内容的核心观点、可信度和建议：\n{content}",
             'WeatherTool': "分析天气数据：{weather_data}，提供天气概况、温度变化和出行建议",
-            'XHSTool': """从以下小红书文案分析:
-            1. 标题吸引力
-            2. 内容结构和叙述方式
-            3. 情感渲染和互动性
-            4. 优化建议
-
-            文案内容：{content}""",
             'ImageTool': "专业解读图像分析结果：\n{content}",
-            'URLTool': "分析API响应状态和关键信息：\n{content}",
             'FileConverterTool': "总结文件转换结果：\n{content}"
         }
 
