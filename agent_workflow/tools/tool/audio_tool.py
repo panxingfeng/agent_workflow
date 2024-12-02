@@ -161,6 +161,7 @@ class AudioTool:
         os.makedirs(self.upload_dir, exist_ok=True)
         os.makedirs(self.output_dir, exist_ok=True)
 
+
     @property
     def all_characters(self) -> List[str]:
         """获取所有可用角色列表"""
