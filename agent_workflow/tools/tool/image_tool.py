@@ -10,8 +10,13 @@
 @description:
 图像识别工具类模块 (ImageTool)
 
+支持模型:
+- llama3.2-vision: 基于Ollama API的识别模型
+- glm-edge-v-5b: 智谱AI开源的中英双语图像理解模型
+- MiniCPM-V-2_6: 清华开源的视觉语言大模型
+
 主要功能：
-基于 Ollama API 实现多种图像分析功能，包括图像描述、文字提取、物体检测和场景分析
+实现多种图像分析功能，包括图像描述、文字提取、物体检测和场景分析
 
 核心特性：
 1. 多任务支持：支持多种图像分析任务类型
@@ -25,12 +30,25 @@ All rights reserved.
 """
 import base64
 import json
+import torch
+from PIL import Image
 from typing import List, Dict, Any, Optional
 from enum import Enum
 import ollama
+from modelscope import snapshot_download, AutoModel
+from transformers import (
+    AutoTokenizer,
+    AutoImageProcessor,
+    AutoModelForCausalLM,
+)
 
 from agent_workflow.tools.tool.base import BaseTool
 
+
+class ModelType(str, Enum):
+    LLAMA = "llama3.2-vision"
+    GLM = "glm-edge-v-5b"
+    MINICPM_V_2_6 = "OpenBMB/MiniCPM-V-2_6"
 
 class ImageTaskType(str, Enum):
     """
@@ -69,7 +87,7 @@ class ImageTool(BaseTool):
     4. 场景内容解析
 
     属性：
-        model: 使用的模型名称
+        model: 使用的模型名称  支持llama3.2-vision,glm-edge-v-5b,MiniCPM-V-2_6
         PROMPT_TEMPLATES: 不同任务类型的提示词模板
     """
 
@@ -166,12 +184,16 @@ class ImageTool(BaseTool):
        - 环境状态和使用情况"""
     }
 
-    def __init__(self, model: str = "llama3.2-vision"):
-        """
-        初始化图像识别工具类。
-        :param model: 使用的模型名称，默认为 "llama3.2-vision"。
+    def __init__(self, model: str = ModelType.LLAMA):
+        """初始化图像识别工具
+        Args:
+            model: 选择模型类型
+                llama3.2-vision: Ollama推理API、响应快速
+                glm-edge-v-5b: 智谱开源、中英双语支持
+                MiniCPM-V-2_6: 清华开源、支持图文理解
         """
         self.model = model
+        self.model_components = None
 
     def get_description(self) -> str:
         """
@@ -203,6 +225,39 @@ class ImageTool(BaseTool):
             }
         }
         return json.dumps(tool_info, ensure_ascii=False)
+
+    def _init_model(self):
+        """根据选择的模型类型加载对应组件"""
+        if self.model_components is not None:
+            return
+
+        if self.model == ModelType.GLM:
+            model_dir = snapshot_download("ZhipuAI/glm-edge-v-5b")
+            self.model_components = {
+                'processor': AutoImageProcessor.from_pretrained(model_dir, trust_remote_code=True),
+                'tokenizer': AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True),
+                'model': AutoModelForCausalLM.from_pretrained(
+                    model_dir, torch_dtype=torch.bfloat16, device_map="cuda", trust_remote_code=True
+                )
+            }
+
+        elif self.model == ModelType.MINICPM_V_2_6:
+            model = AutoModel.from_pretrained(
+                ModelType.MINICPM_V_2_6,
+                trust_remote_code=True,
+                attn_implementation='sdpa',
+                torch_dtype=torch.bfloat16
+            ).eval().cuda()
+
+            tokenizer = AutoTokenizer.from_pretrained(
+                ModelType.MINICPM_V_2_6,
+                trust_remote_code=True
+            )
+
+            self.model_components = {
+                'model': model,
+                'tokenizer': tokenizer
+            }
 
     @staticmethod
     def encode_image(file_path: str) -> str:
@@ -360,48 +415,177 @@ class ImageTool(BaseTool):
             return f"分析失败: {response['error']}"
         return response.get("message", {}).get("content", "未返回场景分析结果")
 
+    def _analyze_with_ollama(self, image_path: str, task_type: ImageTaskType, user_question: Optional[str]) -> Dict[
+        str, Any]:
+        """
+        使用Ollama API进行图像分析
+
+        Args:
+            image_path: 图像路径
+            task_type: 任务类型
+            user_question: 用户问题
+
+        Returns:
+            分析结果字典,包含模型响应内容
+
+        处理流程:
+        1. 图像编码为base64
+        2. 构建prompt和消息体
+        3. 调用API获取结果
+        """
+        image_data = self.encode_image("upload/" + image_path)
+        prompt = self.PROMPT_TEMPLATES[task_type]
+        if user_question:
+            prompt += f"\n\n用户问题: {user_question}\n请根据图像内容和用户问题生成回答。"
+
+        return ollama.chat(
+            model=self.model,
+            messages=[{
+                "role": "user",
+                "content": prompt,
+                "images": [image_data],
+            }],
+        )
+
+    def _analyze_with_glm(self, image_path: str, task_type: ImageTaskType, user_question: Optional[str]) -> Dict[
+        str, Any]:
+        """
+        使用GLM模型进行图像分析
+
+        Args:
+            image_path: 图像路径
+            task_type: 任务类型
+            user_question: 用户问题
+
+        Returns:
+            分析结果字典,包含生成的文本内容
+
+        处理流程:
+        1. 初始化/加载GLM模型
+        2. 构建消息和输入数据
+        3. 处理图像并生成结果
+        4. 解码并返回结果
+        """
+        if self.model_components is None:
+            model_dir = snapshot_download("ZhipuAI/glm-edge-v-5b")
+            self.model_components = {
+                'processor': AutoImageProcessor.from_pretrained(model_dir, trust_remote_code=True),
+                'tokenizer': AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True),
+                'model': AutoModelForCausalLM.from_pretrained(
+                    model_dir, torch_dtype=torch.bfloat16, device_map="cuda", trust_remote_code=True
+                )
+            }
+        image = Image.open("upload/" + image_path)
+
+        messages = [{"role": "user", "content": [
+            {"type": "image"},
+            {"type": "text", "text": f"{self.PROMPT_TEMPLATES[task_type]}\n\n{user_question}" if user_question else
+            self.PROMPT_TEMPLATES[task_type]}
+        ]}]
+
+        inputs = self.model_components['tokenizer'].apply_chat_template(
+            messages, add_generation_prompt=True, return_dict=True, tokenize=True, return_tensors="pt"
+        ).to(next(self.model_components['model'].parameters()).device)
+
+        pixel_values = self.model_components['processor'](image).pixel_values
+        generate_kwargs = {
+            **inputs,
+            "pixel_values": torch.tensor(pixel_values).to(next(self.model_components['model'].parameters()).device)
+        }
+
+        output = self.model_components['model'].generate(**generate_kwargs, max_new_tokens=100)
+        content = self.model_components['tokenizer'].decode(
+            output[0][len(inputs["input_ids"][0]):], skip_special_tokens=True
+        )
+        return {"message": {"content": content}}
+
+    def _analyze_with_minicpm(self, image_path: str, task_type: ImageTaskType, user_question: Optional[str]) -> Dict[
+        str, Any]:
+        """
+        使用MiniCPM模型分析图像
+
+        参数:
+            image_path: 图像路径 (需以upload/开头)
+            task_type: 分析任务类型
+            user_question: 用户问题(可选)
+
+        返回:
+            Dict[str, Any]: {
+                "message": {"content": str} # 分析结果
+            }
+
+        流程:
+        1. 模型初始化
+        2. 图像预处理
+        3. 提示词构建
+        4. 生成分析结果
+        """
+        if self.model_components is None:
+            model = AutoModel.from_pretrained(
+                ModelType.MINICPM_V_2_6,
+                trust_remote_code=True,
+                attn_implementation='sdpa',
+                torch_dtype=torch.bfloat16
+            ).eval().cuda()
+
+            tokenizer = AutoTokenizer.from_pretrained(ModelType.MINICPM_V_2_6, trust_remote_code=True)
+
+            self.model_components = {
+                'model': model,
+                'tokenizer': tokenizer
+            }
+
+        image = Image.open("upload/" + image_path).convert('RGB')
+        prompt = self.PROMPT_TEMPLATES[task_type]
+        if user_question:
+            prompt += f"\n\n{user_question}"
+
+        msgs = [{'role': 'user', 'content': [image, prompt]}]
+        output = self.model_components['model'].chat(
+            image=None,
+            msgs=msgs,
+            tokenizer=self.model_components['tokenizer']
+        )
+        return {"message": {"content": output}}
+
     def analyze_image(self, image_path: str, task_type: ImageTaskType, user_question: Optional[str] = None) -> Dict[
         str, Any]:
         """
-        执行图像分析任务
+        执行图像分析任务并路由到对应模型处理
 
         Args:
-            image_path: 图像文件路径
-            task_type: 任务类型
-            user_question: 用户问题（可选）
+            image_path: 图像文件路径 (需要以upload/开头)
+            task_type: 分析任务类型 (描述/文本提取/物体检测/场景分析)
+            user_question: 特定分析问题 (可选)
 
         Returns:
-            分析结果字典
+            Dict[str, Any]: {
+                "message": {"content": str}, # 成功时返回分析结果
+                "error": str                 # 失败时返回错误信息
+            }
 
-        功能：
-        1. 图像编码和验证
-        2. 任务类型匹配
-        3. 调用模型进行分析
-        4. 结果格式化处理
+        处理流程:
+        1. 校验任务类型合法性
+        2. 根据当前模型类型路由到对应处理函数
+        3. 异常捕获并返回统一格式错误信息
+
+        错误处理:
+        - 不支持的任务类型
+        - 不支持的模型类型
+        - 处理过程异常
         """
         if task_type not in ImageTaskType.list_tasks():
             return {"error": f"不支持的任务类型: {task_type}"}
 
         try:
-            # 编码图像
-            image_data = self.encode_image("upload/" + image_path)
-
-            # 获取任务提示词
-            prompt = self.PROMPT_TEMPLATES[task_type]
-            if user_question:
-                prompt += f"\n\n用户问题: {user_question}\n请根据图像内容和用户问题生成回答。"
-
-            # 调用模型进行分析
-            response = ollama.chat(
-                model=self.model,
-                messages=[{
-                    "role": "user",
-                    "content": prompt,
-                    "images": [image_data],
-                }],
-            )
-
-            return response
+            if self.model == ModelType.LLAMA:
+                return self._analyze_with_ollama(image_path, task_type, user_question)
+            elif self.model == ModelType.GLM:
+                return self._analyze_with_glm(image_path, task_type, user_question)
+            elif self.model == ModelType.MINICPM_V_2_6:
+                return self._analyze_with_minicpm(image_path, task_type, user_question)
+            else:
+                return {"error": f"不支持的模型类型: {self.model}"}
         except Exception as e:
             return {"error": str(e)}
 
