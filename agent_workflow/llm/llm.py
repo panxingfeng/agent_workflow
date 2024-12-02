@@ -41,6 +41,7 @@ from config.config import OLLAMA_DATA, CHATGPT_DATA
 from agent_workflow.tools.tool.base import BaseTool
 from ..llm.base import get_llm_instance
 
+
 class LLM:
     """LLM调用的主类"""
 
@@ -129,9 +130,11 @@ class LLM:
 
 class ChatTool(BaseTool):
     """聊天工具"""
-    def __init__(self, stream: bool = False):
+
+    def __init__(self, stream: bool = False, is_gpt: bool = False):
         self.stream = stream
         self.chat_history = []
+        self.is_gpt = is_gpt
 
     def get_description(self) -> str:
         tool_info = {
@@ -171,7 +174,6 @@ class ChatTool(BaseTool):
     async def run(self, **kwargs) -> str:
         try:
             message = kwargs.get("message", "")
-            is_gpt = kwargs.get("is_gpt", False)
 
             if not message:
                 return "请输入您想说的话"
@@ -191,7 +193,7 @@ class ChatTool(BaseTool):
             response = llm.chat(
                 prompt=system_prompt,
                 message=message,
-                is_gpt=is_gpt
+                is_gpt=self.is_gpt
             )
 
             if self.stream:

@@ -62,8 +62,6 @@ from agent_workflow.utils import loadingInfo
 class TTSModel(str, Enum):
     """TTS模型枚举类型"""
     F5_TTS = "f5-tts"
-    E2_TTS = "e2-tts"
-    CUSTOM = "custom"
     SOVITS = "sovits"
 
     @classmethod
