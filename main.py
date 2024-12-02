@@ -17,7 +17,6 @@ if __name__ == '__main__':
     ]
 
     ##################### 打开其中一种方式运行即可 #####################
-
     asyncio_run(
         demo=Task(
             tool_manager=ToolManager(
