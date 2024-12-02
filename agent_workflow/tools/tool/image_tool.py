@@ -574,6 +574,7 @@ class ImageTool(BaseTool):
         - 不支持的模型类型
         - 处理过程异常
         """
+
         if task_type not in ImageTaskType.list_tasks():
             return {"error": f"不支持的任务类型: {task_type}"}
 
