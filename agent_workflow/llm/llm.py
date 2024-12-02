@@ -130,7 +130,6 @@ class LLM:
 
 class ChatTool(BaseTool):
     """聊天工具"""
-
     def __init__(self, stream: bool = False, is_gpt: bool = False):
         self.stream = stream
         self.chat_history = []
