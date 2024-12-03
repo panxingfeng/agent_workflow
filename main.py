@@ -10,13 +10,14 @@ if __name__ == '__main__':
     tools = [
         WeatherTool(),
         FileConverterTool(),
-        ChatTool(is_gpt=True),  # 默认ollama模型，可选项(gpt模型设置 is_gpt=True)
+        ChatTool(),  # 默认ollama模型，可选项(gpt模型设置 is_gpt=True)
         ImageTool(model=ModelType.GLM),  # 默认llama3.2vision，可选项(ModelType.GLM ModelType.MINICPM_V_2_6)
         SearchTool(),
         AudioTool(model=TTSModel.F5_TTS)  # 默认F5-TTS，可选项(TTSModel.SOVITS)
     ]
 
     ##################### 打开其中一种方式运行即可 #####################
+
     asyncio_run(
         demo=Task(
             tool_manager=ToolManager(

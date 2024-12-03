@@ -44,7 +44,6 @@ from ..llm.base import get_llm_instance
 
 class LLM:
     """LLM调用的主类"""
-
     def __init__(self, stream: bool = False):
         self.llm, self.model_name, self.api_key = self.ollama()
         self.stream = stream
