@@ -61,7 +61,7 @@ Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮�
 
 - 图像识别 支持 llama3.2vision/MiniCPM/glm-edge-v
 - 图像生成 支持 flux.1-dev(本地部署)、sd-3.5-large(本地部署)、sd-webui
-- sdwebui 支持 forge(使用flux模型)(基于selenium实现，原生api不支持flux生成,需安装谷歌浏览器)
+- sdwebui 支持 forge(使用flux模型)(基于selenium实现，原生api不支持flux生成,需安装谷歌浏览器) 建议显存24G使用
 - [图像识别示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/imagetool_result.png)
 </details>
 
