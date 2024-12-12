@@ -82,8 +82,8 @@ FEISHU_DATA = {
 GAODE_WEATHER_API_KEY = ""
 
 # sdwebui的api账户信息
-FORGE_SDWEBUI_USERNAME="PanllQ" # 模型包中的forge.exe启动器中的点开“高级选项”->“登录凭证管理”->“API鉴权-管理API 账号和密码”设置以后填入此处即可
-FORGE_SDWEBUI_PASSWORD="Pan.960327"
+FORGE_SDWEBUI_USERNAME="" # 模型包中的forge.exe启动器中的点开“高级选项”->“登录凭证管理”->“API鉴权-管理API 账号和密码”设置以后填入此处即可
+FORGE_SDWEBUI_PASSWORD=""
 
 # 生图质量词
 QUALITY_PROMPTS = """masterpiece, best quality, highly detailed, 8k uhd, perfect composition, professional lighting, high quality, ultra-detailed, sharp focus, high resolution, detailed, award winning, stunning, breathtaking, remarkable, beautiful, intricate details, ultra realistic, photorealistic quality, cinematic lighting, dramatic lighting, excellent composition"""
