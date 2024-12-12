@@ -43,7 +43,7 @@ Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮�
 <summary><b>智能搜索</b> - 基于Perplexica</summary>
 
 - 使用Docker部署
-- [配置说明](https://github.com/ItzCrazyKns/Perplexica)
+- [工具项目地址](https://github.com/ItzCrazyKns/Perplexica)
 - [查看示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/searchtool_result1.png)
 - 【重要】ollama 安装embedding模型 ollama run bge-m3】
 </details>
