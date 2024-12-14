@@ -146,7 +146,7 @@ playwright install  # 安装Playwright 的浏览器
    - 如果出现forge启动器挂壁过多次，可以切换sdwebui(速度更快) ps:sdwebui的代码需要进行调整
    - 目前默认生图工具forge_sdwebui,识别工具llama3.2-vision
    - config下的base_model_info.xlsx和lora_model_info.xlsx是填入使用到的模型的一些预设信息
-   - 提示词生成有两个模式可选，rag和llm，<rag>是我把sd主流的tag提示词放到了本地rag中，<llm>是直接使用llm进行生成，默认为None，即分发任务时程序自动设置
+   - 提示词生成有两个模式可选，rag和llm，PromptGenMode.RAG是我把sd主流的tag提示词放到了本地rag中，PromptGenMode.LLM是直接使用llm进行生成，默认为PromptGenMode.None，即分发任务时程序自动设置
 
 5. 自定义创建工具/智能体示例代码
    - 参考example下的参考代码
