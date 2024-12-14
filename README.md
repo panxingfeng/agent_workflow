@@ -49,9 +49,9 @@ Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮�
 </details>
 
 <details>
-<summary><b>PDF转换工具</b></summary>
+<summary><b>文件转换工具</b></summary>
 
-- 支持URL转PDF等功能
+- 支持URL转PDF、PDF转其他文件格式等功能
 - [控制台输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdftool_console_output.png)
 - [转换结果示例](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdf_converter_result.png)
 </details>
