@@ -172,7 +172,6 @@ python main.py # 后续缺失什么就安装什么
 - [ ] 基于ComfyUI的视频生成功能
    - Text to Video (T2V)
    - Image to Video (I2V)
-   - Video to Video (V2V)
 
 ### 🎵 音频工具
 - [ ] 基于ComfyUI的音频生成功能
