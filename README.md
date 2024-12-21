@@ -61,7 +61,7 @@ Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮�
 
 - 图像识别 支持 llama3.2vision/MiniCPM/glm-edge-v
 - 图像生成 支持 flux.1-dev(本地部署)、sd-3.5-large(本地部署)、sd-webui
-- sdwebui 支持 forge(使用flux模型)(基于selenium实现，原生api不支持flux生成,需安装谷歌浏览器)
+- sdwebui 支持 forge(使用flux模型)(基于selenium实现，原生api不支持flux生成,需安装谷歌浏览器) 建议显存24G使用
 - [图像识别示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/imagetool_result.png)
 </details>
 
@@ -126,6 +126,13 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 pip install playwright
 playwright install  # 安装Playwright 的浏览器
 
+# 3.2 需要使用ui界面的需要安装
+cd chat_ui
+npm install
+npm install lucide-react
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+npm run dev
 ```
 
 ### 配置说明
@@ -143,8 +150,8 @@ playwright install  # 安装Playwright 的浏览器
 
 4. 图像工具
    - 根据自己电脑的内存进行选择
-   - 如果出现forge启动器挂壁过多次，可以切换sdwebui(速度更快) ps:sdwebui的代码需要进行调整
-   - 目前默认生图工具forge_sdwebui,识别工具llama3.2-vision
+   - 如果出现forge启动器挂壁过多次，可以切换sdwebui/comfyui(速度更快) ps:sdwebui的代码需要进行调整
+   - 目前默认生图工具comfyui,识别工具llama3.2-vision
    - config下的base_model_info.xlsx和lora_model_info.xlsx是填入使用到的模型的一些预设信息
    - 提示词生成有两个模式可选，rag和llm，<rag>是我把sd主流的tag提示词放到了本地rag中，<llm>是直接使用llm进行生成，默认为None，即分发任务时程序自动设置
 
@@ -164,7 +171,7 @@ python main.py # 后续缺失什么就安装什么
 
 ### 🎨 图像工具
 - [ ] 支持 ComfyUI 和 Stable Diffusion WebUI
-   - ComfyUI 工作流集成  
+   - ComfyUI 工作流集成 (已完成 -> 基础文生图) 
    - SDWebUI API 接入
    - ComfyUI更多的功能工作流
 
@@ -180,7 +187,7 @@ python main.py # 后续缺失什么就安装什么
    - 基于操作界面的语音训练功能
 
 ### 💻 UI界面
-- [ ] 基于react的Web界面
+- [ ] 基于react的Web界面(已完成部分代码。调试中)
    - 多模态输入支持
    - 工作流可视化支持
    - ...
