@@ -37,63 +37,9 @@ class SearchAgent(BaseAgent):
         """
         agent_info = {
             "name": "SearchAgent",
-            "description": "搜索代理，支持多种搜索模式和优化选项",
-            "parameters": {
-                "query": {
-                    "type": "string",
-                    "description": "搜索查询内容",
-                    "required": True
-                },
-                "focus_mode": {
-                    "type": "string",
-                    "description": "搜索焦点模式",
-                    "required": False,
-                    "default": "webSearch",
-                    "enum": [
-                        {"name": "webSearch", "description": "网页搜索模式"},
-                        {"name": "academicSearch", "description": "学术搜索模式"},
-                        {"name": "writingAssistant", "description": "写作辅助模式"},
-                        {"name": "wolframAlphaSearch", "description": "Wolfram Alpha搜索"},
-                        {"name": "youtubeSearch", "description": "YouTube视频搜索"},
-                        {"name": "redditSearch", "description": "Reddit社区搜索"}
-                    ]
-                },
-                "optimization_mode": {
-                    "type": "string",
-                    "description": "优化模式",
-                    "required": False,
-                    "default": "speed",
-                    "enum": [
-                        {"name": "speed", "description": "速度优先模式"},
-                        {"name": "balanced", "description": "平衡模式"}
-                    ]
-                }
-            },
-            "execution_options": {
-                "async_support": True,
-                "batch_processing": False,
-                "max_tokens": 1024,
-                "timeout": 60.0
-            }
+            "description": "搜索代理，支持多种搜索模式和优化选项"
         }
         return json.dumps(agent_info, ensure_ascii=False, indent=2)
-
-    def get_parameter_rules(self) -> str:
-        """返回代理的参数设置规则"""
-        return """
-        Search Agent 参数规则:
-        - query: 搜索查询内容
-        - focus_mode: 搜索模式（可选）
-          * webSearch（默认）
-          * academicSearch
-          * writingAssistant
-          * wolframAlphaSearch
-          * youtubeSearch
-          * redditSearch
-        - optimization_mode: 优化模式（可选）
-          * speed（默认）
-          * balanced
-        """
 
     def _create_message_input(self, query: str) -> MessageInput:
         """创建消息输入对象"""

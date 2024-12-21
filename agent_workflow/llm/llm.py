@@ -60,8 +60,6 @@ class LLM:
 
         Args:
             messages: 消息列表，包含角色和内容
-            model: 模型名称
-            stream: 是否使用流式输出
             temperature: 温度参数，控制输出随机性
             max_tokens: 最大标记数限制
 
@@ -95,8 +93,6 @@ class LLM:
         Args:
             prompt: 系统提示词
             message: 用户消息
-            model: 模型名称
-            stream: 是否使用流式输出
 
         Returns:
             如果stream=True，返回字符串生成器
@@ -125,7 +121,6 @@ class LLM:
             model_name=CHATGPT_DATA['model'],
             api_key=CHATGPT_DATA['key']
         )
-
 
 class ChatTool(BaseTool):
     """聊天工具"""

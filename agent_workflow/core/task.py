@@ -37,6 +37,7 @@ import json
 import uuid
 
 from pydantic import BaseModel
+from reportlab.graphics.widgets.signsandsymbols import NoEntry
 
 from .FeiShu import Feishu
 from .VChat import VChat
@@ -184,19 +185,19 @@ class Task:
 
             # 第一步：确定工具
             tool_selection_prompt = f"""根据用户需求选择合适的工具。
-
+    用户的问题：{user_message}
     可用工具：
     {list(tool_descriptions.keys())}
 
-    选择规则：
+    选择示例：
     1. 图像生成需求使用：ImageGeneratorTool
     2. 普通对话内容使用：ChatTool
 
     只需返回工具名称，不需要其他内容。"""
 
             selected_tool = ''.join(self.llm.chat(
-                message=tool_selection_prompt,
-                prompt=f"用户输入: {user_message}"
+                message=user_message,
+                prompt=tool_selection_prompt,
             )).strip()
 
             print(f"选择的工具: {selected_tool}")
@@ -231,8 +232,8 @@ class Task:
     3. 不要添加注释或说明"""
 
             params_response = ''.join(self.llm.chat(
-                message=params_prompt,
-                prompt=f"用户输入: {user_message}"
+                message=user_message,
+                prompt=params_prompt
             ))
 
             print("参数生成结果:\n" + params_response)

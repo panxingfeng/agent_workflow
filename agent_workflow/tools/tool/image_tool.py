@@ -20,6 +20,7 @@
     - flux: FLUX.1-dev开发版模型
     - sd3: Stable Diffusion 3.5大型模型
     - sdwebui_forge: SD WebUI Forge模型
+    - comfyui: 使用comfyui进行生图
 
 主要功能：
 1. 图像识别：
@@ -33,15 +34,6 @@
     - 多模型支持
     - 风格迁移(Lora)
     - 参数优化配置
-
-核心特性：
-1. 多任务支持：支持图像识别和生成多种任务类型
-2. 统一接口：提供标准化的任务处理接口
-3. 灵活配置：支持自定义用户问题和分析需求
-4. 错误处理：完善的异常捕获和错误处理机制
-5. 结果格式化：统一的结果输出格式
-6. 模型优化：内置多种性能优化方案
-7. 提示词系统：支持多种提示词生成模式
 
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
@@ -63,7 +55,8 @@ from agent_workflow.llm.llm import LLM
 from agent_workflow.rag.lightrag_mode import LightsRAG
 from agent_workflow.tools.tool.base import BaseTool, images_tool_prompts, get_prompts
 from agent_workflow.utils import ForgeImageGenerator, ForgeAPI
-from config.config import QUALITY_PROMPTS
+from agent_workflow.utils.comfyui_api import ComfyuiAPI
+from config.config import QUALITY_PROMPTS, NEGATIVE_PROMPTS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -121,12 +114,7 @@ class GenerationModelType(str, Enum):
 class GenerationConfig(BaseModel):
     prompt: str = Field(..., description="英文生成提示词")
     negative_prompt: Optional[str] = Field(
-        default=(
-        "blurry, low quality, distorted, bad anatomy, poor quality, low resolution, pixelated, "
-        "jpeg artifacts, compression artifacts, grainy, noisy, out of focus, motion blur, "
-        "poorly drawn, deformed anatomy, disproportionate body parts, misaligned features, "
-        "watermark, signature, text, logo, bad lighting, harsh shadows"
-        ),
+        default=NEGATIVE_PROMPTS,
         description="负面提示词"
     )
     width: int = Field(default=512)
@@ -145,6 +133,25 @@ class ForgeGenerationConfig(BaseModel):
     batch_size: int = Field(default=1, description="单批数量")
     cfg_scale: float = Field(default=3.5, description="CFG系数")
     seed: int = Field(default=-1, description="随机种子")
+    output_dir: str = Field(default="output", description="输出目录")
+
+
+class ComfyuiGenerationConfig(BaseModel):
+    task_mode: str = Field(default="基础文生图", description="生图模式")
+    prompt: str = Field(..., description="生成提示词")
+    negative_prompt: Optional[str] = Field(
+        default=NEGATIVE_PROMPTS,
+        description="负面提示词"
+    )
+    model_name: str = Field(default="基础_F.1基础算法模型.safetensors", description="模型名称")
+    image_name: str = Field(default=None,description="上传的图像内容")
+    sampling_method: str = Field(default="euler", description="采样方法")
+    steps: int = Field(default=25, description="迭代步数")
+    width: int = Field(default=512, description="图像宽度")
+    height: int = Field(default=768, description="图像高度")
+    batch_count: int = Field(default=1, description="总批次数")
+    batch_size: int = Field(default=1, description="单批数量")
+    cfg_scale: float = Field(default=8.0, description="CFG系数")
     output_dir: str = Field(default="output", description="输出目录")
 
 
@@ -170,7 +177,6 @@ class SDPromptGenerator:
             "details": []
         }
 
-        # 处理 high_level_keywords
         high_level = kw_data.get("high_level_keywords", [])
         for kw in high_level:
             kw = kw.lower()
@@ -181,7 +187,6 @@ class SDPromptGenerator:
             else:
                 result["subject"].append(kw)
 
-        # 处理 low_level_keywords
         low_level = kw_data.get("low_level_keywords", [])
         for kw in low_level:
             kw = kw.lower()
@@ -1009,7 +1014,7 @@ class ImageGeneratorTool(BaseTool):
         }
     }
 
-    def __init__(self, model_type: str = GenerationModelType.SDWEBUI_FORGE,
+    def __init__(self, model_type: str = GenerationModelType.COMFYUI,
                  prompt_gen_mode: str = PromptGenMode.NONE,
                  use_local: bool = True):
         """初始化图像生成工具
@@ -1022,35 +1027,50 @@ class ImageGeneratorTool(BaseTool):
         self.model_type = model_type
         self.use_local = use_local
         self.prompt_mode = prompt_gen_mode
-        if model_type not in [GenerationModelType.SDWEBUI_FORGE, GenerationModelType.SDWEBUI]:
+        if model_type not in [GenerationModelType.SDWEBUI_FORGE, GenerationModelType.SDWEBUI,GenerationModelType.COMFYUI]:
             self._setup_model()
 
     def get_description(self) -> str:
         """获取工具描述信息，包括支持的模型和功能说明"""
-        supported_models = ForgeAPI().get_models()
-        supported_loras = ForgeAPI().get_loras()
-
-        return json.dumps({
-            "name": "ImageGeneratorTool",
-            "description": f"""AI图像生成工具，
-                               model_name可只支持模型<{supported_models}>,
-                               根据用户描述的内容进行选择更合适的基础模型，如果无法选择到适应的基础模型就返回默认值:<F.1基础算法模型>,
-                               lora_name可支持模型<{supported_loras}>,
-                               根据用户的描述选择更合适的lora风格模型,支持两个lora配置(基础风格lora和场景lora),无lora可选时使用默认值:<aidmaImageUpraderv0.3>,
-                               如果用户的内容,在支持的模型中只有lora_name的模型符合，就使用基础模型<F.1基础算法模型>和对应的lora_name,
-                               model_name和lora_name必须是可支持模型中的名称,禁止修改成英文,""",
-            "parameters": {
-                "prompt": {"type": "string", "description": "必须是英文内容的提示词", "required": True},
-                "lora_name": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
+        global supported_models, supported_loras
+        if self.model_type == GenerationModelType.SDWEBUI_FORGE:
+            supported_models = ForgeAPI().get_models()
+            supported_loras = ForgeAPI().get_loras()
+            return json.dumps({
+                "name": "ImageGeneratorTool",
+                "description": f"""AI图像生成工具，
+                                           model_name可只支持模型<{supported_models}>,
+                                           根据用户描述的内容进行选择更合适的基础模型，如果无法选择到适应的基础模型就返回默认值:<F.1基础算法模型>,
+                                           lora_name可支持模型<{supported_loras}>,
+                                           根据用户的描述选择更合适的lora风格模型,支持两个lora配置(基础风格lora和场景lora),无lora可选时使用默认值:<aidmaImageUpraderv0.3>,
+                                           如果用户的内容,在支持的模型中只有lora_name的模型符合，就使用基础模型<F.1基础算法模型>和对应的lora_name,
+                                           model_name和lora_name必须是可支持模型中的名称,禁止修改成英文,""",
+                "parameters": {
+                    "prompt": {"type": "string", "description": "必须是英文内容的提示词", "required": True},
+                    "lora_name": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "风格模型列表"
                     },
-                    "description": "风格模型列表"
-                },
-                "model_name":{"type": "string","description":"生图的基础模型"}
-            }
-        }, ensure_ascii=False, indent=2)
+                    "model_name": {"type": "string", "description": "生图的基础模型"}
+                }
+            }, ensure_ascii=False, indent=2)
+        elif self.model_type == GenerationModelType.COMFYUI:
+            supported_models = ComfyuiAPI().get_models()
+            return json.dumps({
+                "name": "ImageGeneratorTool",
+                "description": f"""AI图像生成工具，
+                                           model_name可只支持模型<{supported_models}>,
+                                           根据用户描述的内容进行选择更合适的基础模型，如果无法选择到适应的基础模型就返回默认值:<majicmixRealistic_v5.safetensors>,
+                                           model_name必须是可支持模型中的名称,禁止修改成英文,""",
+                "parameters": {
+                    "prompt": {"type": "string", "description": "必须是英文内容的提示词", "required": True},
+                    "model_name": {"type": "string", "description": "生图的基础模型"}
+                }
+            }, ensure_ascii=False, indent=2)
+
 
     def get_parameter_rules(self) -> str:
         """返回参数设置规则说明"""
@@ -1174,6 +1194,28 @@ class ImageGeneratorTool(BaseTool):
 
                 return img_path
 
+            elif self.model_type == GenerationModelType.COMFYUI:
+                config = ComfyuiGenerationConfig(**kwargs)
+                generator = ComfyuiAPI()
+
+                img_path = generator.run(
+                    task_mode=kwargs.get("task_mode") if kwargs.get("task_mode") else config.task_mode,
+                    model_name=kwargs.get("model_name"),
+                    prompt_text=kwargs.get("prompt") if kwargs.get("prompt") else config.prompt + QUALITY_PROMPTS,
+                    negative_prompt_text=kwargs.get("negative_prompt") if kwargs.get("negative_prompt") else config.negative_prompt,
+                    image_name=kwargs.get("image_name") if kwargs.get("image_name") else config.image_name,
+                    width=kwargs.get("width") if kwargs.get("width") else config.width,
+                    height=kwargs.get("height") if kwargs.get("height") else config.height,
+                    steps=kwargs.get("steps") if kwargs.get("steps") else config.steps,
+                    batch_count=kwargs.get("batch_count") if kwargs.get("batch_count") else config.batch_size,
+                    batch_size=kwargs.get("batch_size") if kwargs.get("batch_size") else config.batch_size,
+                    sampling_method=kwargs.get("sampling_method") if kwargs.get("sampling_method") else config.sampling_method,
+                    cfg_scale=kwargs.get("cfg_scale") if kwargs.get("cfg_scale") else config.cfg_scale,
+                    output_dir=kwargs.get("output_dir") if kwargs.get("output_dir") else config.output_dir,
+                )
+
+                return img_path
+
             # FLUX或SD3.5模型的处理逻辑
             elif self.model_type in [GenerationModelType.FLUX_1_DEV, GenerationModelType.SD3_5_LARGE]:
                 config = GenerationConfig(**kwargs)
@@ -1196,8 +1238,8 @@ class ImageGeneratorTool(BaseTool):
 
                 # 生成并保存图像
                 images = self.pipe(**generation_args).images
-                path = [self._save_image(img, idx, output_dir) for idx, img in enumerate(images)]
-                return path
+                img_path = [self._save_image(img, idx, output_dir) for idx, img in enumerate(images)]
+                return img_path
 
             else:
                 return "不支持这个模型"

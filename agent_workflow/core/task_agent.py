@@ -22,10 +22,11 @@
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
-
+import asyncio
 import re
 from enum import Enum
 from typing import List, Dict, Any, Optional
+
 from .VChat import VChat
 from .FeiShu import Feishu
 from agent_workflow.agent import BaseAgent
@@ -102,9 +103,9 @@ class MasterAgent:
         5. 如果没有完全匹配的，选择功能最接近的
 
         示例：
-        用户输入："北京天气怎么样" -> "WeatherAgent"
-        用户输入："搜索人工智能资料" -> "SearchAgent"
-        用户输入："我想生成一张xxx的图像" -> "ImageAgent"
+        用户输入：“武汉天气怎么样” -> "WeatherAgent"
+        用户输入：“搜索人工智能资料” -> "SearchAgent"
+        用户输入：”我想生成一张xxx的图像“/“帮我分析一下这张图像” -> "ImageAgent"
         """
 
         message = f"""
@@ -197,7 +198,7 @@ class MasterAgent:
             return {"error": f"处理失败: {str(e)}"}
 
     async def vchat_demo(self):
-        """启动VChat服务，实现微信公众号接入"""
+        """启动VChat服务，实现微信接入"""
         bot = VChat(self)
         await bot.start()
 
@@ -261,6 +262,204 @@ class MasterAgent:
                 except Exception:
                     result = result
                 return {"result": result}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        config = uvicorn.Config(app, host=host, port=port)
+        server = uvicorn.Server(config)
+        await server.serve()
+
+    async def chat_ui_process(self, message_input: MessageInput | FeishuUserQuery, message_id: str):
+        """处理用户消息并返回实时思考过程"""
+
+        def extract_response(text):
+            if "回答：" in text:
+                return text.split("回答：")[1].strip()
+            return text
+
+        try:
+            self.status = AgentStatus.RUNNING
+            result = None  # 初始化 result 变量
+
+            # 开始处理
+            yield {
+                "type": "thinking_process",
+                "message_id": message_id,
+                "content": "正在思考..."
+            }
+            await asyncio.sleep(0.01)
+
+            # 处理输入
+            if isinstance(message_input, MessageInput):
+                user_query = message_input.process_input()
+            else:
+                user_query = message_input
+
+            # 选择合适的Agent
+            yield {
+                "type": "thinking_process",
+                "message_id": message_id,
+                "content": "分析问题并选择合适的处理方式..."
+            }
+            await asyncio.sleep(0.01)
+
+            # Debug信息
+            yield {
+                "type": "thinking_process",
+                "message_id": message_id,
+                "content": f"[Debug] 正在与LLM沟通，分析问题类型..."
+            }
+            await asyncio.sleep(0.01)
+
+            agent_name = await self._select_agent_with_llm(user_query.text)
+
+            if not agent_name:
+                self.status = AgentStatus.FAILED
+                yield {
+                    "type": "thinking_process",
+                    "message_id": message_id,
+                    "content": "[Debug] 抱歉，我无法确定合适的处理方式"
+                }
+                await asyncio.sleep(0.01)
+                return
+
+            yield {
+                "type": "thinking_process",
+                "message_id": message_id,
+                "content": f"已选择 {agent_name} 来处理您的问题"
+            }
+            await asyncio.sleep(0.01)
+
+            selected_agent = self.agents[agent_name]
+
+            # 执行任务
+            yield {
+                "type": "thinking_process",
+                "message_id": message_id,
+                "content": "开始处理您的请求..."
+            }
+            await asyncio.sleep(0.01)
+
+            async for status in selected_agent.run_with_status(
+                    message_id=message_id,
+                    query=user_query.text,
+                    images=[att.content for att in user_query.attachments if att.type == InputType.IMAGE],
+                    files=[att.content for att in user_query.attachments if att.type == InputType.FILE]
+            ):
+                if status["type"] == "result":
+                    result = status["content"]  # 保存结果
+                yield status
+
+            self.status = AgentStatus.SUCCESS
+            yield {
+                "type": "thinking_process",
+                "message_id": message_id,
+                "content": "✓ 处理完成"
+            }
+            await asyncio.sleep(0.01)
+
+            # 返回结果
+            if result is not None:
+                yield {
+                    "type": "result",
+                    "message_id": message_id,
+                    "content": extract_response(result)
+                }
+
+        except Exception as e:
+            self.status = AgentStatus.FAILED
+            yield {
+                "type": "thinking_process",
+                "message_id": message_id,
+                "content": f"抱歉，处理过程中出现了错误: {str(e)}"
+            }
+            await asyncio.sleep(0.01)
+            yield {
+                "type": "error",
+                "message_id": message_id,
+                "content": f"处理失败: {str(e)}"
+            }
+
+    async def chat_ui_demo(self, host="localhost", port=8000):
+        """
+        启动FastAPI服务器，提供HTTP接口
+
+        Args:
+            host: 服务主机地址，默认localhost
+            port: 服务端口号，默认8000
+        """
+        from fastapi import HTTPException, FastAPI
+        from fastapi.responses import StreamingResponse
+        import uvicorn
+        from pydantic import BaseModel
+        from fastapi.middleware.cors import CORSMiddleware
+        import json
+        import asyncio
+
+        app = FastAPI()
+
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+        class MessageRequest(BaseModel):
+            """接口请求模型"""
+            message_id: str  # 消息唯一标识
+            query: str  # 查询文本
+            images: Optional[List[str]] = None  # 图片列表
+            files: Optional[List[str]] = None  # 文件列表
+            urls: Optional[List[str]] = None  # URL列表
+
+        @app.post("/api/chat")
+        async def process_message(message: MessageRequest):
+            """
+            处理消息的API接口，返回流式响应
+
+            Args:
+                message: 消息请求对象
+
+            Returns:
+                StreamingResponse: 流式响应对象
+
+            Raises:
+                HTTPException: 处理失败时抛出的异常
+            """
+            try:
+                async def generate():
+                    try:
+                        input_msg = MessageInput(
+                            query=message.query,
+                            images=message.images,
+                            files=message.files,
+                            urls=message.urls
+                        )
+
+                        async for update in self.chat_ui_process(input_msg, message.message_id):
+                            # 确保每个数据块都是JSON格式且以换行结束
+                            yield json.dumps(update) + '\n'
+                            await asyncio.sleep(0.01)  # 确保数据立即发送
+
+                    except Exception as e:
+                        # 发送错误信息
+                        yield json.dumps({
+                            "type": "error",
+                            "message_id": message.message_id,
+                            "content": str(e)
+                        }) + '\n'
+
+                return StreamingResponse(
+                    generate(),
+                    media_type='application/x-ndjson',  # 使用换行分隔的JSON流
+                    headers={
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                    }
+                )
+
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 

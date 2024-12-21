@@ -1,5 +1,6 @@
+import asyncio
 import json
-from typing import Dict, Any
+from typing import Dict, Any, AsyncGenerator
 from agent_workflow.core.task import Task, ToolManager, UserQuery
 from agent_workflow.agent import BaseAgent
 from agent_workflow.llm.llm import ChatTool
@@ -27,26 +28,9 @@ class ChatAgent(BaseAgent):
         """获取代理描述信息"""
         agent_info = {
             "name": "ChatAgent",
-            "description": "聊天代理，处理用户的对话请求",
-            "parameters": {
-                "message": {
-                    "type": "string",
-                    "description": "用户的聊天内容",
-                    "required": True
-                }
-            }
+            "description": "聊天代理，处理用户的对话请求"
         }
         return json.dumps(agent_info, ensure_ascii=False, indent=2)
-
-    def get_parameter_rules(self) -> str:
-        """返回代理的参数设置规则"""
-        return """
-        Chat Agent 参数规则:
-        - message: 用户的聊天内容
-          * 必填参数
-          * 支持任何形式的对话内容
-          * 如："你好"、"介绍一下自己"等
-        """
 
     async def process_query(self, message: str) -> str:
         """处理聊天查询
@@ -64,7 +48,6 @@ class ChatAgent(BaseAgent):
             text=message,
             attachments=[]
         )
-        print(str(user_query))
         return await self.task.process(
             user_query,
             printInfo=self.print_info
@@ -94,3 +77,56 @@ class ChatAgent(BaseAgent):
             user_query,
             printInfo=self.print_info
         )
+
+    async def run_with_status(self, **kwargs) -> AsyncGenerator[Dict[str, Any], None]:
+        """执行聊天代理并提供状态反馈
+
+        Args:
+            query: 用户文本消息
+            images: 图片列表（可选）
+            files: 文件列表（可选）
+            message_id: 消息ID
+        """
+        query = kwargs.get('query')
+        message_id = kwargs.get('message_id', 'default_id')
+
+        if not query:
+            yield {
+                "type": "error",
+                "message_id": message_id,
+                "content": "缺少所需参数信息"
+            }
+            return
+
+        user_query = UserQuery(
+            text=query,
+            attachments=[]
+        )
+
+        # 构建工具参数
+        yield {
+            "type": "thinking_process",
+            "message_id": message_id,
+            "content": f"构建执行工具的参数信息:\n{str(user_query)}\n发送到chat工具进行处理"
+        }
+
+        try:
+            # 执行工具处理
+            result = await self.task.process(
+                user_query,
+                printInfo=self.print_info
+            )
+
+            yield {
+                "type": "result",
+                "message_id": message_id,
+                "content": result
+            }
+
+        except Exception as e:
+
+            yield {
+                "type": "error",
+                "message_id": message_id,
+                "content": f"[ERROR] 处理失败: {str(e)}"
+            }

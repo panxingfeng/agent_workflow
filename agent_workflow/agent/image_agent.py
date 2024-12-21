@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, AsyncGenerator
 from agent_workflow.core.task import Task, ToolManager, UserQuery
 from agent_workflow.agent import BaseAgent
 from agent_workflow.tools import MessageInput
@@ -12,7 +12,7 @@ class ImageAgent(BaseAgent):
 
     def __init__(self, print_info: bool = True,
                  description_mode: str = DescriptionModelType.LLAMA,
-                 imageGenerator_mode: str = GenerationModelType.SDWEBUI_FORGE,
+                 imageGenerator_mode: str = GenerationModelType.COMFYUI,
                  prompt_gen_mode=PromptGenMode.NONE):
         """初始化图像代理"""
         self.print_info = print_info
@@ -33,44 +33,9 @@ class ImageAgent(BaseAgent):
         """获取代理描述信息"""
         agent_info = {
             "name": "ImageAgent",
-            "description": "图像智能代理，支持图像分析和生成任务",
-            "parameters": {
-                "mode": {
-                    "type": "string",
-                    "description": "任务模式",
-                    "required": True,
-                    "enum": ["analyze", "generate"],
-                    "detection_keywords": {
-                        "analyze": ["分析", "识别", "检测", "看看", "描述", "是什么", "告诉我"],
-                        "generate": ["生成", "创建", "画", "绘制", "制作", "做一个", "做一张"]
-                    }
-                },
-                "query": {
-                    "type": "string",
-                    "description": "用户输入内容",
-                    "required": True
-                },
-                "images": {
-                    "type": "string",
-                    "description": "图像路径",
-                    "required_if": {"mode": "analyze"}
-                }
-            }
+            "description": "图像智能代理，支持图像分析和图像生成，mode模式设置规格：分析任务(analyze),图像生成(generate)"
         }
         return json.dumps(agent_info, ensure_ascii=False, indent=2)
-
-    def get_parameter_rules(self) -> str:
-        """返回代理的参数设置规则"""
-        return """
-        Image Agent 参数规则:
-
-        1. 图像分析模式 (mode="analyze"):
-           - user_input: 用户问题或分析需求
-           - image_path: 需要分析的图像路径
-
-        2. 图像生成模式 (mode="generate"):
-           - user_input: 用户描述的图像生成需求
-        """
 
     def _create_message_input(self, query: str, image_path: Optional[str] = None) -> MessageInput:
         """创建消息输入对象
@@ -134,3 +99,56 @@ class ImageAgent(BaseAgent):
         """同步方式执行代理"""
         import asyncio
         return asyncio.run(self.run(**kwargs))
+
+    async def run_with_status(self, **kwargs) -> AsyncGenerator[Dict[str, Any], None]:
+        """执行图像代理并提供状态反馈
+
+        Args:
+            query: 提示词
+            message_id: 消息ID
+        """
+        query = kwargs.get('query')
+        image_path = kwargs.get('images')
+        message_id = kwargs.get('message_id', 'default_id')
+
+        if not query:
+            yield {
+                "type": "error",
+                "message_id": message_id,
+                "content": "缺少所需参数信息"
+            }
+            return
+
+        message_input = MessageInput(
+            query=query,
+            images=[image_path],
+            urls=[],
+            files=[]
+        )
+
+        # 构建工具参数
+        yield {
+            "type": "thinking_process",
+            "message_id": message_id,
+            "content": f"构建执行工具的参数信息:\n{str(message_input.process_input())}\n发送到图像工具进行处理"
+        }
+
+        try:
+            # 执行工具处理
+            result = await self.task.process(
+                message_input.process_input(),
+                printInfo=self.print_info
+            )
+
+            yield {
+                "type": "result",
+                "message_id": message_id,
+                "content": result
+            }
+
+        except Exception as e:
+            yield {
+                "type": "error",
+                "message_id": message_id,
+                "content": f"[ERROR] 处理失败: {str(e)}"
+            }
