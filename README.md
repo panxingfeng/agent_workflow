@@ -33,25 +33,25 @@ Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮�
 ### 📌 工具支持
 
 <details>
-<summary><b>天气查询</b> - 基于高德API</summary>
+<summary><b>天气查询</b></summary>
 
-- 需配置 `GAODE_WEATHER_API_KEY`
+- 基于高德API，需配置 `GAODE_WEATHER_API_KEY`
 - [查看示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/weathertool_result.png)
 </details>
 
 <details>
-<summary><b>智能搜索</b> - 基于Perplexica</summary>
+<summary><b>智能搜索</b></summary>
 
-- 使用Docker部署
-- [工具项目地址](https://github.com/ItzCrazyKns/Perplexica)
+- 基于Perplexica开源项目，建议使用Docker部署
+- [Perplexica工具项目地址](https://github.com/ItzCrazyKns/Perplexica)
 - [查看示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/searchtool_result1.png)
 - 【重要】ollama 安装embedding模型 ollama run bge-m3】
 </details>
 
 <details>
-<summary><b>PDF转换工具</b></summary>
+<summary><b>文件转换工具</b></summary>
 
-- 支持URL转PDF等功能
+- 支持URL转PDF、PDF转其他文件格式等功能
 - [控制台输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdftool_console_output.png)
 - [转换结果示例](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/pdf_converter_result.png)
 </details>
@@ -153,7 +153,7 @@ npm run dev
    - 如果出现forge启动器挂壁过多次，可以切换sdwebui/comfyui(速度更快) ps:sdwebui的代码需要进行调整
    - 目前默认生图工具comfyui,识别工具llama3.2-vision
    - config下的base_model_info.xlsx和lora_model_info.xlsx是填入使用到的模型的一些预设信息
-   - 提示词生成有两个模式可选，rag和llm，<rag>是我把sd主流的tag提示词放到了本地rag中，<llm>是直接使用llm进行生成，默认为None，即分发任务时程序自动设置
+   - 提示词生成有两个模式可选，rag和llm，PromptGenMode.RAG是我把sd主流的tag提示词放到了本地rag中，PromptGenMode.LLM是直接使用llm进行生成，默认为PromptGenMode.None，即分发任务时程序自动设置
 
 5. 自定义创建工具/智能体示例代码
    - 参考example下的参考代码
@@ -179,7 +179,6 @@ python main.py # 后续缺失什么就安装什么
 - [ ] 基于ComfyUI的视频生成功能
    - Text to Video (T2V)
    - Image to Video (I2V)
-   - Video to Video (V2V)
 
 ### 🎵 音频工具
 - [ ] 基于ComfyUI的音频生成功能
