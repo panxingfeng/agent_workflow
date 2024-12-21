@@ -173,7 +173,6 @@ python main.py # 后续缺失什么就安装什么
 - [ ] 支持 ComfyUI 和 Stable Diffusion WebUI
    - ComfyUI 工作流集成 (已完成 -> 基础文生图) 
    - SDWebUI API 接入
-   - ComfyUI更多的功能工作流
 
 ### 🎥 视频工具
 - [ ] 基于ComfyUI的视频生成功能
