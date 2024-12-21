@@ -3,7 +3,7 @@
 @file: comfyui_generator.py
 @author: PanXingFeng
 @contact: 1115005803@qq.com、canomiguelittle@gmail.com
-@date: 2024-12-12
+@date: 2024-12-22
 @version: 1.0.0
 @license: MIT License
 
