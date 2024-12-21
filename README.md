@@ -151,8 +151,9 @@ npm run dev
 4. 图像工具
    - 根据自己电脑的内存进行选择
    - 如果出现forge启动器挂壁过多次，可以切换sdwebui/comfyui(速度更快) ps:sdwebui的代码需要进行调整
-   - 目前默认生图工具comfyui,识别工具llama3.2-vision
-   - config下的base_model_info.xlsx和lora_model_info.xlsx是填入使用到的模型的一些预设信息
+   - 目前默认生图工具comfyui[学习视频](https://www.bilibili.com/video/BV1nMzEYZEr8/?vd_source=eec5d1b28cc06356bee610d63672dca2),识别工具llama3.2-vision
+   - config下的base_model_info.xlsx和lora_model_info.xlsx是使用forge时填入使用到的模型的一些预设信息
+   - comfyui可以使用我百度网盘的安装包，内置一个写实类的模型，json数据是在config下的json_file中，
    - 提示词生成有两个模式可选，rag和llm，PromptGenMode.RAG是我把sd主流的tag提示词放到了本地rag中，PromptGenMode.LLM是直接使用llm进行生成，默认为PromptGenMode.None，即分发任务时程序自动设置
 
 5. 自定义创建工具/智能体示例代码
