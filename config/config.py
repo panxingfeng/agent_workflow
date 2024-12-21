@@ -102,6 +102,11 @@ F5_TTS_PORT = 7860
 # GPT-SoVITS端口信息
 GPT_SoVITS_PORT = 5000
 
+# comfyui的端口信息
+COMFYUI_PORT = 8188
+
+COMFYUI_MODEL_PATH = "x://xxxx//models//checkpoints" # 带有checkpoints的路径
+
 #########################################  其他信息  #########################################
 
 # Perplexica中的ollama模型配置信息
