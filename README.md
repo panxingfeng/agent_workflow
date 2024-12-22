@@ -139,7 +139,7 @@ npm run dev
 ## 🛠️ 配置指南
 
 ### 📱 Perplexica 搜索工具
-Perplexica 是一个强大的搜索工具，为了获得最佳体验，我们推荐：
+Perplexica 是一个强大的搜索工具，推荐：
 - ✨ 使用 Docker 进行安装部署
 - 📖 查看[详细安装文档](https://github.com/ItzCrazyKns/Perplexica)获取完整指南
 
