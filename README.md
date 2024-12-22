@@ -156,6 +156,7 @@ npm run dev
    - comfyui可以使用我百度网盘的安装包，内置一个写实类和一个万能的模型，comfyui的工作流json文件放在在config下
    - 支持自定义工作流：根据默认的basic_t2i.json中的设置规则进行自定义的修改自己创建的工作流(基于文生图)
    - 提示词生成有两个模式可选，rag是我把sd主流的tag提示词放到了本地rag中，llm是直接使用llm进行生成，默认为PromptGenMode.None，即分发任务时程序自动设置
+   - 默认模型可以在config中进行设置修改 FORGE_MODEL、COMFYUI_MODEL
 
 5. 自定义创建工具/智能体示例代码
    - 参考example下的参考代码
