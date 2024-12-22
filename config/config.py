@@ -88,7 +88,7 @@ FORGE_SDWEBUI_PASSWORD=""
 # 生图质量词
 QUALITY_PROMPTS = """masterpiece, best quality, highly detailed, 8k uhd, perfect composition, professional lighting, high quality, ultra-detailed, sharp focus, high resolution, detailed, award winning, stunning, breathtaking, remarkable, beautiful, intricate details, ultra realistic, photorealistic quality, cinematic lighting, dramatic lighting, excellent composition"""
 # 负面提示词
-NEGATIVE_PROMPTS = "nsfw, (worst quality:2), (low quality:2), (normal quality:2), lowres, normal quality, ((monochrome)), ((grayscale)), bad anatomy, deepnegative, skin spots, acnes, skin blemishes, age spot, glans, extra fingers, fewer fingers, ((watermark:2)), (white letters:1), (multi nipples), bad hands, bad fingers, bad anatomy, missing fingers, extra digit, fewer digits, bad feet, bad proportions, easynegative, out of frame, tiling, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, disfigured, missing arms, missing legs, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, cross-eyed, mutated hands, cropped, centered, text, jpeg artifacts, signature, watermark, username, error, missing fingers, ghost, poorly drawn, artifacts, blur, blurry, unclear"
+NEGATIVE_PROMPTS = "nsfw,"
 
 # forge-sdwebui的端口信息
 FORGE_SDWEBUI_PORT = 7862
@@ -106,6 +106,12 @@ GPT_SoVITS_PORT = 5000
 COMFYUI_PORT = 8188
 
 COMFYUI_MODEL_PATH = "x://xxxx//models//checkpoints" # 带有checkpoints的路径
+
+# forge默认模型
+FORGE_MODEL = "F.1基础算法" # 不用包含.safetensors
+
+# comfyui默认模型
+COMFYUI_MODEL = "dreamshaper.safetensors" # 包含.safetensors
 
 #########################################  其他信息  #########################################
 

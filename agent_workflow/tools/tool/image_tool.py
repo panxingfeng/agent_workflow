@@ -56,7 +56,7 @@ from agent_workflow.rag.lightrag_mode import LightsRAG
 from agent_workflow.tools.tool.base import BaseTool, images_tool_prompts, get_prompts
 from agent_workflow.utils import ForgeImageGenerator, ForgeAPI
 from agent_workflow.utils.comfyui_api import ComfyuiAPI
-from config.config import QUALITY_PROMPTS, NEGATIVE_PROMPTS
+from config.config import QUALITY_PROMPTS, NEGATIVE_PROMPTS, COMFYUI_MODEL, FORGE_MODEL
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1040,7 +1040,7 @@ class ImageGeneratorTool(BaseTool):
                 "name": "ImageGeneratorTool",
                 "description": f"""AI图像生成工具，
                                            model_name可只支持模型<{supported_models}>,
-                                           根据用户描述的内容进行选择更合适的基础模型，如果无法选择到适应的基础模型就返回默认值:<F.1基础算法模型>,
+                                           根据用户描述的内容进行选择更合适的基础模型，如果无法选择到适应的基础模型就返回默认值:<{FORGE_MODEL}>,
                                            lora_name可支持模型<{supported_loras}>,
                                            根据用户的描述选择更合适的lora风格模型,支持两个lora配置(基础风格lora和场景lora),无lora可选时使用默认值:<aidmaImageUpraderv0.3>,
                                            如果用户的内容,在支持的模型中只有lora_name的模型符合，就使用基础模型<F.1基础算法模型>和对应的lora_name,
@@ -1063,7 +1063,7 @@ class ImageGeneratorTool(BaseTool):
                 "name": "ImageGeneratorTool",
                 "description": f"""AI图像生成工具，
                                            model_name可只支持模型<{supported_models}>,
-                                           根据用户描述的内容进行选择更合适的基础模型，如果无法选择到适应的基础模型就返回默认值:<majicmixRealistic_v5.safetensors>,
+                                           根据用户描述的内容进行选择更合适的基础模型，如果无法选择到适应的基础模型就返回默认值:<{COMFYUI_MODEL}>,
                                            model_name必须是可支持模型中的名称,禁止修改成英文,""",
                 "parameters": {
                     "prompt": {"type": "string", "description": "必须是英文内容的提示词", "required": True},
