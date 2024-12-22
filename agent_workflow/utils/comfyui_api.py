@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@file: comfyui_generator.py
+@file: comfyui_api.py
 @author: PanXingFeng
 @contact: 1115005803@qq.com、canomiguelittle@gmail.com
 @date: 2024-12-22
@@ -8,7 +8,7 @@
 @license: MIT License
 
 @description:
-ComfyUI图像生成工具类 (ComfyuiImageGenerator)
+ComfyUI图像生成工具类 (ComfyuiAPI)
 
 模型支持:
 - checkpoint模型系列支持
