@@ -19,6 +19,7 @@
 - [项目简介](#-项目简介)
 - [核心功能](#-核心功能)
 - [快速开始](#-快速开始)
+- [配置指南](#-配置指南)
 - [更新计划](#-更新计划)
 - [错误预览](#-错误预览)
 - [许可证](#-许可证)
@@ -135,33 +136,66 @@ npx tailwindcss init -p
 npm run dev
 ```
 
-### 配置说明
+## 🛠️ 配置指南
 
-1. Perplexica 搜索工具
-   - 推荐使用Docker安装
-   - [详细安装说明](https://github.com/ItzCrazyKns/Perplexica)
+### 📱 Perplexica 搜索工具
+Perplexica 是一个强大的搜索工具，为了获得最佳体验，我们推荐：
+- ✨ 使用 Docker 进行安装部署
+- 📖 查看[详细安装文档](https://github.com/ItzCrazyKns/Perplexica)获取完整指南
 
-2. 天气工具
-   - 需申请高德API密钥
-   - 配置于 `config.py`中的`GAODE_WEATHER_API_KEY`参数
+### 🌤️ 天气工具
+此工具基于高德地图 API，使用前需要：
+- 🔑 申请高德开放平台 API 密钥
+- ⚙️ 在 `config.py` 文件中配置 `GAODE_WEATHER_API_KEY` 参数
 
-3. 语音工具
-   - 语音克隆,需要使用没有噪音的语音文件，效果最佳
+### 🎙️ 语音工具
+语音克隆功能说明：
+- 🎯 使用高质量、无噪音的语音文件作为输入
+- 💫 清晰的音源文件将带来最佳克隆效果
 
-4. 图像工具
-   - 根据自己电脑的内存进行选择
-   - 如果出现forge启动器挂壁过多次(建议需要24G的大显存GPU)，可以切换速度更快的sdwebui/comfyui ps:sdwebui的代码需要进行调整
-   - 目前默认生图工具comfyui[学习视频](https://www.bilibili.com/video/BV1nMzEYZEr8/?vd_source=eec5d1b28cc06356bee610d63672dca2),识别工具llama3.2-vision
-   - config下的base_model_info.xlsx和lora_model_info.xlsx是使用forge时填入使用到的模型的一些预设信息
-   - comfyui可以使用我百度网盘的安装包，内置一个写实类和一个万能的模型，comfyui的工作流json文件放在在config下
-   - 支持自定义工作流：根据默认的basic_t2i.json中的设置规则进行自定义的修改自己创建的工作流(基于文生图) 
-   - 提示词生成有两个模式可选，rag是我把sd主流的tag提示词放到了本地rag中，llm是直接使用llm进行生成，默认为PromptGenMode.None，即分发任务时程序自动设置
-   - 默认模型可以在config中进行设置修改 FORGE_MODEL、COMFYUI_MODEL
+### 🎨 图像工具
+图像处理工具配置指南：
 
-5. 自定义创建工具/智能体示例代码
-   - 参考example下的参考代码
-    
-6. 网盘链接(模型、环境包<如果环境有问题可以选择直接下载以后复制到conda创建的目录下>) -> [链接](https://pan.baidu.com/s/1NL8GLMGwu7jjuI0k-iAvtg?pwd=sczs)
+#### 硬件要求
+- 💻 根据实际内存容量选择适合的配置
+- 🖥️ 推荐使用 24GB 显存的 GPU（尤其是使用 Forge 启动器时）
+
+#### 默认配置
+- 🎯 默认生图工具：ComfyUI
+  - 🔍 [查看学习视频教程](https://www.bilibili.com/video/BV1nMzEYZEr8)
+- 🔎 图像识别：Llama 3.2-vision 模型
+
+#### 模型配置
+- 📊 Forge 相关配置文件：
+  - `config/base_model_info.xlsx`：基础模型预设
+  - `config/lora_model_info.xlsx`：Lora 模型预设
+  - `config/workflow_json.xlsx`：comfyui工作流预设信息
+
+#### ComfyUI 配置
+- 📦 推荐使用百度网盘安装包（内含两个预置模型）：
+  - 写实风格模型
+  - 通用型模型
+- 🔧 工作流配置文件位于 `config` 目录
+
+#### 其他
+- 🛠️ 支持自定义工作流：
+  - 参考 `basic_t2i.json` 的设置规则
+  - 可根据需求修改形式为文生图的工作流
+- 💡 提示词生成支持多种模式：
+  - RAG 模式：是我把常用的sd tag词放到了本地rag中
+  - LLM 模式：直接使用 LLM 生成(预设了专门sd提示词的prompt)
+  - 默认：PromptGenMode.None
+- ⚙️ forge/comfyui默认模型可在 config 中修改：
+  - `FORGE_MODEL`
+  - `COMFYUI_MODEL`
+
+### 🔧 开发者资源
+- 📝 示例代码：查看 `example` 目录下的工具/智能体代码的参考实现
+- 💾 资源下载：[百度网盘链接](https://pan.baidu.com/s/1NL8GLMGwu7jjuI0k-iAvtg?pwd=sczs)
+  - 包含：模型文件、环境包
+  - 环境配置提示：可直接复制到 conda 创建的目录下
+
+---
 
 ### 运行示例
 ```bash
@@ -188,7 +222,7 @@ python main.py # 后续缺失什么就安装什么
    - 基于操作界面的语音训练功能
 
 ### 💻 UI界面
-- [ ] 基于react的Web界面(已完成部分代码。调试中) [目前运行测试示例](https://pan.baidu.com/s/1an4h0TU4vgv0TANCcAfFvQ?pwd=fa8a)
+- [ ] 基于react的Web界面(已完成部分代码。调试中) [示例1](https://pan.baidu.com/s/1an4h0TU4vgv0TANCcAfFvQ?pwd=fa8a) [示例2](https://pan.baidu.com/s/12-8q0E4YINWUKslQmacFMA?pwd=ttim)
    - 多模态输入支持
    - 工作流可视化支持
    - ...
