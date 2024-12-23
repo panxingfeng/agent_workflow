@@ -56,6 +56,7 @@ import asyncio
 from pydub import AudioSegment
 from gradio_client import Client, handle_file
 
+from agent_workflow.tools.tool import BaseTool
 from agent_workflow.utils import loadingInfo
 from config.config import F5_TTS_PORT, GPT_SoVITS_PORT
 
@@ -106,7 +107,7 @@ class AudioConfig(BaseModel):
     sovits_config: Optional[SoVitsConfig] = Field(None, description="GPT-SoVITS配置")
 
 
-class AudioTool:
+class AudioTool(BaseTool):
     """
     音频处理工具类
 
@@ -119,7 +120,7 @@ class AudioTool:
     def __init__(self,
                  f5_host: str = f"http://127.0.0.1:{F5_TTS_PORT}",
                  sovits_host: str = f"http://127.0.0.1:{GPT_SoVITS_PORT}",
-                 model: TTSModel = TTSModel.F5_TTS,
+                 model: TTSModel = TTSModel.SOVITS,
                  timeout: float = 60.0,
                  project_root: Optional[str] = None):
         """

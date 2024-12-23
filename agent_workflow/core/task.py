@@ -36,14 +36,11 @@ from dataclasses import dataclass, field
 import json
 import uuid
 
-from pydantic import BaseModel
-from reportlab.graphics.widgets.signsandsymbols import NoEntry
-
 from .FeiShu import Feishu
 from .VChat import VChat
 from ..llm.llm import LLM
 from ..tools.result_formatter import ResultFormatter
-from ..tools.base import TaskState, InputType, UserQuery, MessageInput, FeishuUserQuery
+from ..tools.base import TaskState, InputType, UserQuery, FeishuUserQuery
 from ..tools.tool_manager import ToolManager
 
 

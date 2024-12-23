@@ -1,9 +1,9 @@
-import asyncio
 import json
 from typing import Dict, Any, AsyncGenerator
 from agent_workflow.core.task import Task, ToolManager, UserQuery
 from agent_workflow.agent import BaseAgent
 from agent_workflow.llm.llm import ChatTool
+from agent_workflow.tools import MessageInput
 
 
 class ChatAgent(BaseAgent):
@@ -98,22 +98,24 @@ class ChatAgent(BaseAgent):
             }
             return
 
-        user_query = UserQuery(
-            text=query,
-            attachments=[]
+        message_input = MessageInput(
+            query=query,
+            images=[],
+            urls=[],
+            files=[]
         )
 
         # 构建工具参数
         yield {
             "type": "thinking_process",
             "message_id": message_id,
-            "content": f"构建执行工具的参数信息:\n{str(user_query)}\n发送到chat工具进行处理"
+            "content": f"构建执行工具的参数信息:\n{str(message_input.process_input())}\n发送到chat工具进行处理"
         }
 
         try:
             # 执行工具处理
             result = await self.task.process(
-                user_query,
+                message_input.process_input(),
                 printInfo=self.print_info
             )
 

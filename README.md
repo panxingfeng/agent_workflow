@@ -27,7 +27,7 @@
 
 ## 📖 项目简介
 
-Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮助开发者快速构建单/多智能体系统。项目提供了丰富的工具集成和便捷的部署方式。
+Agent_Workflow 是一个基于 Ollama 的智能体框架，旨在帮助开发者快速构建单/多智能体系统。项目提供了丰富的工具集成和便捷的部署方式。
 
 ## 🚀 核心功能
 
@@ -60,7 +60,7 @@ Agent_Workflow 是一个基于 langchain/Ollama 的智能体框架，旨在帮�
 <details>
 <summary><b>图像工具</b></summary>
 
-- 图像识别 支持 llama3.2vision/MiniCPM/glm-edge-v
+- 图像识别 支持 llama3.2vision/MiniCPM(支持多图像)/glm-edge-v
 - 图像生成 支持 flux.1-dev(本地部署)、sd-3.5-large(本地部署)、sd-webui
 - sdwebui 支持 forge(使用flux模型)(基于selenium实现，原生api不支持flux生成,需安装谷歌浏览器) 建议显存24G使用
 - [图像识别示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/imagetool_result.png)
@@ -258,4 +258,5 @@ ps:工作流正在陆陆续续的搭建和测试中
 - [ollama](https://github.com/ollama/ollama) - 提供本地模型部署支持
 - [Perplexica](https://github.com/ItzCrazyKns/Perplexica) - 提供搜索工具支持
 - [F5-TTS](https://github.com/SWivid/F5-TTS)、[GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) - 提供语音工具的支持
+- [comfyui](https://github.com/comfyanonymous/ComfyUI)、[sd_webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) - 提供文生图等的支持
 ---

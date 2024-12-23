@@ -14,10 +14,11 @@ class WeatherAgent(BaseAgent):
     def __init__(self, print_info: bool = True):
         """初始化天气代理"""
         self.print_info = print_info
-        self.tools = [WeatherTool()]
         self.task = Task(
             tool_manager=ToolManager(
-                tools=self.tools
+                tools=[
+                    WeatherTool()
+                ]
             )
         )
 

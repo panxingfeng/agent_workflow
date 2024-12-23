@@ -45,7 +45,7 @@ import os
 
 import torch
 from PIL import Image
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from enum import Enum
 import ollama
 from diffusers import BitsAndBytesConfig, StableDiffusion3Pipeline, FluxPipeline
@@ -143,7 +143,7 @@ class ComfyuiGenerationConfig(BaseModel):
         default=NEGATIVE_PROMPTS,
         description="负面提示词"
     )
-    model_name: str = Field(default="基础_F.1基础算法模型.safetensors", description="模型名称")
+    model_name: str = Field(default="dreamshaper.safetensors", description="模型名称")
     image_name: str = Field(default=None,description="上传的图像内容")
     sampling_method: str = Field(default="euler", description="采样方法")
     steps: int = Field(default=25, description="迭代步数")
@@ -495,7 +495,7 @@ class DescriptionImageTool(BaseTool):
         """
         tool_info = {
             "name": "DescriptionImageTool",
-            "description": "图像分析工具，可以根据用户问题分析图像内容并生成相关结果。",
+            "description": "图像分析工具，可以根据用户问题分析图像内容并生成相关结果。task_type是必填信息，默认是describe",
             "capabilities": [
                 "描述图像内容",
                 "提取图像中的文字",
@@ -504,8 +504,20 @@ class DescriptionImageTool(BaseTool):
             ],
             "parameters": {
                 "image_path": {
-                    "type": "string",
-                    "description": "图像文件路径"
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "description": "单个图像文件路径"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "多个图像文件路径列表"
+                        }
+                    ],
+                    "description": "图像文件路径，支持单个路径或路径列表"
                 },
                 "user_question": {
                     "type": "string",
@@ -542,17 +554,22 @@ class DescriptionImageTool(BaseTool):
         return rules
 
     @staticmethod
-    def encode_image(file_path: str) -> str:
+    def encode_images(image_paths: list) -> list:
         """
-        将图像文件编码为 Base64 格式。
-        :param file_path: 图像文件路径。
-        :return: Base64 编码后的字符串。
+        将多个图像文件编码为 Base64 格式。
+        :param image_paths: 图像文件路径列表。
+        :return: Base64 编码后的字符串列表。
         """
-        try:
-            with open(file_path, "rb") as img_file:
-                return base64.b64encode(img_file.read()).decode("utf-8")
-        except Exception as e:
-            raise ValueError(f"图像编码错误: {e}")
+        encoded_images = []
+        for path in image_paths:
+            try:
+                file_path = os.path.join("upload", path)
+                with open(file_path, "rb") as img_file:
+                    encoded = base64.b64encode(img_file.read()).decode("utf-8")
+                    encoded_images.append(encoded)
+            except Exception as e:
+                raise ValueError(f"图像 {path} 编码错误: {e}")
+        return encoded_images
 
     def describe_image(self, image_path: str, user_question: Optional[str] = None) -> str:
         """
@@ -697,13 +714,14 @@ class DescriptionImageTool(BaseTool):
             return f"分析失败: {response['error']}"
         return response.get("message", {}).get("content", "未返回场景分析结果")
 
-    def _analyze_with_ollama(self, image_path: str, task_type: ImageTaskType, user_question: Optional[str]) -> Dict[
+    def _analyze_with_ollama(self, image_path: Union[str, list], task_type: ImageTaskType,
+                             user_question: Optional[str]) -> Dict[
         str, Any]:
         """
         使用Ollama API进行图像分析
 
         Args:
-            image_path: 图像路径
+            image_path: 图像路径，可以是单个路径字符串或路径列表
             task_type: 任务类型
             user_question: 用户问题
 
@@ -715,7 +733,15 @@ class DescriptionImageTool(BaseTool):
         2. 构建prompt和消息体
         3. 调用API获取结果
         """
-        image_data = self.encode_image("upload/" + image_path)
+        # 统一将输入转换为列表处理
+        if isinstance(image_path, str):
+            paths = [image_path]
+        else:
+            paths = [path for path in image_path]
+
+        # 编码所有图片
+        image_data = self.encode_images(paths)
+
         prompt = self.PROMPT_TEMPLATES[task_type]
         if user_question:
             prompt += f"\n\n用户问题: {user_question}\n请根据图像内容和用户问题生成回答。"
@@ -725,7 +751,7 @@ class DescriptionImageTool(BaseTool):
             messages=[{
                 "role": "user",
                 "content": prompt,
-                "images": [image_data],
+                "images": image_data,
             }],
         )
 

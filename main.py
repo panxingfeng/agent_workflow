@@ -1,6 +1,8 @@
 import asyncio
 
 from agent_workflow import ToolManager, UserQuery
+from agent_workflow.agent.audio_agent import AudioAgent
+from agent_workflow.agent.file_agent import FileConverterAgent
 from agent_workflow.core.task import Task
 from agent_workflow.agent.chat_agent import ChatAgent
 from agent_workflow.agent.image_agent import ImageAgent
@@ -27,9 +29,11 @@ async def main():
     # 创建需要的智能体
     agents = [
         ChatAgent(),
+        WeatherAgent(),
         ImageAgent(),
         SearchAgent(),
-        WeatherAgent(),
+        FileConverterAgent(),
+        AudioAgent()
     ]
     # 创建智能体调度
     master = MasterAgent(agents)
@@ -40,7 +44,7 @@ async def main():
 
     # 创建用户消息输入
     message = MessageInput(
-        query="你是谁",
+        query="你好啊",
         images=[],
         files=[],
         urls=[]
@@ -49,7 +53,7 @@ async def main():
     # 处理消息
     await master.process(message)
 
-    ################################### 微信启动 ###################################
+    ################################## 微信启动 ###################################
 
     # await master.vchat_demo()
 
@@ -62,35 +66,36 @@ async def main():
     # await master.fastapi_demo()
 
 
+
 if __name__ == "__main__":
     # 启动多智能体
     asyncio.run(main())
 
     ###################################-------- 单智能体创建 --------###################################
 
-    tools = [
-        WeatherTool(),
-        ChatTool(),
-    ]
+    # tools = [
+    #     WeatherTool(),
+    #     ChatTool(),
+    # ]
 
     ################################### 控制台启动 ###################################
 
-    print("-----------------------------单智能体回答-----------------------------")
-    asyncio_run(
-        demo=Task(
-            tool_manager=ToolManager(
-                tools=tools,
-            )
-        ).process(
-            MessageInput(
-                query="你是谁",
-                images=[],
-                files=[],
-                urls=[]
-            ).process_input(),
-            printInfo=True  # 控制台打印结果信息
-        )
-    )  # 控制台启动
+    # print("-----------------------------单智能体回答-----------------------------")
+    # asyncio_run(
+    #     demo=Task(
+    #         tool_manager=ToolManager(
+    #             tools=tools,
+    #         )
+    #     ).process(
+    #         MessageInput(
+    #             query="你是谁",
+    #             images=[],
+    #             files=[],
+    #             urls=[]
+    #         ).process_input(),
+    #         printInfo=True  # 控制台打印结果信息
+    #     )
+    # )  # 控制台启动
 
     ################################### 微信启动 ###################################
 

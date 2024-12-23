@@ -18,10 +18,11 @@ class SearchAgent(BaseAgent):
             print_info: 是否打印详细信息
         """
         self.print_info = print_info
-        self.tools = [SearchTool()]
         self.task = Task(
             tool_manager=ToolManager(
-                tools=self.tools
+                tools=[
+                    SearchTool()
+                ]
             )
         )
 
