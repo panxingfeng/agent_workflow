@@ -224,7 +224,7 @@ python main.py # 后续缺失什么就安装什么
    - 基于操作界面的语音训练功能
 
 ### 💻 UI界面
-- [ ] 基于react的Web界面(已完成部分代码。调试中) [示例1](https://pan.baidu.com/s/1an4h0TU4vgv0TANCcAfFvQ?pwd=fa8a) [示例2](https://pan.baidu.com/s/12-8q0E4YINWUKslQmacFMA?pwd=ttim)
+- [ ] 基于react的Web界面(已完成部分代码。调试中) [示例1](https://pan.baidu.com/s/1an4h0TU4vgv0TANCcAfFvQ?pwd=fa8a) [示例2](https://pan.baidu.com/s/12-8q0E4YINWUKslQmacFMA?pwd=ttim) [多模态支持样例](https://pan.baidu.com/s/15ChV3tbPat8scOZPkTxhdQ?pwd=32zi)
    - 多模态输入支持
    - 工作流可视化支持
    - ...
