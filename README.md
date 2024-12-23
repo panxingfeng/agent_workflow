@@ -127,7 +127,7 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 pip install playwright
 playwright install  # 安装Playwright 的浏览器
 
-# 3.2 需要使用ui界面的需要安装
+# 3.2 需要使用ui界面的需要安装(等chat_ui的代码上传以后再安装此项)
 cd chat_ui
 npm install
 npm install lucide-react
