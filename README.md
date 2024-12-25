@@ -61,7 +61,7 @@ Agent_Workflow 是一个基于 Ollama 的智能体框架，旨在帮助开发者
 <summary><b>图像工具</b></summary>
 
 - 图像识别 支持 llama3.2vision/MiniCPM(支持多图像)/glm-edge-v
-- 图像生成 支持 flux.1-dev(本地部署)、sd-3.5-large(本地部署)、sd-webui
+- 图像生成 支持 flux.1-dev(本地部署)、sd-3.5-large(本地部署)、comfyui
 - sdwebui 支持 forge(使用flux模型)(基于selenium实现，原生api不支持flux生成,需安装谷歌浏览器) 建议显存24G使用
 - [图像识别示例输出](https://github.com/panxingfeng/agent_chat_wechat/blob/master/images/imagetool_result.png)
 </details>
@@ -209,9 +209,8 @@ python main.py # 后续缺失什么就安装什么
 ## 📅 更新计划
 
 ### 🎨 图像工具
-- [ ] 支持 ComfyUI 和 Stable Diffusion WebUI
+- [ ] 支持 ComfyUI
    - ComfyUI 工作流集成 (已完成 -> 基础文生图) 
-   - SDWebUI API 接入
 
 ### 🎥 视频工具
 - [ ] 基于ComfyUI的视频生成功能
@@ -258,5 +257,5 @@ ps:工作流正在陆陆续续的搭建和测试中
 - [ollama](https://github.com/ollama/ollama) - 提供本地模型部署支持
 - [Perplexica](https://github.com/ItzCrazyKns/Perplexica) - 提供搜索工具支持
 - [F5-TTS](https://github.com/SWivid/F5-TTS)、[GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) - 提供语音工具的支持
-- [comfyui](https://github.com/comfyanonymous/ComfyUI)、[sd_webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) - 提供文生图等的支持
+- [comfyui](https://github.com/comfyanonymous/ComfyUI) - 提供文生图等的支持
 ---
