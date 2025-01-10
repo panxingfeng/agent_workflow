@@ -78,33 +78,15 @@ Agent_Workflow 是一个基于 Ollama 的智能体框架，旨在帮助开发者
 
 - ✅ vchat微信接入 [实现实例1](./images/wechat_demo1.png)、[实现实例2](./images/wechat_demo2.png)、[实现实例3](./images/wechat_demo3.png)
   ```
-    agents = [
-        ChatAgent()
-    ]
-    # 创建智能体调度
-    master = MasterAgent(agents)
-    # 微信启动
-    await master.vchat_demo()
+  把main.py中的注销打开即可 2.0还未测试 有一些细节未修改
   ```
 - ✅ FastAPI服务 [实现实例1](./images/fastapi_demo1.png)、[实现实例2](./images/fastapi_demo2.png)
   ```
-    agents = [
-        ChatAgent()
-    ]
-    # 创建智能体调度
-    master = MasterAgent(agents)
-    # 微信启动
-    await await master.fastapi_demo()
+    把main.py中的注销打开即可 2.0还未测试 有一些细节未修改
   ```
 - ✅ 飞书机器人 [实现实例1](./images/feishu_demo1.png)、[实现实例2](./images/feishu_demo2.png)
   ```
-    agents = [
-        ChatAgent()
-    ]
-    # 创建智能体调度
-    master = MasterAgent(agents)
-    # 微信启动
-    await master.feishu_demo()
+    把main.py中的注销打开即可 2.0还未测试 有一些细节未修改
   ```
 ## 🚀 快速开始
 
@@ -127,13 +109,10 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 pip install playwright
 playwright install  # 安装Playwright 的浏览器
 
-# 3.2 需要使用ui界面的需要安装(等chat_ui的代码上传以后再安装此项)
+# 3.2 需要使用ui界面的需要安装
 cd chat_ui
 npm install
-npm install lucide-react
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-npm run dev
+npm start
 ```
 
 ## 🛠️ 配置指南
@@ -192,7 +171,7 @@ Perplexica 是一个强大的搜索工具，推荐：
   - `COMFYUI_MODEL`
 
 ### 🔧 开发者资源
-- 📝 示例代码：查看 `example` 目录下的工具/智能体代码的参考实现
+- 📝 示例代码：查看 `example` 目录下的工具代码的参考实现
 - 💾 资源下载：[百度网盘链接](https://pan.baidu.com/s/1NL8GLMGwu7jjuI0k-iAvtg?pwd=sczs)
   - 包含：模型文件、环境包
   - 环境配置提示：可直接复制到 conda 创建的目录下
@@ -201,6 +180,7 @@ Perplexica 是一个强大的搜索工具，推荐：
 
 ### 运行示例
 ```bash
+# 版本2.0 我只测试了搜索，GPT-SoVITS，天气，comfyui，其余有问题的可以提issues，有时间就修改
 python main.py # 后续缺失什么就安装什么
 ```
 
@@ -209,9 +189,8 @@ python main.py # 后续缺失什么就安装什么
 ## 📅 更新计划
 
 ### 🎨 图像工具
-- [ ] 支持 ComfyUI 和 Stable Diffusion WebUI
-   - ComfyUI 工作流集成 (已完成 -> 基础文生图) 
-   - SDWebUI API 接入
+- [√ ] 支持 ComfyUI
+   - ComfyUI 工作流集成 (已完成 -> 基础文生图)
 
 ### 🎥 视频工具
 - [ ] 基于ComfyUI的视频生成功能
@@ -224,12 +203,11 @@ python main.py # 后续缺失什么就安装什么
    - 基于操作界面的语音训练功能
 
 ### 💻 UI界面
-- [ ] 基于react的Web界面(已完成部分代码。调试中) [chat实现预览](https://pan.baidu.com/s/171wajOxzxqADBwPgbqzzBw?pwd=geim)
-   - 工作流可视化支持
-   - ...
+- [√ ] 基于react的Web界面 [chat实现预览](https://pan.baidu.com/s/1I_xHWs7cgBSPI11y_gz5Fg?pwd=mica)
+   - 工作流程可视化
 
-### 🤖 多智能体协调工作
-- [ ] 智能体通信机制
+### 🤖 多智能体协调工作 
+- [√ ] 智能体通信机制 (持续更新中)
   - 消息传递
   - 错误纠正
   - 优化性能
