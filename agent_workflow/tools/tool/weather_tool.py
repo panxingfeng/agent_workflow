@@ -1,27 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@file: weather_tool.py
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2024-11-23
-@version: 1.0.0
+@date: 2025-1-11
+@version: 2.0.0
 @license: MIT License
-
-@description:
-天气查询工具
-
-主要功能：
-1. 基于高德地图API实现天气查询
-2. 支持省市区三级行政区划查询
-3. 智能地区名称识别和匹配
-4. 结果格式化展示
-
-技术特点：
-1. 多级行政区划支持
-2. 模糊匹配和复合地址解析
-3. 完整的错误处理机制
-4. 自定义输出格式化
-
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
@@ -140,16 +123,6 @@ class WeatherTool(BaseTool):
         }
         return json.dumps(tool_info, ensure_ascii=False)
 
-    def get_parameter_rules(self) -> str:
-        """返回天气工具的参数设置规则"""
-        rules = """
-        WeatherTool 需要设置:
-        - location: 从用户查询中提取城市名称
-          - 示例输入: "武汉今天天气怎么样？"
-          - 参数设置: {"location": "武汉"}
-          - 规则: 提取查询中的城市名，包括可能的区县名
-        """
-        return rules
 
     def _init_region_lookup(self, file_path: str) -> None:
         """

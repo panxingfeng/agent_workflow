@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@file: comfyui_api.py
+@files: comfyui_api.py
 @author: PanXingFeng
 @contact: 1115005803@qq.com、canomiguelittle@gmail.com
 @date: 2024-12-22
@@ -47,7 +47,7 @@ import threading
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
 from agent_workflow.utils.loading import LoadingIndicator
-from config.config import COMFYUI_MODEL_PATH
+from config.config import COMFYUI_MODEL_PATH, COMFYUI_PATH
 
 
 class ComfyuiAPI:
@@ -381,7 +381,7 @@ class ComfyuiAPI:
 
         return True
 
-    def get_models(self, models_dir: str = COMFYUI_MODEL_PATH) -> list:
+    def get_models(self, models_dir: str = os.path.join(COMFYUI_PATH, COMFYUI_MODEL_PATH)) -> list:
         """遍历指定目录下的模型文件"""
         model_files = []
         if os.path.exists(models_dir):
@@ -508,3 +508,4 @@ class ComfyuiAPI:
 
         except Exception:
             return None
+

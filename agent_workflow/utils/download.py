@@ -26,15 +26,15 @@ def download_image(url, save_directory=None):
         if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')):
             # 根据响应头的Content-Type字段来确定图像类型
             content_type = response.headers.get('Content-Type', '')
-            if 'image/png' in content_type:
+            if 'images/png' in content_type:
                 file_name += '.png'
-            elif 'image/jpeg' in content_type or 'image/jpg' in content_type:
+            elif 'images/jpeg' in content_type or 'images/jpg' in content_type:
                 file_name += '.jpg'
-            elif 'image/gif' in content_type:
+            elif 'images/gif' in content_type:
                 file_name += '.gif'
-            elif 'image/bmp' in content_type:
+            elif 'images/bmp' in content_type:
                 file_name += '.bmp'
-            elif 'image/webp' in content_type:
+            elif 'images/webp' in content_type:
                 file_name += '.webp'
             else:
                 # 如果无法确定类型，默认使用.png扩展名

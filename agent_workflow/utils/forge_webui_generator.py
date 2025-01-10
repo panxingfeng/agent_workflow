@@ -153,10 +153,10 @@ class ForgeImageGenerator:
     def wait_and_save_image(self, base_path):
         wait = WebDriverWait(self.driver, 300)
 
-        img_path = os.path.join(base_path, "output/image")
+        img_path = os.path.join(base_path, "output/images")
         os.makedirs(img_path, exist_ok=True)
 
-        img = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'img[data-testid="detailed-image"]')))
+        img = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'img[data-testid="detailed-images"]')))
         img_url = img.get_attribute('src')
         info_text = self.driver.find_element(By.CSS_SELECTOR, 'div#html_info_txt2img').text
         filename = img_url.split('/')[-1]

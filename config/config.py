@@ -11,6 +11,7 @@ CHATGPT_DATA = {
 OLLAMA_DATA = {
     'use': True,
     'model': 'qwen2.5',  # ollama运行的模型名称
+    'inference_model': 'qwen2.5',
     'code_model': 'qwen2.5',
     'embedding_model': 'bge-m3',
     'key': 'EMPTY',
@@ -55,10 +56,10 @@ REDIS_DATA = {
 
 # 微信中的文件保存到本地的地址信息#
 DOWNLOAD_ADDRESS = {
-    'file': 'D:\\xxxx\\file',
+    'files': 'D:\\xxxx\\files',
     'vidio': 'D:\\xxxx\\vidio',
     'audio': 'D:\\xxxx\\audio',
-    'image': 'D:\\xxxx\\image'
+    'images': 'D:\\xxxx\\images'
 }
 
 # 登录微信的基本信息
@@ -70,7 +71,7 @@ LOGIN_WECHAT_DATA = {
 #########################################  feishu信息  #########################################
 
 FEISHU_DATA = {
-    "name": "智能体机器人", # 机器人界面显示的名字
+    "name": "智能体机器人",  # 机器人界面显示的名字
     "app_id": "",  # 应用凭证中的App ID
     "app_secret": "",  # 应用凭证中的App Secret
     "encrypt_key": "",  # 自建应用中的“事件与回调”下的加密策略中的Encrypt Key
@@ -79,11 +80,11 @@ FEISHU_DATA = {
 
 #########################################  工具API信息  #########################################
 
-GAODE_WEATHER_API_KEY = ""
+GAODE_WEATHER_API_KEY = "" # 高德天气API
 
 # sdwebui的api账户信息
-FORGE_SDWEBUI_USERNAME="" # 模型包中的forge.exe启动器中的点开“高级选项”->“登录凭证管理”->“API鉴权-管理API 账号和密码”设置以后填入此处即可
-FORGE_SDWEBUI_PASSWORD=""
+FORGE_SDWEBUI_USERNAME = "*******"  # 模型包中的forge.exe启动器中的点开“高级选项”->“登录凭证管理”->“API鉴权-管理API 账号和密码”设置以后填入此处即可
+FORGE_SDWEBUI_PASSWORD = "*******"
 
 # 生图质量词
 QUALITY_PROMPTS = """masterpiece, best quality, highly detailed, 8k uhd, perfect composition, professional lighting, high quality, ultra-detailed, sharp focus, high resolution, detailed, award winning, stunning, breathtaking, remarkable, beautiful, intricate details, ultra realistic, photorealistic quality, cinematic lighting, dramatic lighting, excellent composition"""
@@ -92,9 +93,6 @@ NEGATIVE_PROMPTS = "nsfw,"
 
 # forge-sdwebui的端口信息
 FORGE_SDWEBUI_PORT = 7862
-
-# sdwebui的端口信息
-SDWEBUI_PORT = 7865
 
 # F5-TTS端口信息
 F5_TTS_PORT = 7860
@@ -105,13 +103,23 @@ GPT_SoVITS_PORT = 5000
 # comfyui的端口信息
 COMFYUI_PORT = 8188
 
-COMFYUI_MODEL_PATH = "x://xxxx//models//checkpoints" # 带有checkpoints的路径
+# 前端ui的端口信息
+UI_HOST = "localhost"
+UI_PORT = 8000
+# UI_PORT可以根据内网穿透指定的端口设置，
+# 例如，指定的网址是：http://xxx.xxx.xx 内网穿透软件将本地的8000端口开放到http://xxx.xxx.xx使用 LOCAL_PORT_ADDRESS=http://xxx.xxx.xx
+# 默认：http://localhost:8000
+LOCAL_PORT_ADDRESS = "http://localhost:8000"
+
+COMFYUI_PATH = "D:\BaiduNetdiskDownload\ComfyUI-aki-v1.4"  # comfyui文件的路径地址
+
+COMFYUI_MODEL_PATH = "models\checkpoints" # 不需要修改
 
 # forge默认模型
-FORGE_MODEL = "F.1基础算法" # 不用包含.safetensors
+FORGE_MODEL = "xxxxx"  # 不用包含.safetensors
 
 # comfyui默认模型
-COMFYUI_MODEL = "dreamshaper.safetensors" # 包含.safetensors
+COMFYUI_MODEL = "dreamshaper.safetensors"  # 包含.safetensors
 
 #########################################  其他信息  #########################################
 

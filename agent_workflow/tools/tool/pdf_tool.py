@@ -1,25 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@file: pdf_tool.py
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2024-11-23
-@version: 1.0.0
+@date: 2025-1-11
+@version: 2.0.0
 @license: MIT License
-
-@description:
-文件格式转换工具类（FileConverterTool）
-
-主要功能：
-实现各种文件格式之间的转换，包括PDF、Word、Image等多种格式
-
-核心特性：
-1. 多格式支持：支持多种文件格式的互相转换
-2. 多引擎集成：集成LibreOffice、Unoconv、Pandoc等转换引擎
-3. 自动依赖处理：自动检测和安装必要的依赖
-4. 灵活配置：支持自定义输出和批量处理
-5. 错误处理：完善的异常捕获和错误恢复机制
-
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
@@ -119,6 +104,7 @@ class FileConverterTool(BaseTool):
             printInfo: 是否打印详细信息
         """
         self.upload_dir = "upload"
+        self.sub_upload_dir = os.path.join(self.upload_dir, "files")
         self.output_dir = "output"
         self.output_directory = output_directory
         self.printInfo = printInfo
@@ -133,6 +119,7 @@ class FileConverterTool(BaseTool):
             self._download_poppler()
 
         self.register_fonts()
+
 
     def get_description(self) -> str:
         tool_info = {
@@ -163,21 +150,6 @@ class FileConverterTool(BaseTool):
         }
         return json.dumps(tool_info, ensure_ascii=False)
 
-    def get_parameter_rules(self) -> str:
-        """返回文件转换工具的参数设置规则"""
-        rules = """
-       FileConverterTool 需要设置:
-       - conversion_type: 从用户查询中提取转换类型
-         - 示例输入: "把这个PDF转成Word"
-         - 参数设置: {"conversion_type": "pdf_to_word"}
-         - 规则: 从用户描述中匹配转换类型,可选值包括 url_to_pdf、pdf_to_word、pdf_to_text等
-
-       - input_path: 从用户提供的文件路径或URL中提取
-         - 示例输入: "把test.pdf转成Word" 
-         - 参数设置: {"input_path": "test.pdf"}
-         - 规则: 提取用户消息中的文件名、路径或URL
-       """
-        return rules
 
     def register_fonts(self):
         """
@@ -209,7 +181,7 @@ class FileConverterTool(BaseTool):
                     except:
                         continue
         except:
-            pass  # 如果注册失败，使用默认字体
+            pass
 
 
     def _ensure_directories(self):
@@ -230,6 +202,7 @@ class FileConverterTool(BaseTool):
                 os.makedirs(directory)
                 print(f"Created directory: {directory}")
 
+
     def _check_poppler(self) -> bool:
         """
         检查Poppler是否已正确安装
@@ -245,6 +218,7 @@ class FileConverterTool(BaseTool):
         required_files = ['pdfinfo.exe', 'pdftocairo.exe']
         return all(os.path.exists(os.path.join(self.poppler_path, file))
                    for file in required_files)
+
 
     def _download_poppler(self):
         """
@@ -293,12 +267,14 @@ class FileConverterTool(BaseTool):
             print("Please download manually from: https://github.com/oschwartz10612/poppler-windows/releases")
             print(f"And extract to: {self.poppler_path}")
 
+
     def _generate_output_path(self, prefix: str, extension: str) -> str:
         """生成输出文件路径"""
         from datetime import datetime
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{prefix}_{timestamp}.{extension}"
         return os.path.join(self.output_dir, filename)
+
 
     def convert_with_libreoffice(self, input_file: str, output_file: str) -> bool:
         """
@@ -359,6 +335,7 @@ class FileConverterTool(BaseTool):
             print(f"LibreOffice conversion failed: {str(e)}")
             return False
 
+
     def convert_with_unoconv(self, input_file: str, output_file: str) -> bool:
         """
         使用Unoconv进行文件转换
@@ -384,6 +361,7 @@ class FileConverterTool(BaseTool):
             print(f"Unoconv conversion failed: {str(e)}")
             return False
 
+
     def convert_with_pandoc(self, input_file: str, output_file: str) -> bool:
         """
         使用Pandoc进行文件转换
@@ -408,6 +386,7 @@ class FileConverterTool(BaseTool):
         except Exception as e:
             print(f"Pandoc conversion failed: {str(e)}")
             return False
+
 
     @staticmethod
     def get_system_info() -> dict:
@@ -457,6 +436,7 @@ class FileConverterTool(BaseTool):
                 pass
 
         return info
+
 
     def pdf_to_pdfa(self, pdf_path: str) -> Optional[str]:
         """
@@ -508,6 +488,7 @@ class FileConverterTool(BaseTool):
         except Exception as e:
             print(f"Failed to convert PDF to PDF/A: {str(e)}")
             return None
+
 
     async def url_to_pdf(self, url: str) -> Optional[str]:
         """
@@ -591,6 +572,7 @@ class FileConverterTool(BaseTool):
             print(f"Detailed error: {traceback.format_exc()}")
             return None
 
+
     async def pdf_to_word(self, pdf_path: str, output_format: str = 'docx') -> Optional[str]:
         """
         将PDF转换为Word文档
@@ -608,20 +590,25 @@ class FileConverterTool(BaseTool):
             import os
 
             full_path = os.path.join(os.getcwd(), self.upload_dir, pdf_path)
+            if os.path.exists(full_path):
+                full_path = full_path
+            else:
+                full_path = os.path.join(os.getcwd(), self.sub_upload_dir, pdf_path)
+
             # 规范化路径（处理斜杠/反斜杠）
-            full_pdf_path = os.path.normpath(full_path)
+            full_file_path = os.path.normpath(full_path)
 
             # 验证文件是否存在
-            if not os.path.exists(full_pdf_path):
+            if not os.path.exists(full_file_path):
                 # 列出upload目录中的所有文件
-                upload_dir = os.path.join(os.getcwd(), 'upload')
+                upload_dir = os.path.join(os.getcwd(), self.sub_upload_dir)
                 if os.path.exists(upload_dir):
                     files = os.listdir(upload_dir)
                     print(f"Upload目录中的文件: {files}")
-                raise FileNotFoundError(f"PDF文件未找到: {full_pdf_path}")
+                raise FileNotFoundError(f"文件未找到: {full_file_path}")
 
-            if os.path.getsize(full_pdf_path) == 0:
-                raise ValueError(f"PDF文件为空: {full_pdf_path}")
+            if os.path.getsize(full_file_path) == 0:
+                raise ValueError(f"PDF文件为空: {full_file_path}")
 
             # 确保output目录存在
             output_dir = os.path.join(os.getcwd(), self.output_dir)
@@ -631,7 +618,7 @@ class FileConverterTool(BaseTool):
             output_path = self._generate_output_path("converted", output_format)
 
             # 创建转换器对象
-            cv = Converter(full_pdf_path)
+            cv = Converter(full_file_path)
 
             try:
                 # 执行转换
@@ -662,6 +649,7 @@ class FileConverterTool(BaseTool):
             print(f"Detailed error: {traceback.format_exc()}")
             return None
 
+
     async def pdf_to_text(self, pdf_path: str) -> Optional[str]:
         """
         将PDF转换为文本文件
@@ -685,19 +673,26 @@ class FileConverterTool(BaseTool):
             # 生成输出路径
             output_path = self._generate_output_path("converted", "txt")
 
+            full_path = os.path.join(os.getcwd(), self.upload_dir, pdf_path)
+            if os.path.exists(full_path):
+                full_path = os.path.join(self.upload_dir, pdf_path)
+            else:
+                full_path = os.path.join(self.sub_upload_dir, pdf_path)
+
             # 在线程池中执行PDF转换
-            text = await asyncio.to_thread(pymupdf4llm.to_markdown, self.upload_dir + "/" +pdf_path)
+            text = await asyncio.to_thread(pymupdf4llm.to_markdown, full_path)
 
             # 异步写入文件
             async with aiofiles.open(output_path, 'w', encoding='utf-8') as f:
                 await f.write(text)
 
-            outputData(f"Text file saved to: {output_path}", self.printInfo)
+            outputData(f"Text files saved to: {output_path}", self.printInfo)
             return output_path
 
         except Exception as e:
             print(f"PDF to text conversion failed: {str(e)}")
             return None
+
 
     def pdf_to_presentation(self, pdf_path: str, output_format: str = 'pptx') -> Optional[str]:
         """
@@ -732,9 +727,15 @@ class FileConverterTool(BaseTool):
             # 初始化PPT文档
             prs = Presentation()
 
+            full_path = os.path.join(os.getcwd(), self.upload_dir, pdf_path)
+            if os.path.exists(full_path):
+                full_path = os.path.join(self.upload_dir, pdf_path)
+            else:
+                full_path = os.path.join(self.sub_upload_dir, pdf_path)
+
             # 将PDF页面转换为高质量图片（300dpi）
             images = convert_from_path(
-                self.upload_dir + "/" +pdf_path,
+                full_path,
                 dpi=300,
                 poppler_path=poppler_path
             )
@@ -819,6 +820,10 @@ class FileConverterTool(BaseTool):
 
             # 构建完整的PDF路径
             full_path = os.path.join(os.getcwd(), self.upload_dir, pdf_path)
+            if os.path.exists(full_path):
+                full_path = os.path.join(self.upload_dir, pdf_path)
+            else:
+                full_path = os.path.join(self.sub_upload_dir, pdf_path)
             # 规范化路径（处理斜杠/反斜杠）
             full_pdf_path = os.path.normpath(full_path)
 
@@ -867,6 +872,7 @@ class FileConverterTool(BaseTool):
             print(f"Detailed error: {traceback.format_exc()}")
             return None
 
+
     def pdf_to_markdown(self, pdf_path: str, output_dir: str = "output"):
         """
         将PDF转换为Markdown格式
@@ -889,6 +895,10 @@ class FileConverterTool(BaseTool):
             from pathlib import Path
 
             full_path = os.path.join(os.getcwd(), self.upload_dir, pdf_path)
+            if os.path.exists(full_path):
+                full_path = os.path.join(self.upload_dir, pdf_path)
+            else:
+                full_path = os.path.join(self.sub_upload_dir, pdf_path)
             # 规范化路径（处理斜杠/反斜杠）
             full_pdf_path = os.path.normpath(full_path)
             # 转换内容
@@ -898,12 +908,13 @@ class FileConverterTool(BaseTool):
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(text)
 
-            outputData(f"Markdown file saved to: {output_path}", self.printInfo)
+            outputData(f"Markdown files saved to: {output_path}", self.printInfo)
             return output_path
 
         except Exception as e:
             print(f"PDF to Markdown conversion failed: {str(e)}")
             return None
+
 
     def markdown_to_pdf(self, markdown_path: str) -> Optional[str]:
         """
@@ -935,6 +946,10 @@ class FileConverterTool(BaseTool):
             config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
             output_path = self._generate_output_path("converted", "pdf")
             full_path = os.path.join(os.getcwd(), self.upload_dir, markdown_path)
+            if os.path.exists(full_path):
+                full_path = os.path.join(self.upload_dir, markdown_path)
+            else:
+                full_path = os.path.join(self.sub_upload_dir, markdown_path)
             # 规范化路径（处理斜杠/反斜杠）
             full_md_path = os.path.normpath(full_path)
             # 读取和转换Markdown
@@ -972,7 +987,7 @@ class FileConverterTool(BaseTool):
 
             # 配置PDF生成选项
             options = {
-                'enable-local-file-access': True,
+                'enable-local-files-access': True,
                 'no-stop-slow-scripts': True,
             }
 
@@ -988,6 +1003,7 @@ class FileConverterTool(BaseTool):
         except Exception as e:
             print(f"Markdown to PDF conversion failed: {str(e)}")
             return None
+
 
     def file_to_pdf(self, file_path: str) -> Optional[str]:
         """
@@ -1007,6 +1023,10 @@ class FileConverterTool(BaseTool):
         """
         try:
             full_path = os.path.join(os.getcwd(), self.upload_dir, file_path)
+            if os.path.exists(full_path):
+                full_path = os.path.join(self.upload_dir, file_path)
+            else:
+                full_path = os.path.join(self.sub_upload_dir, file_path)
             # 规范化路径（处理斜杠/反斜杠）
             full_file_path = os.path.normpath(full_path)
             output_path = self._generate_output_path("converted", "pdf")
@@ -1039,6 +1059,7 @@ class FileConverterTool(BaseTool):
             print(f"File to PDF conversion failed: {str(e)}")
             print(f"Detailed error: {traceback.format_exc()}")
             return None
+
 
     async def run(self, **kwargs) -> str:
         """

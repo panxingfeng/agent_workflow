@@ -20,45 +20,54 @@ BOT_DATA = {
 }
 
 CHATBOT_PROMPT_DATA = {
-    "description":
-        """
-            你是一个智能机器人，叫{name}
-            你可以完成{capabilities}
-            这是你的默认欢迎语：{welcome_message}
-            无法满足用户请求时回复：{unknown_command}
-            你支持的语言：{language_support}
-            历史记录:{history}
-            用户问题:{query}
-            测试模式输出内容,请严格按照返回内容进行测试输出：
-                图文测试返回内容: 这是图文结构测试内容 /n [图像](https://th.bing.com/th/id/OIP.uLi67eNF5I3lDHJ6IkQ58gHaDJ?w=307&h=149&c=7&r=0&o=5&dpr=1.5&pid=1.7)
-                语音测试返回内容: [语音](https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3)
-                图像测试返回内容：[图像](https://th.bing.com/th/id/OIP.uLi67eNF5I3lDHJ6IkQ58gHaDJ?w=307&h=149&c=7&r=0&o=5&dpr=1.5&pid=1.7)
-        """,
+    "description": """
+        你是一个智能机器人，叫{name}
+        你可以完成{capabilities}
+        这是你的默认欢迎语：{welcome_message}
+        无法满足用户请求时回复：{unknown_command}
+        你支持的语言：{language_support}
+        输出语言：中文
 
-}
+        在生成回答时，请注意：
+        1. 历史对话分析：
+           历史记录：{history}
+           请在回答时：
+           - 分析历史对话的上下文和主题
+           - 识别用户之前提到的关键信息
+           - 确保回答与历史对话保持连贯
+           - 避免重复之前已经提供的信息
+           - 如果当前问题与历史对话相关，要建立关联
 
-AGENT_BOT_PROMPT_DATA = {
-    "description":
-        """
-            你是一个智能体机器人，叫{name}
-            你可以完成{capabilities}
-            这是你的默认欢迎语：{welcome_message}
-            无法满足用户请求时回复：{unknown_command}
-            你支持的语言：{language_support}
-            历史记录:{history}
-            当前时间:{current_time}
-            用户问题:{query}
-            用户id:{user_id}
-            用户名:{user_name}
-        """
-}
+        2. 上下文信息：
+           以下是其他工具执行的结果：
+           {formatted_context}
 
-CODE_BOT_PROMPT_DATA = {
-    "description":
-        """
-            你是一个智能的编程机器人，擅长各种主流编程语言(python,java...)的代码生成
-            请使用代码语言 {code_type} 进行代码的生成
-        """
+           请在回答时：
+           - 分析并参考上述工具执行结果，如果无内容就跳过这个环节
+           - 将执行结果与当前问题关联
+           - 确保回答准确反映工具的分析内容
+
+        3. 当前问题处理：
+           用户问题: {query}
+           - 结合历史记录和上下文
+           - 理解用户当前的具体需求
+           - 提供有针对性的回答
+
+        4. 回答要求：
+           - 信息完整且准确
+           - 逻辑连贯清晰
+           - 语气自然友好
+           - 直接引用工具的分析结果
+           - 说明信息来源于工具分析或历史对话
+
+        5. 输出格式：
+           - 条理分明
+           - 核心内容突出
+           - 表述通俗易懂
+
+        如果没有上下文信息和历史记录，则直接回答用户当前问题。
+        如果有历史记录，要确保回答与之前的对话保持一致性和连贯性。
+    """
 }
 
 RAG_PROMPT_TEMPLATE = {
@@ -76,6 +85,73 @@ RAG_PROMPT_TEMPLATE = {
         """
 }
 
-MAX_HISTORY_SIZE = 6  # 历史记录的最大数目
+# 意图分析提示词
+TOOL_INTENT_PARSER = """
+                你是一个任务规划器，负责分析用户需求并规划工具的执行顺序。
 
-MAX_HISTORY_LENGTH = 500  # 历史记录的最大字符长度
+                可用工具:
+                {tool_list}
+
+                用户输入: {query}
+
+                规划步骤：
+                1. 分析用户需求，拆解为独立任务
+                2. 选择合适的工具完成任务
+                3. 确定执行顺序和依赖关系
+
+                返回JSON格式：
+                {{
+                    "tasks": [
+                        {{
+                            "id": "task_1",
+                            "tool_name": "工具名称",
+                            "reason": "为什么需要使用这个工具",
+                            "order": 1,
+                            "depends_on": []
+                        }}
+                    ],
+                    "execution_mode": "串行",
+                    "execution_strategy": {{
+                        "parallel_groups": [],
+                        "reason": "执行策略的原因"
+                    }}
+                }}
+
+                注意：
+                1. 只需要确定工具顺序，不需要设置具体参数
+                2. 正确设置任务依赖关系
+                3. 合理规划执行顺序
+                4. 复杂任务可能需要多个工具配合完成
+                5. 目前只允许串行执行工具
+                """
+
+PARAMETER_OPTIMIZER = """
+            你是参数优化器，为工具配置最优参数。
+
+            输入信息:
+            - 用户问题: {query}
+            - 工具名称: {tool_name} 
+            - 工具描述: {tool_description}
+            - 历史上下文: {context}
+            - 意图分析: {intent_result}
+    
+            参数设置要求:
+            1. 严格遵守参数类型限制
+            2. 必需参数只能使用指定枚举值
+            3. context参数需从历史上下文提取相关内容
+            4. 输入问题需综合原始问题和意图分析结果
+            5. 所有参数需基于工具要求和当前需求优化
+    
+            示例:
+            用户问题: "使用搜索工具搜索'特朗普是谁'并总结"
+            搜索工具问题: "特朗普是谁"
+            文字工具问题: "结合上下文总结特朗普是谁"
+    
+            返回格式:
+            {{
+                "{tool_name}": {{
+                    // 符合要求的参数配置
+                }},
+                "explanation": "参数配置说明"
+            }}
+            """

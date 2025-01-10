@@ -1,0 +1,699 @@
+## 1. 日式动漫风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),anime style,japanese animation,(clean line art:1.2),vibrant colors,smooth shading,big expressive eyes,detailed hair,dramatic lighting,dynamic pose,manga influence,cel shading,bold outlines,professional illustration,studio quality
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),skin spots,acnes,skin blemishes,age spot,mutated hands,mutated fingers,deformed,bad anatomy,disfigured,poorly drawn face,extra limb,ugly,poorly drawn hands,missing limb,floating limbs,disconnected limbs,out of focus,long neck,long body,extra fingers,fewer fingers,bad hands,signature,username,bad feet,blurry,bad body
+
+## 2. 中国水墨画风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),traditional chinese ink painting,brush strokes,(flowing ink:1.2),minimal color palette,misty mountains,zen atmosphere,negative space,bamboo elements,calligraphy influence,traditional composition,landscape painting,atmospheric perspective,rice paper texture
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),vibrant colors,western art style,modern elements,digital effects
+
+## 3. 复古电影风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),(vintage film grain:1.2),cinematic lighting,muted colors,70s aesthetic,film photography,analog effects,soft focus,vignette effect,retro color grading,classic hollywood style,dramatic shadows,nostalgic atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),digital artifacts,modern elements,sharp digital clarity
+
+## 4. 梦幻童话插画风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),whimsical illustration,children book style,(soft colors:1.2),cute characters,magical elements,storybook aesthetic,detailed backgrounds,gentle lighting,playful composition,fantasy creatures,rounded shapes,cheerful atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),dark themes,horror elements,realistic style,gritty textures
+
+## 5. 未来科技风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-deailed,(realistic,photorealistic,photo-realistic:1.37),futuristic design,advanced technology,(glowing elements:1.2),holographic interfaces,clean geometric shapes,metallic surfaces,sci-fi atmosphere,blue accent lighting,floating displays,minimal design,high tech materials,glossy reflections
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),vintage elements,organic textures,traditional designs
+
+## 6. 油画肖像风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),oil painting portrait,(thick oil paint:1.2),classical composition,rich color palette,visible brushstrokes,dramatic lighting,detailed facial features,beautiful detailed eyes,elegant pose,gallery quality,professional color grading,traditional canvas texture
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),skin spots,acnes,skin blemishes,age spot,mutated hands,mutated fingers,deformed,bad anatomy,disfigured,poorly drawn face,extra limb,ugly,poorly drawn hands,missing limb,floating limbs,disconnected limbs
+
+## 7. 现代街头艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),urban street art,(graffiti elements:1.2),spray paint texture,bold colors,geometric patterns,contemporary style,concrete wall texture,urban decay,vibrant contrast,street culture influence,modern art composition,dynamic design
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),classical art style,traditional painting,subtle colors
+
+## 8. 极简主义风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),minimalist design,(clean composition:1.2),simple shapes,negative space,monochromatic scheme,geometric harmony,subtle gradients,basic elements,architectural influence,modern aesthetic,precise lines,balanced composition
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),busy patterns,complex textures,cluttered composition
+
+## 9. 蒸汽波艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),vaporwave aesthetic,(retro electronics:1.2),glitch effects,pink and blue gradient,ancient greek statues,palm trees,grid patterns,90s computer graphics,nostalgic elements,digital sunset,glowing neon,synthwave influence
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),realistic style,natural colors,traditional art
+
+## 10. 写实自然风光风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),landscape photography,(golden hour lighting:1.2),natural scenery,atmospheric perspective,detailed foliage,environmental details,high dynamic range,depth of field,panoramic view,weather effects,seasonal beauty,professional color grading
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),artificial elements,urban settings,digital art style
+
+## 11. 解构主义艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),deconstructed forms,(fragmented shapes:1.2),abstract composition,geometric chaos,overlapping elements,dynamic angles,bold lines,modernist influence,architectural elements,dramatic contrast,complex spatial relationships
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),traditional composition,realistic representation,symmetrical design
+
+## 12. 科幻机械风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),mechanical design,(detailed machinery:1.2),cybernetic components,metallic textures,tech interface,glowing energy elements,industrial aesthetic,carbon fiber patterns,hydraulic systems,robotic parts,engineering details
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),organic shapes,natural elements,soft textures
+
+## 13. 古典静物风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),classical still life,(dramatic lighting:1.2),rich textures,detailed fabric folds,antique objects,fruit arrangement,dark background,chiaroscuro effect,realistic reflections,traditional composition,oil painting technique
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern elements,abstract style,bright colors
+
+## 14. 哥特式黑暗风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),gothic architecture,(dark atmosphere:1.2),ornate details,pointed arches,stained glass windows,dramatic shadows,medieval aesthetic,stone textures,gargoyles,mystical atmosphere,candlelight,religious motifs
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern elements,bright colors,minimalist style
+
+## 15. 印象派风景风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),impressionist landscape,(loose brushstrokes:1.2),natural light effects,vibrant color palette,outdoor scene,atmospheric perspective,broken color technique,light reflection,dancing shadows,plein air painting style,textured canvas
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),sharp details,photorealistic style,digital art
+
+## 16. 波普艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),pop art style,(bright colors:1.2),halftone dots,comic book effects,bold outlines,commercial art influence,mass media elements,repeated patterns,advertising style,contemporary culture,high contrast colors
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),subtle colors,realistic style,classical art
+
+## 17. 星空夜景风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),night sky photography,(starry night:1.2),milky way,cosmic clouds,moonlight,landscape silhouette,long exposure effect,celestial bodies,dark blue palette,astronomical elements,mountain landscape
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),daylight scenes,urban elements,cloudy sky
+
+## 18. 彩色铅笔插画风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),colored pencil illustration,(hand drawn:1.2),textured paper,soft shading,delicate lines,gentle colors,artistic sketch,detailed rendering,traditional media,subtle color blending,illustration style
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),digital effects,harsh colors,photorealistic style
+
+## 19. 工业设计风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),industrial design,(technical drawing:1.2),blueprint style,mechanical details,precise measurements,product visualization,clean lines,3D modeling,engineering aesthetic,functional design,professional presentation
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),artistic flourishes,organic shapes,abstract elements
+
+## 20. 热带水彩风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),tropical watercolor,(vibrant flora:1.2),exotic flowers,palm leaves,paradise birds,wet in wet technique,flowing pigments,botanical illustration,bright colors,nature study,summer atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),winter scenes,urban settings,dark colors
+
+## 21. 像素艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),pixel art style,(8-bit aesthetic:1.2),retro gaming,limited color palette,blocky shapes,vintage game graphics,crisp pixels,nostalgic gaming,character sprites,simple backgrounds,classic arcade style
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),realistic details,smooth gradients,photorealistic elements
+
+## 22. 蒸汽朋克风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),steampunk aesthetic,(brass machinery:1.2),victorian elements,gears and clockwork,steam engines,copper and bronze,industrial revolution,vintage scientific,mechanical complexity,leather and metal,antique technology
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern technology,plastic materials,digital elements
+
+## 23. 古典东方水墨人物
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),chinese ink painting,(traditional portraiture:1.2),flowing robes,elegant poses,classical composition,minimal color palette,brush stroke techniques,ancient chinese style,ethereal atmosphere,scholarly elements,delicate details
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern clothing,western style,bright colors,skin spots,acnes,skin blemishes,poorly drawn face
+
+## 24. 航空摄影风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),aerial photography,(birds eye view:1.2),landscape patterns,geometric shapes,natural textures,high altitude perspective,cloud formations,environmental photography,vast landscapes,atmospheric depth,professional color grading
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),ground level view,indoor scenes,blurry details
+
+## 25. 新艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),art nouveau style,(organic patterns:1.2),flowing lines,decorative elements,floral motifs,ornate frames,feminine figures,natural forms,detailed ornamentation,pastel colors,elegant composition
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),geometric patterns,minimalist style,harsh lines
+
+## 26. 深海生物风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),deep sea creatures,(bioluminescence:1.2),underwater atmosphere,marine life,dark ocean background,mysterious lighting,floating particles,organic forms,tentacles and fins,iridescent effects,aquatic details
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),land animals,bright daylight,dry textures
+
+## 27. 建筑渲染风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),architectural visualization,(modern buildings:1.2),clean lines,professional rendering,environmental context,realistic materials,dramatic lighting,perspective accuracy,detailed textures,glass reflections,contemporary design
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),sketchy style,abstract forms,incomplete structures
+
+## 28. 波西米亚风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),bohemian style,(rich patterns:1.2),eclectic mix,textile textures,warm colors,layered elements,ethnic influences,vintage accessories,natural materials,artistic lifestyle,free-spirited aesthetic
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),minimalist design,corporate style,modern simplicity
+
+## 29. 超现实主义风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),surrealist art,(dream-like elements:1.2),impossible physics,floating objects,metaphysical imagery,psychological symbols,melting forms,juxtaposed elements,dramatic shadows,mysterious atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),realistic scenes,ordinary perspective,normal physics
+
+## 30. 科幻太空风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),space scene,(cosmic vista:1.2),nebula clouds,distant planets,starship design,space station,stellar phenomena,zero gravity,advanced technology,deep space,alien worlds,galaxy clusters
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),earth scenes,atmospheric effects,terrestrial landscapes
+
+## 31. 巴洛克艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),baroque style,(dramatic lighting:1.2),ornate details,rich colors,grand architecture,religious themes,elaborate costumes,dynamic composition,emotional expression,classical elements,gold accents
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),minimalist style,modern elements,simple design
+
+## 32. 未来主义城市风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),futuristic cityscape,(vertical architecture:1.2),flying vehicles,holographic advertisements,clean energy technology,advanced infrastructure,geometric buildings,glass and steel,environmental integration,smart city elements
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),historic architecture,vintage elements,rural scenes
+
+## 33. 古埃及艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),ancient egyptian art,(hieroglyphic details:1.2),temple architecture,desert landscape,pharaonic symbols,golden artifacts,ritual scenes,papyrus texture,traditional patterns,sacred geometry
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern elements,contemporary style,urban scenes
+
+## 34. 抽象表现主义风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),abstract expressionism,(emotional brushwork:1.2),dynamic movement,color field,spontaneous expression,paint splatters,gestural marks,intense colors,large scale composition,artistic freedom
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),realistic representation,precise lines,photographic style
+
+## 35. 玻璃艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),glass art,(translucent effects:1.2),light refraction,colored glass,blown glass forms,crystal clarity,smooth surfaces,liquid-like shapes,iridescent qualities,delicate details
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),opaque materials,rough textures,matte surfaces
+
+## 36. 童话书插画风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),children book illustration,(whimsical characters:1.2),magical scenes,soft colors,storybook style,playful elements,fantasy creatures,childhood wonder,gentle lighting,detailed backgrounds
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),dark themes,horror elements,realistic gore,adult content
+
+## 37. 现代极简主义风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),minimalist design,(clean lines:1.2),simple geometry,limited color palette,negative space,essential elements,balanced composition,architectural influence,modern aesthetic,subtle textures
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),ornate details,busy patterns,complex designs
+
+## 38. 电影海报风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),movie poster design,(dramatic composition:1.2),cinematic lighting,title typography,hero shot,professional color grading,marketing aesthetic,emotional impact,high contrast,studio quality
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),amateur photography,casual snapshots,unprofessional layout
+
+## 39. 纸雕艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),paper art,(layered cutouts:1.2),depth effect,white paper texture,shadow play,clean edges,delicate details,3D paper sculpture,origami elements,minimal color palette
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),flat design,digital effects,painterly style
+
+## 40. 涂鸦街头风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),street graffiti,(urban art:1.2),spray paint texture,bold colors,wild style letters,urban decay,concrete texture,street culture,dynamic composition,raw artistic expression
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),classical art,formal design,corporate style
+
+## 41. 北欧简约风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),scandinavian design,(clean aesthetics:1.2),natural materials,light wood tones,functional beauty,minimal decoration,white spaces,geometric patterns,organic elements,comfortable atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),cluttered design,baroque style,excessive decoration
+
+## 42. 中世纪手稿风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),medieval manuscript,(illuminated letters:1.2),gold leaf details,ornate borders,religious imagery,calligraphy elements,aged parchment,detailed miniatures,rich colors,historical accuracy
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern design,digital effects,contemporary style
+
+## 43. 故障艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),glitch art,(digital distortion:1.2),corrupted data,pixel sorting,rgb split,electronic interference,technological decay,digital artifacts,abstract patterns,modern aesthetic
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),clean design,traditional art,natural elements
+
+## 44. 低多边形风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),low poly art,(geometric reduction:1.2),triangular faces,flat shading,sharp edges,modern minimalism,3D modeling style,simple color gradients,angular design,digital aesthetic
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),realistic details,smooth curves,photorealistic rendering
+
+## 45. 日式浮世绘风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),ukiyo-e style,(woodblock print:1.2),japanese art,traditional patterns,flat color areas,wave patterns,mount fuji,elegant lines,seasonal themes,cultural elements
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern art style,western influence,photorealistic elements
+
+## 46. 未来主义机械风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),futuristic mechanism,(biomechanical design:1.2),glossy metal surfaces,energy conduits,holographic interface,advanced robotics,chrome details,sci-fi technology,dynamic machinery,flowing energy
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),vintage machinery,steampunk elements,organic forms
+
+## 47. 彩色玻璃窗风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),stained glass design,(leaded glass:1.2),religious art,geometric patterns,cathedral windows,translucent colors,light streaming,mosaic effect,medieval style,sacred imagery
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern art,plain glass,minimalist design
+
+## 48. 热带雨林风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),rainforest scene,(lush vegetation:1.2),exotic flowers,dense foliage,morning mist,tropical birds,waterfall elements,sunbeams through canopy,vibrant wildlife,humid atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),desert scenes,urban environment,arctic landscape
+
+## 49. 艺术装置风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),art installation,(conceptual space:1.2),gallery setting,interactive elements,spatial design,artistic lighting,contemporary art,experimental medium,visitor perspective,museum quality
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),traditional painting,commercial art,amateur setup
+
+## 50. 复古波普风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),retro pop style,(vintage advertising:1.2),1950s aesthetic,commercial art,bold typography,comic book colors,halftone dots,americana influence,consumer culture,nostalgic elements
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern minimalism,subtle colors,realistic photography
+
+## 51. 古典雕塑风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),classical sculpture,(marble texture:1.2),greek statuary,heroic poses,drapery details,mythological themes,weathered stone,museum lighting,ancient art,perfect proportions
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern sculpture,abstract forms,casual poses
+
+## 52. 数字油画风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),digital oil painting,(textured brushwork:1.2),vibrant palette,artistic expression,canvas texture,color blending,dynamic composition,modern interpretation,painterly effect,studio quality
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),traditional oil painting,photorealistic style,flat digital art
+
+## 53. 神话传说风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),mythological scene,(legendary creatures:1.2),fantasy landscape,magical atmosphere,ancient legends,ethereal lighting,epic scale,dramatic composition,mystical elements,otherworldly
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern settings,realistic photography,urban scenes
+
+## 54. 烟雾艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),smoke art,(ethereal wisps:1.2),flowing forms,abstract patterns,dark background,mysterious atmosphere,dynamic movement,particle effects,atmospheric lighting,dreamy quality
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),solid shapes,sharp edges,harsh lighting
+
+## 55. 古代文明风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),ancient civilization,(architectural ruins:1.2),lost city,archaeological elements,weathered stone,historical artifacts,mystical symbols,desert landscape,dramatic lighting,cultural details
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern buildings,contemporary elements,urban scenes
+
+## 56. 闪光霓虹风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),neon art,(glowing lights:1.2),night scene,urban atmosphere,reflected lights,cyberpunk elements,rain effects,city nightlife,electric colors,metallic surfaces
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),daylight scenes,natural landscapes,pastel colors
+
+## 57. 复古游戏风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),retro gaming,(16-bit style:1.2),pixel characters,game interface,arcade aesthetic,classic video game,sprite animation,chiptune influence,nostalgic elements
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),photorealistic style,modern graphics,realistic rendering
+
+## 58. 魔幻森林风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),enchanted forest,(magical creatures:1.2),glowing mushrooms,mystical plants,fairy lights,ancient trees,magical mist,fantasy elements,ethereal atmosphere,woodland magic
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),urban settings,modern elements,realistic forest
+
+## 59. 工业朋克风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),industrial punk,(heavy machinery:1.2),rusty metal,steam elements,industrial wasteland,mechanical parts,dystopian atmosphere,factory setting,grunge aesthetic,dark mood
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),clean design,modern technology,natural elements
+
+## 60. 天体艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),celestial art,(space phenomena:1.2),galaxy clusters,cosmic dust,stellar formation,nebula colors,astronomical scale,deep space,star fields,cosmic rays
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),terrestrial scenes,earth landscapes,daylight settings
+
+## 61. 蝴蝶艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),butterfly art,(wing patterns:1.2),iridescent colors,delicate details,natural symmetry,floral elements,garden setting,soft lighting,floating movement,spring atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),harsh elements,industrial settings,dark themes
+
+## 62. 水晶艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),crystal art,(geometric facets:1.2),transparent surfaces,light refraction,prismatic colors,mineral formations,sharp edges,clarity,gemstone quality,natural formations
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),organic shapes,muddy colors,soft edges
+
+## 63. 古典素描风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),classical drawing,(pencil technique:1.2),detailed shading,anatomical study,precise lines,renaissance style,textured paper,artistic mastery,chiaroscuro effect,studio study
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),digital art,colored drawing,rough sketches
+
+## 64. 未来交通工具风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),future vehicle,(aerodynamic design:1.2),hovering technology,clean energy,streamlined form,advanced materials,glowing details,transparent cockpit,technological innovation,sleek finish
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),vintage vehicles,classic cars,traditional design
+
+## 65. 抽象几何风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),geometric abstraction,(mathematical patterns:1.2),pure forms,precise angles,color theory,spatial composition,minimal design,balanced shapes,clean lines,modern aesthetic
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),organic shapes,realistic elements,natural forms
+
+## 66. 海洋生物风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),marine life,(underwater scene:1.2),coral reefs,tropical fish,ocean currents,aquatic plants,filtered sunlight,bubbles effect,deep sea colors,wave motion
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),land animals,above water,dry environments
+
+## 67. 维多利亚时代风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),victorian era,(ornate details:1.2),period architecture,vintage fashion,elaborate decoration,classic portraiture,antique furniture,rich fabrics,formal gardens,gas lamp lighting
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern elements,contemporary style,minimalist design
+
+## 68. 折纸艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),origami art,(paper folds:1.2),geometric design,crisp edges,minimal color,japanese influence,clean lines,shadow play,precision craft,artistic arrangement
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),wrinkled paper,torn edges,messy composition
+
+## 69. 科幻生物风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),alien creature,(organic technology:1.2),bioluminescent features,otherworldly anatomy,evolutionary adaptation,unusual textures,extraterrestrial environment,strange coloration,hybrid forms
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),earth creatures,normal biology,common animals
+
+## 70. 霓虹复古波风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),synthwave art,(retro futurism:1.2),neon grid,sunset colors,chrome effects,80s aesthetic,digital horizon,perspective grid,retrowave style,purple glow
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),realistic photography,natural landscapes,daylight scenes
+
+## 71. 花卉植物风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),botanical illustration,(detailed flora:1.2),scientific accuracy,natural colors,leaf patterns,flower anatomy,garden composition,herbal study,delicate petals,soft lighting
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),abstract interpretation,artificial elements,urban scenes
+
+## 72. 魔法咒语风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),magical spells,(arcane symbols:1.2),glowing runes,mystic energy,floating elements,spell circles,ancient scripts,magical particles,ethereal light,mysterious atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern technology,scientific elements,realistic settings
+
+## 73. 城市建筑速写风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),urban sketching,(architectural drawing:1.2),line art style,perspective study,street scenes,building details,quick strokes,loose technique,city life,natural light
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),photorealistic rendering,digital art,perfect precision
+
+## 74. 分形艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),fractal art,(mathematical beauty:1.2),recursive patterns,infinite detail,kaleidoscopic design,digital complexity,geometric progression,vibrant colors,abstract formation
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),organic shapes,natural scenes,realistic elements
+
+## 75. 玩具艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),toy design,(plastic texture:1.2),miniature world,playful colors,smooth surfaces,childlike wonder,action figure style,collectible aesthetic,diorama setting
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),realistic scenes,serious mood,natural materials
+
+## 76. 古典音乐视觉风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),classical music visualization,(flowing notes:1.2),musical instruments,symphony elements,sheet music,harmonious composition,elegant movement,orchestral arrangement,artistic interpretation
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern music,electronic elements,pop culture
+
+## 77. 水下世界风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),underwater scene,(aquatic life:1.2),marine biology,water caustics,floating particles,submerged objects,oceanic colors,diving perspective,sea creatures,bubbles effect
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),above water,dry scenes,land animals
+
+## 78. 宇宙探索风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),space exploration,(astronaut perspective:1.2),distant planets,space station,cosmic phenomena,zero gravity,earth view,stars background,technological details,space suit
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),earth bound,terrestrial scenes,atmospheric effects
+
+## 79. 微观世界风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),microscopic view,(cellular detail:1.2),biological structures,molecular patterns,scientific visualization,organic forms,microscope perspective,laboratory aesthetic,cellular mechanisms
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),macro photography,large scale objects,visible world
+
+## 80. 时尚插画风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),fashion illustration,(elegant lines:1.2),haute couture,fabric texture,stylized figures,fashion poses,watercolor effects,minimal color palette,magazine aesthetic
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),casual style,realistic photography,unstylized figures
+
+## 81. 古埃及艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),ancient egyptian art,(hieroglyphic style:1.2),profile views,symbolic elements,golden ratio,temple paintings,sacred geometry,historical accuracy,desert colors
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern style,contemporary art,realistic rendering
+
+## 82. 动态漫画风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),comic book art,(action scene:1.2),motion lines,dramatic angles,bold outlines,superhero style,dynamic poses,speech bubbles,panel layout,intense colors
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),static poses,realistic style,photo elements
+
+## 83. 霜冻水晶风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),frost crystal,(ice formations:1.2),winter patterns,snowflake detail,frozen surfaces,cold atmosphere,crystalline structures,blue tones,natural geometry
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),warm colors,summer scenes,liquid water
+
+## 84. 现代建筑风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),modern architecture,(minimalist design:1.2),clean lines,glass facades,geometric shapes,urban setting,architectural photography,professional lighting,structural elements
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),classical architecture,ornate details,vintage style
+
+## 85. 万花筒艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),kaleidoscope art,(symmetrical patterns:1.2),mirrored images,geometric repetition,prismatic colors,mandala effects,circular design,complex patterns,fractal elements
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),asymmetrical design,random patterns,realistic images
+
+## 86. 森林精灵风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),forest fairy,(ethereal nature:1.2),magical creatures,glowing particles,woodland setting,mystical atmosphere,delicate wings,natural elements,soft lighting,organic patterns
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),urban settings,modern elements,artificial structures
+
+## 87. 电路板艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),circuit board,(technological pattern:1.2),electronic pathways,microchip design,computer aesthetic,digital infrastructure,geometric precision,technical details,glowing connections
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),organic patterns,natural elements,hand drawn style
+
+## 88. 热带夕阳风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),tropical sunset,(golden hour:1.2),palm silhouettes,ocean horizon,warm colors,beach setting,atmospheric lighting,peaceful mood,cloud formations,reflection effects
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),urban scenes,cold colors,stormy weather
+
+## 89. 机械心脏风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),mechanical heart,(steampunk organic:1.2),gear mechanisms,copper pipes,steam elements,clockwork details,industrial aesthetic,moving parts,metallic texture,energy flow
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),biological organs,natural forms,simple mechanics
+
+## 90. 彩色烟雾风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),colored smoke,(dynamic flow:1.2),abstract patterns,vibrant hues,fluid movement,artistic composition,particle effects,dark background,ethereal mood,soft edges
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),sharp edges,solid shapes,realistic scenes
+
+## 91. 古典园林风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),classical garden,(formal landscaping:1.2),manicured hedges,stone sculptures,water features,geometric paths,blooming flowers,architectural elements,peaceful atmosphere
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),wild nature,modern design,urban elements
+
+## 92. 宝石矿物风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),gemstone art,(crystal formation:1.2),mineral structure,natural facets,precious stones,light refraction,geological patterns,raw crystal,metallic inclusions
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),artificial materials,smooth surfaces,organic shapes
+
+## 93. 数字波动风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),digital wave,(frequency pattern:1.2),sound visualization,waveform design,electronic signals,data flow,abstract technology,dynamic movement,grid structure
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),natural waves,organic patterns,realistic scenes
+
+## 94. 极光天空风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),aurora borealis,(night sky:1.2),polar landscape,celestial lights,star field,atmospheric phenomenon,cold environment,natural wonder,dancing lights
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),daylight scenes,urban settings,artificial lights
+
+## 95. 古老羊皮卷风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),ancient scroll,(aged parchment:1.2),weathered texture,medieval script,ink drawings,historical document,decorated borders,mysterious symbols,antique aesthetic
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),modern paper,digital text,clean design
+
+## 96. 机器人艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),robot art,(mechanical beings:1.2),artificial intelligence,technological design,metallic surfaces,glowing elements,precise engineering,futuristic aesthetic,digital consciousness
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),organic forms,human figures,natural elements
+
+## 97. 水彩泼墨风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),ink splash,(watercolor blend:1.2),fluid dynamics,color mixing,spontaneous art,artistic accident,pigment flow,abstract expression,paper texture
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),controlled lines,precise details,photorealistic style
+
+## 98. 壁画艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),mural art,(wall painting:1.2),large scale artwork,public art,cultural elements,urban expression,weathered texture,artistic narrative,community art
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),small canvas,private artwork,gallery setting
+
+## 99. 琉璃艺术风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),stained glass,(translucent art:1.2),colored light,geometric patterns,religious motifs,lead frames,sunlight effect,artistic windows,cathedral style
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),clear glass,modern windows,plain design
+
+## 100. 混合现实风格
+**Prompt:**
+(best quality,4k,8k,highres,masterpiece:1.2),ultra-detailed,(realistic,photorealistic,photo-realistic:1.37),mixed reality,(digital overlay:1.2),augmented reality,virtual elements,real world integration,holographic display,interactive art,technological fusion,future vision
+
+**Negative Prompt:**
+nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters),pure reality,single medium,traditional art

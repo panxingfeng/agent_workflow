@@ -1,22 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@file: task.py
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2024-11-23
-@version: 1.0.0
+@date: 2025-1-11
+@version: 2.0.0
 @license: MIT License
-
-@description:
-搜索工具模块
-
-主要功能：
-1. 多模式搜索支持（网页、学术、写作等）
-2. 异步搜索处理
-3. 结果格式化
-4. 错误处理和恢复
-5. 灵活的参数配置
-
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
@@ -134,8 +122,8 @@ class SearchTool(BaseTool):
                  query: str = None,
                  base_url: str = "http://localhost:3001",
                  timeout: float = 60.0,
-                 optimizationMode: str = None,
-                 focusMode: str = None,
+                 optimizationMode: OptimizationMode = None,
+                 focusMode: FocusMode = None,
                  chat_model: Dict[str, str] = None,
                  embedding_model: Dict[str, str] = None):
         """
@@ -152,11 +140,12 @@ class SearchTool(BaseTool):
         """
         self.base_url = base_url.rstrip('/')
         self.timeout = timeout
-        self.optimizationMode = optimizationMode or OptimizationMode.SPEED
-        self.focusMode = focusMode or FocusMode.WEB_SEARCH
+        self.optimizationMode = optimizationMode if optimizationMode else OptimizationMode.SPEED
+        self.focusMode = focusMode if focusMode else FocusMode.WEB_SEARCH
         self.query = query
-        self.chat_model = chat_model or SEARCH_TOOL_OLLAMA_CONFIG
-        self.embedding_model = embedding_model or SEARCH_TOOL_EMBEDDING_CONFIG
+        self.chat_model = chat_model if chat_model else SEARCH_TOOL_OLLAMA_CONFIG
+        self.embedding_model = embedding_model if embedding_model else SEARCH_TOOL_EMBEDDING_CONFIG
+
 
     def get_description(self) -> str:
         """
@@ -210,27 +199,6 @@ class SearchTool(BaseTool):
         }
         return json.dumps(tool_info, ensure_ascii=False, indent=2)
 
-    def get_parameter_rules(self) -> str:
-        """返回搜索工具的参数设置规则"""
-        rules = """
-        SearchTool 需要设置:
-        - query: 用户的搜索查询内容
-        - focus_mode: 可选的搜索模式，从以下选项选择:
-          * webSearch (默认)
-          * academicSearch
-          * writingAssistant
-          * wolframAlphaSearch
-          * youtubeSearch
-          * redditSearch
-
-        示例:
-        输入: "搜索关于人工智能的最新进展"
-        参数设置: {
-            "query": "人工智能的最新进展",
-            "focus_mode": "academicSearch"
-        }
-        """
-        return rules
 
     @staticmethod
     def _format_result(response_data: dict) -> Dict[str, Any]:
@@ -262,6 +230,7 @@ class SearchTool(BaseTool):
                 "error": f"结果格式化失败: {str(e)}",
                 "raw_data": response_data
             }
+
 
     async def search(self,
                      history: List[Tuple[str, str]] = None,
@@ -321,6 +290,7 @@ class SearchTool(BaseTool):
             loading.stop()
             return {"error": f"发生错误: {str(e)}"}
 
+
     async def run(self, **kwargs) -> str | dict[str, Any]:
         try:
             query = kwargs.get("query", self.query)
@@ -341,7 +311,8 @@ class SearchTool(BaseTool):
         except Exception as e:
             return f"搜索工具运行错误: {str(e)}"
 
-    async def _async_search(self, query: str, focus_mode: str, optimization_mode: str) -> Optional[Dict[str, Any]]:
+
+    async def _async_search(self, query: str, focus_mode: FocusMode, optimization_mode: OptimizationMode) -> Optional[Dict[str, Any]]:
         """异步搜索实现"""
         url = f"{self.base_url}/api/search"
 

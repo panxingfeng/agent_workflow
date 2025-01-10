@@ -123,7 +123,7 @@ class FileHandler:
             tmp_file_path = os.path.join(self.save_directory, file_name)
 
             # 如果文件不是图像类型，则保存为通用文件
-            if not mime_type.startswith('image/'):
+            if not mime_type.startswith('images/'):
                 await self._save_generic_file(file_data, tmp_file_path)
             else:
                 # 如果文件类型是图像，抛出异常

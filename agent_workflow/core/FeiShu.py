@@ -1,31 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@file: feishu.py
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2024-12-12
-@version: 1.0.0
+@date: 2025-1-11
+@version: 2.0.0
 @license: MIT License
-
-@description:
-飞书机器人实现类，实现与飞书平台的对接和消息处理。
-
-功能特性:
-1. 消息加解密处理
-2. 飞书消息接收和发送
-3. 用户信息管理
-4. 多媒体文件处理
-5. 群聊和私聊支持
-6. 事件处理机制
-7. 文件上传功能
-
-工作流程:
-1. 接收飞书平台消息
-2. 解密和验证消息
-3. 处理不同类型消息
-4. 调用对应处理函数
-5. 返回处理结果
-
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
@@ -246,7 +225,7 @@ class MessageTypePrivate:
                 "content":json.dumps({
                         "image_key": image_key,
                     }),
-                "msg_type":"image",
+                "msg_type":"images",
                 "receive_id_type": self.receive_id_type
             }
         else:
@@ -272,7 +251,7 @@ class MessageTypePrivate:
                 "content":json.dumps({
                         "file_key": file_key
                     }),
-                "msg_type":"file",
+                "msg_type":"files",
                 "receive_id_type": self.receive_id_type
             }
         else:
@@ -507,7 +486,7 @@ class FeishuMessageHandler:
 def get_image_key(image_path):
     url = "https://open.feishu.cn/open-apis/im/v1/images"
     form = {'image_type': 'message',
-            'image': (open(image_path, 'rb'))}  # 需要替换具体的path
+            'images': (open(image_path, 'rb'))}
     multi_form = MultipartEncoder(form)
     headers = {'Authorization': "Bearer " + FEISHU_DATA.get('tenant_access_token'),
                'Content-Type': multi_form.content_type}
@@ -550,7 +529,7 @@ def get_audio_key(file_path):
     form = {
         'file_type': 'opus',
         'file_name': file_name,
-        'file': (file_name, open(file_path, 'rb'), 'audio/opus')
+        'files': (file_name, open(file_path, 'rb'), 'audio/opus')
     }
 
     multi_form = MultipartEncoder(form)
@@ -589,7 +568,7 @@ def get_file_key(file_path):
     form = {
         'file_type': file_type,
         'file_name': file_name,
-        'file': (file_name, open(file_path, 'rb'), mime_type)
+        'files': (file_name, open(file_path, 'rb'), mime_type)
     }
 
     multi_form = MultipartEncoder(form)

@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+@author: [PanXingFeng]
+@contact: [1115005803@qq.com、canomiguelittle@gmail.com]
+@date: 2025-1-11
+@version: 2.0.0
+@license: MIT License
+Copyright (c) 2024 [PanXingFeng]
+All rights reserved.
+"""
 import asyncio
 import json
 import os

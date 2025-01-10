@@ -1,19 +1,9 @@
 import asyncio
 
-from agent_workflow import ToolManager, UserQuery
-from agent_workflow.agent.audio_agent import AudioAgent
-from agent_workflow.agent.file_agent import FileConverterAgent
-from agent_workflow.core.task import Task
-from agent_workflow.agent.chat_agent import ChatAgent
-from agent_workflow.agent.image_agent import ImageAgent
-from agent_workflow.agent.search_agent import SearchAgent
-from agent_workflow.agent.wealther_agent import WeatherAgent
+from agent_workflow.core.tool_executor import ToolExecutor, ToolRegistry
 from agent_workflow.core.FeiShu import Feishu
 from agent_workflow.core.task_agent import MasterAgent
-from agent_workflow.llm.llm import ChatTool
 from agent_workflow.tools import MessageInput
-from agent_workflow.tools.tool import WeatherTool
-from agent_workflow.utils.func import asyncio_run
 
 
 async def main():
@@ -24,34 +14,29 @@ async def main():
     # tenant_access_token = await Feishu(None).get_tenant_token()
     # print(str(tenant_access_token))
 
-###################################-------- 多智能体创建 --------###################################
-
-    # 创建需要的智能体
-    agents = [
-        ChatAgent(),
-        WeatherAgent(),
-        ImageAgent(),
-        SearchAgent(),
-        FileConverterAgent(),
-        AudioAgent()
-    ]
     # 创建智能体调度
-    master = MasterAgent(agents)
+    master = MasterAgent(
+        # 创建工具执行器，tools是注册可使用的工具，relative_tool_dir是工具代码的存放地址，verbose是是否打印执行过程到控制台
+        tool_executor=ToolExecutor(
+            tools=ToolRegistry().scan_tools(relative_tool_dir="agent_workflow/tools/tool"),
+            verbose=True
+        ),
+        verbose=True
+    )
 
     # 需要怎么启动就可以把注释关闭
 
     ################################### 控制台启动 ###################################
-
+    #
     # 创建用户消息输入
-    message = MessageInput(
-        query="你好啊",
-        images=[],
-        files=[],
-        urls=[]
-    )
-    print("-----------------------------多智能体回答-----------------------------")
-    # 处理消息
-    await master.process(message)
+    # message = MessageInput(
+    #     query="你好啊",
+    #     images=[],
+    #     files=[],
+    #     urls=[]
+    # )
+    # # 处理消息
+    # await master.process(message)
 
     ################################## 微信启动 ###################################
 
@@ -65,64 +50,11 @@ async def main():
 
     # await master.fastapi_demo()
 
+    ################################### chat_ui启动 ###################################
+
+    await master.chat_ui_demo()
 
 
 if __name__ == "__main__":
     # 启动多智能体
     asyncio.run(main())
-
-    ###################################-------- 单智能体创建 --------###################################
-
-    # tools = [
-    #     WeatherTool(),
-    #     ChatTool(),
-    # ]
-
-    ################################### 控制台启动 ###################################
-
-    # print("-----------------------------单智能体回答-----------------------------")
-    # asyncio_run(
-    #     demo=Task(
-    #         tool_manager=ToolManager(
-    #             tools=tools,
-    #         )
-    #     ).process(
-    #         MessageInput(
-    #             query="你是谁",
-    #             images=[],
-    #             files=[],
-    #             urls=[]
-    #         ).process_input(),
-    #         printInfo=True  # 控制台打印结果信息
-    #     )
-    # )  # 控制台启动
-
-    ################################### 微信启动 ###################################
-
-    # asyncio_run(
-    #     demo=Task(
-    #         tool_manager=ToolManager(
-    #             tools=tools,
-    #         )
-    #     ).vchat_demo() # 微信启动
-    # )
-
-    ################################### 微信启动 ###################################
-
-    # asyncio_run(
-    #     demo=Task(
-    #         tool_manager=ToolManager(
-    #             tools=tools,
-    #         )
-    #     ).feishu_demo() # 飞书启动
-    # )
-
-    ################################### fastapi启动 ###################################
-
-    # asyncio_run(
-    #     demo=Task(
-    #         tool_manager=ToolManager(
-    #             tools=tools,
-    #         )
-    #     ).fastapi_demo() # fastapi启动
-    # )

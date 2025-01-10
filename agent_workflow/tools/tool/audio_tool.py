@@ -1,45 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@file: audio_tool.py
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2024-11-26
-@version: 1.0.0
+@date: 2025-1-11
+@version: 2.0.0
 @license: MIT License
-
-@description:
-语音生成工具类模块 (AudioTool)
-
-主要功能：
-集成 GPT-SoVITS 和 F5-TTS 等多个语音合成模型，实现文本到语音的转换功能，
-支持游戏角色声音生成和声音克隆等多种场景。
-
-核心特性：
-1. 多模型支持：
-   - GPT-SoVITS：游戏角色声音生成
-   - F5-TTS：声音克隆和参考音频转换
-   - 支持自动模型选择和切换
-
-2. 角色声音生成：
-   - 支持原神、崩坏三、崩坏：星穹铁道等游戏角色
-   - 提供角色列表管理和查询功能
-   - 支持情感和语速调整
-
-3. 声音克隆：
-   - 基于参考音频的声音克隆功能
-   - 支持多种音频格式和参数调整
-   - 提供音频预处理和后处理功能
-
-4. 文件管理：
-   - 自动管理临时文件和输出目录
-   - 按日期组织输出文件
-   - 智能文件命名和清理
-
-5. 错误处理：
-   - 完善的错误捕获和处理机制
-   - 详细的日志记录
-   - 友好的错误提示
-
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
@@ -246,12 +211,6 @@ class AudioTool(BaseTool):
                     "example": "auto"
                 }
             },
-            "example_queries": [
-                "生成'你好，世界'的语音",
-                "用派蒙的声音说'今天天气真好'",
-                "让胡桃说'早安，旅行者'",
-                "以1.5倍速生成'欢迎光临'的语音"
-            ],
             "model_specific_examples": {
                 "default": {
                     "query": "生成'你好，世界'的语音",
@@ -272,96 +231,6 @@ class AudioTool(BaseTool):
         }
         return json.dumps(tool_info, ensure_ascii=False, indent=2)
 
-    def get_parameter_rules(self) -> str:
-        """返回音频工具的参数设置规则"""
-        rules = """
-        AudioTool: 文本转语音工具，将输入的文本内容转换成语音。
-
-        使用场景:
-        1. 用户明确表示要"生成语音"、"转成语音"等需求
-        2. 需要将文本内容转换为音频
-        3. 通常文本内容在引号中，如:"你好，世界"
-        4. 如果提供了参考音频，将使用F5-TTS模型进行声音克隆
-        5. 如果没有参考音频，将使用GPT-SoVITS模型生成游戏角色声音
-
-        模型选择规则:
-        1. 未提供参考音频：自动使用 GPT-SoVITS 模型，支持游戏角色声音
-        2. 提供了参考音频：自动使用 F5-TTS 模型进行声音克隆
-        3. 可以通过明确指定 model 参数来强制使用特定模型
-
-        基础参数说明:
-        {
-            "text": 必填，要转换成语音的文本内容。从用户输入的引号中提取。
-            "audio": 可选，参考音频文件路径。如果提供，将使用F5-TTS模型。
-            "model": 可选，指定使用的TTS模型，一般不需要指定，工具会自动选择。
-        }
-
-        GPT-SoVITS模型参数 (无参考音频时使用):
-        {
-            "character": 可选，角色名称，如"派蒙-30h"、"胡桃"等，默认为"Hutao"，
-            "emotion": 可选，情感类型，默认为"default"，
-            "speed": 可选，语速，范围0.5-2.0，默认为1.0，
-            "text_lang": 可选，文本语言，可选"auto"/"zh"/"en"/"ja"，默认为"auto"，
-            "temperature": 可选，采样温度，范围0-1，默认为0.8
-        }
-
-        F5-TTS模型参数 (有参考音频时使用):
-        {
-            "remove_silence": 可选，是否移除静音段，默认为false，
-            "cross_fade_duration": 可选，交叉淡入淡出持续时间，默认为0.15，
-            "speed": 可选，语速，范围0.5-2.0，默认为1.0，
-            "ref_text": 可选，参考音频的文本内容
-        }
-
-        示例1 - 无参考音频，使用角色声音:
-        用户输入: "用派蒙的声音说'你好，旅行者'"
-        返回参数:
-        {
-            "known_facts": "用户想要用派蒙的声音生成'你好，旅行者'的语音",
-            "tools_needed": ["AudioTool"],
-            "parameters": {
-                "AudioTool": {
-                    "text": "你好，旅行者",
-                    "character": "派蒙-30h",
-                    "speed": 1.0,
-                    "temperature": 0.8
-                }
-            }
-        }
-
-        示例2 - 提供参考音频:
-        用户输入: "用这个声音说'你好，世界'"
-        附件信息: audio: reference.mp3
-        返回参数:
-        {
-            "known_facts": "用户想要使用参考音频的声音生成'你好，世界'的语音",
-            "tools_needed": ["AudioTool"],
-            "parameters": {
-                "AudioTool": {
-                    "text": "你好，世界",
-                    "audio": "reference.mp3",
-                    "remove_silence": false,
-                    "speed": 1.0
-                }
-            }
-        }
-
-        示例3 - 无参考音频，调整语速:
-        用户输入: "让胡桃以1.5倍速说'早安，旅行者'"
-        返回参数:
-        {
-            "known_facts": "用户想要以1.5倍速用胡桃的声音生成'早安，旅行者'的语音",
-            "tools_needed": ["AudioTool"],
-            "parameters": {
-                "AudioTool": {
-                    "text": "早安，旅行者",
-                    "character": "Hutao",
-                    "speed": 1.5
-                }
-            }
-        }
-        """
-        return rules
 
     def _find_project_root(self) -> Optional[str]:
         """
@@ -450,7 +319,7 @@ class AudioTool(BaseTool):
             try:
                 if path and os.path.exists(path):
                     os.remove(path)
-                    self.logger.info(f"Cleaned up temp file: {path}")
+                    self.logger.info(f"Cleaned up temp files: {path}")
 
                     parent_dir = os.path.dirname(path)
                     if os.path.exists(parent_dir) and not os.listdir(parent_dir):
@@ -599,7 +468,7 @@ class AudioTool(BaseTool):
                 if not os.path.exists(input_path):
                     return {
                         "success": False,
-                        "error": f"Input file not found: {input_path}",
+                        "error": f"Input files not found: {input_path}",
                         "project_root": self.project_root,
                         "upload_dir": self.upload_dir
                     }
@@ -650,7 +519,7 @@ class AudioTool(BaseTool):
 
                             # 验证生成的文件
                             if not os.path.exists(temp_audio_path):
-                                raise FileNotFoundError("Generated audio file not found")
+                                raise FileNotFoundError("Generated audio files not found")
 
                             # 获取输出路径并确保目录存在
                             output_path = await self._get_output_path(input_file)
@@ -661,7 +530,7 @@ class AudioTool(BaseTool):
 
                             # 验证复制的文件
                             if not os.path.exists(output_path):
-                                raise FileNotFoundError("Failed to copy output file")
+                                raise FileNotFoundError("Failed to copy output files")
 
                             # 清理临时文件
                             await self._cleanup_temp_files(temp_path, temp_audio_path)

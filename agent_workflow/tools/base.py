@@ -9,8 +9,8 @@ import validators
 
 class InputType(str, Enum):
     TEXT = "text"
-    IMAGE = "image"
-    FILE = "file"
+    IMAGE = "images"
+    FILE = "files"
     URL = "url",
     AUDIO = "audio"
 
@@ -237,16 +237,3 @@ class MessageInput:
     def __repr__(self) -> str:
         """提供详细的对象表示"""
         return str(self)
-
-
-class Message(TypedDict):
-    role: str
-    content: str
-
-
-class TaskState(TypedDict):
-    messages: List[Message]
-    task_ledger: Dict[str, Any]
-    task_plan: List[Tuple[str, str]]
-    tool_results: Dict[str, Any]
-    files: Dict[str, str]

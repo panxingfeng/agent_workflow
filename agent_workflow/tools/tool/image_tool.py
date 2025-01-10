@@ -1,40 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@file: image_tool.py
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2024-12-12
-@version: 1.0.0
+@date: 2025-1-11
+@version: 2.0.0
 @license: MIT License
-
-@description:
-图像工具类模块 (ImageTool)
-
-支持模型:
-1. 图像识别模型(2024-11-23):
-    - llama3.2-vision: 基于Ollama API的识别模型
-    - glm-edge-v-5b: 智谱AI开源的中英双语图像理解模型
-    - MiniCPM-V-2_6: 清华开源的视觉语言大模型
-
-2. 图像生成模:
-    - flux: FLUX.1-dev开发版模型
-    - sd3: Stable Diffusion 3.5大型模型
-    - sdwebui_forge: SD WebUI Forge模型
-    - comfyui: 使用comfyui进行生图
-
-主要功能：
-1. 图像识别：
-    - 图像描述生成
-    - 文字内容提取
-    - 物体检测分析
-    - 场景内容理解
-
-2. 图像生成：
-    - 文本生成图像
-    - 多模型支持
-    - 风格迁移(Lora)
-    - 参数优化配置
-
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
@@ -144,7 +114,7 @@ class ComfyuiGenerationConfig(BaseModel):
         description="负面提示词"
     )
     model_name: str = Field(default="dreamshaper.safetensors", description="模型名称")
-    image_name: str = Field(default=None,description="上传的图像内容")
+    image_name: str = Field(default=None, description="上传的图像内容")
     sampling_method: str = Field(default="euler", description="采样方法")
     steps: int = Field(default=25, description="迭代步数")
     width: int = Field(default=512, description="图像宽度")
@@ -156,9 +126,9 @@ class ComfyuiGenerationConfig(BaseModel):
 
 
 class PromptGenMode(str, Enum):
-    RAG = "rag" # 基于lightrag提前预处理的关系图
-    LLM = "llm" # 基于部署的ollama的模型进行生成回复
-    NONE = "none" # 使用智能体提供的提示词
+    RAG = "rag"  # 基于lightrag提前预处理的关系图
+    LLM = "llm"  # 基于部署的ollama的模型进行生成回复
+    NONE = "none"  # 使用智能体提供的提示词
 
     def __str__(self):
         return self.value
@@ -166,6 +136,7 @@ class PromptGenMode(str, Enum):
 
 class SDPromptGenerator:
     """sd提示词生成器"""
+
     def __init__(self):
         self.quality_tags = QUALITY_PROMPTS
 
@@ -387,95 +358,13 @@ class DescriptionImageTool(BaseTool):
 
     # 各任务类型的提示词模板
     PROMPT_TEMPLATES = {
-        "describe": """图像内容描述任务
+        "describe": "请描述这张图片的内容。",
 
-    1. 视觉元素分析：
-       - 主体内容识别和位置描述
-       - 关键视觉元素的空间关系
-       - 色彩、光线和构图特点
+        "extract_text": "请提取图片中的所有文字。",
 
-    2. 细节描述要求：
-       - 前景与背景的区分
-       - 重要对象的特征描述
-       - 动作、表情或状态的捕捉
+        "detect_objects": "请检测并列出图片中的所有物体。",
 
-    3. 场景评估：
-       - 图片质量和清晰度评价
-       - 可见度和光照条件说明
-       - 如遇模糊或不确定，标注"图像不清晰，可能包含..."
-
-    请按照重要性顺序组织描述，确保全面性和准确性。""",
-
-        "extract_text": """图像文字提取任务
-
-    1. 文字检测流程：
-       - 扫描全图定位所有文字区域
-       - 分析文字排列方式(横向/竖向)
-       - 识别特殊符号和标点
-
-    2. 文本内容提取：
-       - 按区域提取并分类文字
-       - 识别多语种文本并注明语言
-       - 保持原始文本格式和布局
-
-    3. 质量评估：
-       - 标注文字清晰度等级
-       - 指出模糊或难以辨认的部分
-       - 提供文字可信度评估
-
-    4. 结果整理：
-       - 按区域或语言分类展示
-       - 标注重要文字的位置信息
-       - 提供完整性和准确性说明""",
-
-        "detect_objects": """图像物体检测任务
-
-    1. 物体识别与定位：
-       - 扫描并定位所有可见物体
-       - 标注物体的精确坐标 [x1, y1, x2, y2]
-       - 计算检测框的置信度
-
-    2. 物体属性分析：
-       - 对象分类和类别确定
-       - 尺寸和比例估计
-       - 姿态和朝向描述
-
-    3. 关系分析：
-       - 物体间的空间关系
-       - 重叠和遮挡情况
-       - 互动和组合模式
-
-    4. 结果输出要求：
-       - 按置信度排序展示结果
-       - 提供详细的属性描述
-       - 标注不确定因素""",
-
-        "analyze_scene": """图像场景分析任务
-
-    1. 环境类型判断：
-       - 场景类别(室内/室外/自然/城市等)
-       - 环境特征和布局分析
-       - 光照和天气条件
-
-    2. 场景要素分析：
-       - 主要建筑或自然元素
-       - 人物和活动状态
-       - 重要标志性特征
-
-    3. 氛围评估：
-       - 整体视觉风格
-       - 色彩和光影效果
-       - 环境情绪和氛围
-
-    4. 场景功能分析：
-       - 空间用途判断
-       - 活动类型识别
-       - 时间和季节特征
-
-    5. 综合信息：
-       - 场景的整体布局和构成
-       - 独特或显著的视觉特征
-       - 环境状态和使用情况"""
+        "analyze_scene": "请分析这个场景的环境特征。"
     }
 
     def __init__(self, model: str = DescriptionModelType.LLAMA):
@@ -493,15 +382,10 @@ class DescriptionImageTool(BaseTool):
         """
         返回工具的描述信息，包括名称、功能和所需参数。
         """
+        options = ImageTaskType.list_tasks()
         tool_info = {
             "name": "DescriptionImageTool",
             "description": "图像分析工具，可以根据用户问题分析图像内容并生成相关结果。task_type是必填信息，默认是describe",
-            "capabilities": [
-                "描述图像内容",
-                "提取图像中的文字",
-                "检测图像中的物体",
-                "分析图像的场景"
-            ],
             "parameters": {
                 "image_path": {
                     "oneOf": [
@@ -517,41 +401,24 @@ class DescriptionImageTool(BaseTool):
                             "description": "多个图像文件路径列表"
                         }
                     ],
-                    "description": "图像文件路径，支持单个路径或路径列表"
+                    "description": "图像文件路径，支持单个路径或路径列表",
+                    "required": True
+
                 },
                 "user_question": {
                     "type": "string",
-                    "description": "用户提问的问题"
+                    "description": "用户提问的问题",
+                    "required": True
                 },
                 "task_type": {
                     "type": "enum",
-                    "options": ImageTaskType.list_tasks(),
-                    "description": "需要执行的图像分析任务类型"
+                    "options": options,
+                    "description": "需要执行的图像分析任务类型,describe是-图像描述,extract_text-文字提取, detect_objects-物体检测, analyze_scene-场景分析",
+                    "required": True
                 }
             }
         }
         return json.dumps(tool_info, ensure_ascii=False)
-
-    def get_parameter_rules(self) -> str:
-        """返回图像处理工具的参数设置规则"""
-        rules = """
-       DescriptionImageTool 需要设置:
-       - image_path: 从用户消息中提取图片路径
-         - 示例输入: "分析upload/test.jpg这张图片"
-         - 参数设置: {"image_path": "test.jpg"}
-         - 规则: 提取图片文件名或完整路径
-
-       - task_type: 从用户意图判断任务类型
-         - 示例输入: "描述这张图片的内容"
-         - 参数设置: {"task_type": "describe"}
-         - 规则: 根据用户描述匹配任务类型:[describe, extract_text, detect_objects, analyze_scene]
-
-       - user_question: 提取用户具体问题(可选)
-         - 示例输入: "图片里有几个人?"
-         - 参数设置: {"user_question": "图片里有几个人?"}
-         - 规则: 保留用户原始问题描述
-       """
-        return rules
 
     @staticmethod
     def encode_images(image_paths: list) -> list:
@@ -794,7 +661,7 @@ class DescriptionImageTool(BaseTool):
             image = Image.open("upload/" + image_path)
 
             messages = [{"role": "user", "content": [
-                {"type": "image"},
+                {"type": "images"},
                 {"type": "text", "text": f"{self.PROMPT_TEMPLATES[task_type]}\n\n{user_question}" if user_question else
                 self.PROMPT_TEMPLATES[task_type]}
             ]}]
@@ -1097,40 +964,6 @@ class ImageGeneratorTool(BaseTool):
                 }
             }, ensure_ascii=False, indent=2)
 
-
-    def get_parameter_rules(self) -> str:
-        """返回参数设置规则说明"""
-        rules = """
-    ImageGeneratorTool 参数配置指南：
-
-    1. prompt (图像提示词)
-       - 格式：英文提示词
-       - 用途：描述想要生成的图像内容
-       - 示例：
-         * 用户输入："生成一个女孩的图片"
-         * 参数配置：{"prompt": "a girl"}
-       - 处理规则：自动将用户中文描述转换为英文提示词
-
-    2. lora_name (风格模型)
-       - 格式：模型名称列表
-       - 用途：定义图像的风格特征
-       - 示例：
-         * 用户输入："生成一个女孩的图片"
-         * 参数配置：{"lora_name": ["aidmaImageUpraderv0.3"]}
-       - 处理规则：基于用户描述选择合适的风格模型
-       - 默认值：aidmaImageUpraderv0.3
-
-    3. model_name (基础模型)
-       - 格式：模型名称
-       - 用途：选择图像生成的基础模型
-       - 示例：
-         * 用户输入："生成一张港风风格的女生图像"
-         * 参数配置：{"model_name": "港风风格模型"}
-       - 处理规则：根据用户需求选择最适合的模型
-       - 默认值：F.1基础算法模型
-    """
-        return rules
-
     def _setup_model(self):
         """设置模型配置，包括加载模型和设置优化参数"""
         model_info = self.MODELS[self.model_type]
@@ -1228,14 +1061,16 @@ class ImageGeneratorTool(BaseTool):
                     task_mode=kwargs.get("task_mode") if kwargs.get("task_mode") else config.task_mode,
                     model_name=kwargs.get("model_name"),
                     prompt_text=kwargs.get("prompt") if kwargs.get("prompt") else config.prompt + QUALITY_PROMPTS,
-                    negative_prompt_text=kwargs.get("negative_prompt") if kwargs.get("negative_prompt") else config.negative_prompt,
+                    negative_prompt_text=kwargs.get("negative_prompt") if kwargs.get(
+                        "negative_prompt") else config.negative_prompt,
                     image_name=kwargs.get("image_name") if kwargs.get("image_name") else config.image_name,
                     width=kwargs.get("width") if kwargs.get("width") else config.width,
                     height=kwargs.get("height") if kwargs.get("height") else config.height,
                     steps=kwargs.get("steps") if kwargs.get("steps") else config.steps,
                     batch_count=kwargs.get("batch_count") if kwargs.get("batch_count") else config.batch_size,
                     batch_size=kwargs.get("batch_size") if kwargs.get("batch_size") else config.batch_size,
-                    sampling_method=kwargs.get("sampling_method") if kwargs.get("sampling_method") else config.sampling_method,
+                    sampling_method=kwargs.get("sampling_method") if kwargs.get(
+                        "sampling_method") else config.sampling_method,
                     cfg_scale=kwargs.get("cfg_scale") if kwargs.get("cfg_scale") else config.cfg_scale,
                     output_dir=kwargs.get("output_dir") if kwargs.get("output_dir") else config.output_dir,
                 )
