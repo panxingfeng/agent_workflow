@@ -78,15 +78,15 @@ Agent_Workflow 是一个基于 Ollama 的智能体框架，旨在帮助开发者
 
 - ✅ vchat微信接入 [实现实例1](./images/wechat_demo1.png)、[实现实例2](./images/wechat_demo2.png)、[实现实例3](./images/wechat_demo3.png)
   ```
-  把main.py中的注销打开即可 2.0还未测试 有一些细节未修改
+  把main.py中的注销打开即可 2.0还未测试 可能有一些细节未修改
   ```
 - ✅ FastAPI服务 [实现实例1](./images/fastapi_demo1.png)、[实现实例2](./images/fastapi_demo2.png)
   ```
-    把main.py中的注销打开即可 2.0还未测试 有一些细节未修改
+    把main.py中的注销打开即可 2.0还未测试 可能有一些细节未修改
   ```
 - ✅ 飞书机器人 [实现实例1](./images/feishu_demo1.png)、[实现实例2](./images/feishu_demo2.png)
   ```
-    把main.py中的注销打开即可 2.0还未测试 有一些细节未修改
+    把main.py中的注销打开即可 2.0还未测试 可能有一些细节未修改
   ```
 ## 🚀 快速开始
 
