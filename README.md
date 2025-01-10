@@ -189,7 +189,7 @@ python main.py # 后续缺失什么就安装什么
 ## 📅 更新计划
 
 ### 🎨 图像工具
-- [√ ] 支持 ComfyUI
+- ✅ 支持 ComfyUI
    - ComfyUI 工作流集成 (已完成 -> 基础文生图)
 - [ ] 支持语义描述进行成图的制作
    - 使用文本内容进行最后类似于换装/图片高清放大/图像修复等等 
@@ -205,11 +205,13 @@ python main.py # 后续缺失什么就安装什么
    - 基于操作界面的语音训练功能
 
 ### 💻 UI界面
-- [√ ] 基于react的Web界面 [chat实现预览](https://pan.baidu.com/s/1I_xHWs7cgBSPI11y_gz5Fg?pwd=mica)
+## 演示视频
+![chat_ui演示视频](https://github.com/panxingfeng/agent_workflow/raw/main/images/chat_ui演示视频.mp4)
+- ✅ 基于react的Web界面
    - 工作流程可视化
 
 ### 🤖 多智能体协调工作 
-- [√ ] 智能体通信机制 (持续更新中)
+- ✅ 智能体通信机制 (持续更新中)
   - 消息传递
   - 错误纠正
   - 优化性能
