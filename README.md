@@ -204,13 +204,9 @@ python main.py # 后续缺失什么就安装什么
    - 文本到音频转换
    - 基于操作界面的语音训练功能
 
-# UI界面
-## 🎥 功能演示
-https://github.com/panxingfeng/agent_workflow/raw/main/images/chat_ui演示视频.mp4
-
-## 已实现功能 ✅
-- 基于react的Web界面
-  - 工作流程可视化
+### 💻 UI界面
+- ✅ 基于react的Web界面 [chat实现预览](https://pan.baidu.com/s/1I_xHWs7cgBSPI11y_gz5Fg?pwd=mica)
+   - 工作流程可视化
 
 ### 🤖 多智能体协调工作 
 - ✅ 智能体通信机制 (持续更新中)
