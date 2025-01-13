@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {ChevronDown, ChevronUp, Download, Paperclip, Pause, Play, RotateCcw} from 'lucide-react';
+import {LOADING_TEXT} from "../../../constants";
 
 // 音频播放器组件
 const AudioPlayer = ({ url }) => {
@@ -146,7 +147,6 @@ const ImageContent = ({ url, index }) => {
           </div>
         )}
 
-        {/* Thumbnail Image */}
         <img
           src={url}
           alt={`Generated Image ${index + 1}`}
@@ -156,14 +156,12 @@ const ImageContent = ({ url, index }) => {
           onError={handleError}
         />
 
-        {/* Error State */}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-red-50 rounded-lg">
             <div className="text-red-500 text-sm">图片加载失败</div>
           </div>
         )}
 
-        {/* Hover Effect */}
         {!error && !isLoading && (
           <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
             <div className="text-white text-sm">点击查看大图</div>
@@ -171,7 +169,6 @@ const ImageContent = ({ url, index }) => {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
@@ -250,12 +247,12 @@ const ThinkingProcess = React.memo(({ messageId, steps = [], isExpanded, onToggl
         )}
         <div className="font-medium">
           {isLoading ? (
-            <span className="flex items-center whitespace-nowrap">
-              稍等哦，小pan同学正在思考哦
-              <span className="ml-1 animate-bounce">🤔</span>
-            </span>
+              <span className="flex items-center whitespace-nowrap">
+                {LOADING_TEXT}
+                <span className="ml-1 animate-bounce">🤔</span>
+              </span>
           ) : (
-            <span className="text-gray-600 group-hover:text-gray-800 transition-colors">
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors">
               思考过程
             </span>
           )}
@@ -318,12 +315,10 @@ const LinkPreview = ({ number, url }) => {
       rel="noopener noreferrer"
       className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-100 hover:bg-gray-50 transition-all duration-200"
     >
-      {/* 左侧：序号 */}
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
         <span className="text-sm text-gray-500">{number}</span>
       </div>
 
-      {/* 中间：网站图标 */}
       <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
         <img
           src={getFaviconUrl(url)}
@@ -335,7 +330,6 @@ const LinkPreview = ({ number, url }) => {
         />
       </div>
 
-      {/* 右侧：链接 */}
       <div className="flex-1 min-w-0">
         <div className="text-sm text-gray-500 truncate">
           {url}
@@ -498,19 +492,16 @@ const MessageContent = ({ messageId, content, type = 'text', thinkingProcess }) 
     let inLinkSection = false;
 
     for (const line of lines) {
-      // 检查是否是链接行
       if (/^\d+\.\s*https?:\/\//.test(line)) {
         inLinkSection = true;
         continue;
       }
 
-      // 如果不在链接部分，保留该行
       if (!inLinkSection || !line.trim()) {
         processedLines.push(line);
       }
     }
 
-    // 去除末尾多余的空行，但保留段落之间的空行
     while (processedLines.length > 0 && !processedLines[processedLines.length - 1].trim()) {
       processedLines.pop();
     }
@@ -518,31 +509,70 @@ const MessageContent = ({ messageId, content, type = 'text', thinkingProcess }) 
     return processedLines.join('\n');
   };
   const processMessageContent = (content) => {
-
     let normalizedContent = content;
+
     if (isDialogMessage(content)) {
       normalizedContent = content.response;
     }
 
     let result;
-    // 处理 mixed 类型或包含text的对象
     if (normalizedContent?.type === 'mixed' ||
         (typeof normalizedContent === 'object' && normalizedContent?.text)) {
-      result = {
-        text: normalizedContent.text || '',
-        links: extractLinks(normalizedContent.text || ''),
-        images: (normalizedContent.images || []).map(img => ({
+
+      const allImages = [
+        ...(normalizedContent.images || []).map(img => ({
           url: img.url,
           previewUrl: img.url
         })),
-        files: (normalizedContent.files || []).map(file => ({
+        ...(normalizedContent.files || [])
+          .filter(file => file.type === 'image')
+          .map(file => ({
+            url: file.url,
+            previewUrl: file.url
+          }))
+      ];
+
+      const otherFiles = (normalizedContent.files || [])
+        .filter(file => file.type !== 'image')
+        .map(file => ({
           url: file.url,
           name: file.name || file.filename || '',
-          size: file.size || 0
-        }))
+          size: file.size || 0,
+          type: file.type || ''
+        }));
+
+      result = {
+        text: normalizedContent.text || '',
+        links: extractLinks(normalizedContent.text || ''),
+        images: allImages,
+        files: otherFiles
       };
+
+    } else if (normalizedContent?.files) {
+      const images = normalizedContent.files
+        .filter(file => file.type === 'image')
+        .map(file => ({
+          url: file.url,
+          previewUrl: file.url
+        }));
+
+      const otherFiles = normalizedContent.files
+        .filter(file => file.type !== 'image')
+        .map(file => ({
+          url: file.url,
+          name: file.name || file.filename || '',
+          size: file.size || 0,
+          type: file.type || ''
+        }));
+
+      result = {
+        text: normalizedContent.text || '',
+        links: [],
+        images,
+        files: otherFiles
+      };
+
     } else {
-      // 处理字符串内容
       const textContent = typeof normalizedContent === 'string'
         ? normalizedContent
         : normalizedContent?.text || '';

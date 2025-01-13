@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import {MEMORY_SETTINGS} from "../../constants";
 
 const MemorySettings = ({ maxMemory, onChangeMemory, messagesLength = 0 }) => {
   const [open, setOpen] = React.useState(false);
@@ -40,17 +41,17 @@ const MemorySettings = ({ maxMemory, onChangeMemory, messagesLength = 0 }) => {
           className="text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
         >
           <Brain className="h-4 w-4 mr-2" />
-          记忆条数 {messagesLength > maxMemory ? maxMemory : messagesLength}/{maxMemory}
+          {MEMORY_SETTINGS.memory_title} {messagesLength > maxMemory ? maxMemory : messagesLength}/{maxMemory}
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-gray-900">
-            上下文记忆设置
+            {MEMORY_SETTINGS.memory_desc_title}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-500 mt-1">
-            设置对话记忆的条数，较长的上下文可以让AI更好地理解对话历史，但也会消耗更多资源。
+            {MEMORY_SETTINGS.memory_desc}
           </DialogDescription>
         </DialogHeader>
 
@@ -60,7 +61,7 @@ const MemorySettings = ({ maxMemory, onChangeMemory, messagesLength = 0 }) => {
               htmlFor="maxMemory"
               className="text-sm font-medium text-gray-900 w-20"
             >
-              记忆条数
+              {MEMORY_SETTINGS.memory_title}
             </Label>
             <Select
               value={tempMemory}

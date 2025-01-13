@@ -354,6 +354,7 @@ class MasterAgent:
                         chat_ui=chat_ui
                 ):
                     files = []
+                    images = []
                     if isinstance(result, dict):
                         if "error" in result:
                             yield {
@@ -385,11 +386,9 @@ class MasterAgent:
                                                         if file_extension in ['.png', '.jpg', '.jpeg', '.gif']:
                                                             relative_path = f"{file_name}"
                                                             image_url = f"{url}/static/output/{relative_path}"
-                                                            files.append({
+                                                            images.append({
                                                                 'url': image_url,
-                                                                'name': file_name,
-                                                                'size': os.path.getsize(output_file_path),
-                                                                'type': 'image'
+                                                                'name': file_name
                                                             })
                                                             final_result = ""
                                                         elif file_extension == '.wav':
@@ -397,9 +396,7 @@ class MasterAgent:
                                                             audio_url = f"{url}/static/output/{relative_path}"
                                                             files.append({
                                                                 'url': audio_url,
-                                                                'name': file_name,
-                                                                'size': os.path.getsize(output_file_path),
-                                                                'type': 'audio'
+                                                                'name': file_name
                                                             })
                                                             final_result = ""
                                                         else:
@@ -407,9 +404,7 @@ class MasterAgent:
                                                             file_url = f"{url}/static/output/{relative_path}"
                                                             files.append({
                                                                 'url': file_url,
-                                                                'name': file_name,
-                                                                'size': os.path.getsize(output_file_path),
-                                                                'type': 'file'
+                                                                'name': file_name
                                                             })
                                                             final_result = ""
 
@@ -442,14 +437,13 @@ class MasterAgent:
 
                                             processed_result = {
                                                 'type': 'mixed',
-                                                'text': final_result
+                                                'text': final_result,
+                                                'files': files if files else files,
+                                                'images': images if images else images,
                                             }
 
                                             if link_text:
                                                 processed_result['text'] = final_result + "\n" + link_text
-
-                                            if files:
-                                                processed_result['files'] = files
 
                                             new_message = {
                                                 'query': processed_query.query,
