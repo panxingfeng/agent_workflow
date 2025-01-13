@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Copy, Paperclip, Pause, Play, RotateCcw, Download } from 'lucide-react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {ChevronDown, ChevronUp, Download, Paperclip, Pause, Play, RotateCcw} from 'lucide-react';
 
 // 音频播放器组件
 const AudioPlayer = ({ url }) => {
@@ -346,10 +346,17 @@ const LinkPreview = ({ number, url }) => {
 };
 
 // 链接预览列表组件
-const LinkPreviewList = ({ links = [] }) => {
+const LinkPreviewList = React.memo(({ links = [] }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [processedLinks, setProcessedLinks] = useState([]);
 
-  if (!links?.length) return null;
+  useEffect(() => {
+    if (Array.isArray(links) && links.length > 0) {
+      setProcessedLinks(links);
+    }
+  }, [links]);
+
+  if (!processedLinks?.length) return null;
 
   return (
     <div className="mt-4 max-w-[600px]">
@@ -364,18 +371,19 @@ const LinkPreviewList = ({ links = [] }) => {
         )}
         <div className="font-medium">
           <span className="text-gray-600 group-hover:text-gray-800 transition-colors">
-            相关链接 ({links.length})
+            相关链接 ({processedLinks.length})
           </span>
         </div>
       </button>
 
-      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}>
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+        isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+      }`}>
         <div className="mt-2 space-y-2">
-          {links.map((link) => (
+          {processedLinks.map((link) => (
             <LinkPreview
-              key={link.url}
-              number={link.number || link.title.replace('参考来源 ', '')}
+              key={`${link.url}-${link.number}`}  // 更好的 key
+              number={link.number}
               url={link.url}
             />
           ))}
@@ -383,7 +391,7 @@ const LinkPreviewList = ({ links = [] }) => {
       </div>
     </div>
   );
-};
+});
 
 const style = document.createElement('style');
 style.textContent = `
@@ -410,107 +418,155 @@ const MessageContent = ({ messageId, content, type = 'text', thinkingProcess }) 
   const [currentSteps, setCurrentSteps] = useState([]);
   const messageStatesRef = useRef(new Map());
 
-  // 处理内容中可能包含的链接数据
-  const processContent = (content) => {
-    // 处理 response 直接是 mixed 类型的情况
-    if (content?.type === 'mixed') {
-      return {
-        displayContent: content.text || '',
-        links: [],
-        images: (content.images || []).map(img => ({
+  const isDialogMessage = (content) => {
+    return content?.query !== undefined && content?.response !== undefined;
+  };
+
+  const extractLinks = (text) => {
+    if (!text) {
+      return [];
+    }
+
+    const links = [];
+    const processedUrls = new Set();
+    const processedRefs = new Set();
+
+    const referenceMatches = text.matchAll(/\[(\d+)\]/g);
+    for (const match of referenceMatches) {
+      const number = parseInt(match[1], 10);
+      if (number && !processedRefs.has(number)) {
+        links.push({
+          number,
+          type: 'reference',
+          title: `参考来源 ${number}`,
+          isPlaceholder: true
+        });
+        processedRefs.add(number);
+      }
+    }
+
+    const lines = text.split('\n');
+    const urlList = [];
+    let inLinkSection = false;
+    lines.forEach((line, index) => {
+      const linkMatch = line.match(/^(\d+)\.\s*(https?:\/\/[^\s]+)/);
+      if (linkMatch) {
+        inLinkSection = true;
+        urlList.push({
+          lineNumber: index + 1,
+          number: parseInt(linkMatch[1], 10),
+          url: linkMatch[2].trim()
+        });
+      }
+    });
+
+    links.forEach(link => {
+      if (link.isPlaceholder) {
+        const matchedUrl = urlList.find(url => url.number === link.number);
+        if (matchedUrl) {
+          link.url = matchedUrl.url;
+          delete link.isPlaceholder;
+          processedUrls.add(matchedUrl.url);
+        }
+      }
+    });
+
+    urlList.forEach(item => {
+      if (!processedUrls.has(item.url)) {
+        links.push({
+          number: item.number,
+          url: item.url,
+          title: `参考来源 ${item.number}`,
+          type: 'reference'
+        });
+        processedUrls.add(item.url);
+      }
+    });
+
+    const validLinks = links.filter(link => !link.isPlaceholder);
+
+    validLinks.sort((a, b) => a.number - b.number);
+
+    return validLinks;
+  };
+
+  const cleanContent = (text) => {
+    if (!text) return '';
+
+    const lines = text.split('\n');
+    let processedLines = [];
+    let inLinkSection = false;
+
+    for (const line of lines) {
+      // 检查是否是链接行
+      if (/^\d+\.\s*https?:\/\//.test(line)) {
+        inLinkSection = true;
+        continue;
+      }
+
+      // 如果不在链接部分，保留该行
+      if (!inLinkSection || !line.trim()) {
+        processedLines.push(line);
+      }
+    }
+
+    // 去除末尾多余的空行，但保留段落之间的空行
+    while (processedLines.length > 0 && !processedLines[processedLines.length - 1].trim()) {
+      processedLines.pop();
+    }
+
+    return processedLines.join('\n');
+  };
+  const processMessageContent = (content) => {
+
+    let normalizedContent = content;
+    if (isDialogMessage(content)) {
+      normalizedContent = content.response;
+    }
+
+    let result;
+    // 处理 mixed 类型或包含text的对象
+    if (normalizedContent?.type === 'mixed' ||
+        (typeof normalizedContent === 'object' && normalizedContent?.text)) {
+      result = {
+        text: normalizedContent.text || '',
+        links: extractLinks(normalizedContent.text || ''),
+        images: (normalizedContent.images || []).map(img => ({
           url: img.url,
           previewUrl: img.url
         })),
-        files: (content.files || []).map(file => ({
+        files: (normalizedContent.files || []).map(file => ({
           url: file.url,
           name: file.name || file.filename || '',
           size: file.size || 0
         }))
       };
-    }
+    } else {
+      // 处理字符串内容
+      const textContent = typeof normalizedContent === 'string'
+        ? normalizedContent
+        : normalizedContent?.text || '';
 
-    // 处理 attachments 格式的情况
-    if (content && typeof content === 'object' && !content.type) {
-      const attachmentImages = content.attachments?.images?.map(img => ({
-        url: img.saved_path,
-        previewUrl: img.saved_path,
-        path: img.original_name
-      })) || [];
-
-      return {
-        displayContent: typeof content === 'string' ? content : content.text || '',
-        links: [],
-        images: attachmentImages,
-        files: (content.attachments?.files || []).map(file => ({
-          url: file.saved_path,
-          name: file.original_name || '',
-          size: file.size || 0
-        }))
-      };
-    }
-
-    // 处理字符串类型
-    if (typeof content === 'string') {
-      const links = [];
-      const parts = content.split('\n---\n');
-      const mainContent = parts[0].trim();
-
-      // 提取数字编号的链接和描述
-      const linkPattern = /\[(\d+)\]:\s*(.*?)(?=\n\[\d+\]:|$)/gs;
-      let match;
-
-      while ((match = linkPattern.exec(content)) !== null) {
-        const [_, number, description] = match;
-        const urlMatch = description.match(/(https?:\/\/[^\s]+)\s*(.*)/);
-        if (urlMatch) {
-          const [__, url, text] = urlMatch;
-          links.push({
-            number,
-            title: `参考来源 ${number}`,
-            url: url.trim(),
-            description: text.trim()
-          });
-        }
-      }
-
-      // 再提取 "数字. URL" 格式的链接
-      const urlOnlyPattern = /(\d+)\.\s+(https?:\/\/[^\s\n]+)/g;
-      while ((match = urlOnlyPattern.exec(content)) !== null) {
-        const [_, number, url] = match;
-        // 检查这个编号是否已经存在
-        if (!links.find(link => link.number === number)) {
-          links.push({
-            number,
-            title: `参考来源 ${number}`,
-            url: url.trim(),
-            description: ''
-          });
-        }
-      }
-
-      // 按编号排序
-      links.sort((a, b) => parseInt(a.number) - parseInt(b.number));
-
-      return {
-        displayContent: mainContent,
-        links,
+      result = {
+        text: textContent,
+        links: extractLinks(textContent),
         images: [],
         files: []
       };
     }
 
-    // 处理其他类型（null、undefined等）
-    return {
-      displayContent: content === null || content === undefined ? '' : String(content),
-      links: [],
-      images: [],
-      files: []
-    };
+    return result;
   };
 
-  const { displayContent, links, images, files } = useMemo(() =>
-    processContent(content)
-    , [content]);
+  const { text, links, images, files } = useMemo(() => {
+    const processedContent = processMessageContent(content);
+    return {
+      text: cleanContent(processedContent.text),
+      links: processedContent.links,
+      images: processedContent.images,
+      files: processedContent.files
+    };
+  }, [content]);
 
   // 处理思考过程
   useEffect(() => {
@@ -556,8 +612,8 @@ const MessageContent = ({ messageId, content, type = 'text', thinkingProcess }) 
     return (
       <div className="space-y-4 w-full">
         {/* 显示主要内容 */}
-        {displayContent && (
-          <div className="whitespace-pre-wrap text-gray-700">{displayContent}</div>
+        {text && (
+          <div className="whitespace-pre-wrap text-gray-700">{text}</div>
         )}
 
         {/* 显示链接预览 */}
@@ -615,7 +671,6 @@ const MessageContent = ({ messageId, content, type = 'text', thinkingProcess }) 
                     <span className="text-gray-700 group-hover:text-blue-600 text-sm">
                       {file.name}
                     </span>
-                    <p></p>
                   </div>
                   <div className="text-gray-400 group-hover:text-blue-500">
                     <Download size={16} />

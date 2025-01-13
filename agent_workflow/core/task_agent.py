@@ -242,6 +242,7 @@ class MasterAgent:
                               context_length: int,
                               history_mode: str,
                               chat_ui) -> AsyncGenerator[Dict[str, Any], None]:
+        global image_url, audio_url, file_url, file_name, output_file_path
         try:
             self.status = AgentStatus.RUNNING
             self.message_id = message_id
@@ -352,6 +353,7 @@ class MasterAgent:
                         history=context_data,
                         chat_ui=chat_ui
                 ):
+                    files = []
                     if isinstance(result, dict):
                         if "error" in result:
                             yield {
@@ -360,13 +362,12 @@ class MasterAgent:
                                 "content": result.get("error", "处理失败")
                             }
                             return
+
                         elif result.get("status") == "success" and "result" in result:
                             tool_response = result.get("result", {})
+                            link_text  = result.get("link", {})
                             if tool_response:
                                 final_result = list(tool_response.values())[-1]["result"]
-
-                                # 处理结果内容，转换为混合格式
-                                processed_result = final_result
 
                                 if isinstance(final_result, str):
                                     if 'output\\' in final_result or 'output/' in final_result:
@@ -383,43 +384,35 @@ class MasterAgent:
                                                     if output_file_path.exists():
                                                         if file_extension in ['.png', '.jpg', '.jpeg', '.gif']:
                                                             relative_path = f"{file_name}"
+                                                            image_url = f"{url}/static/output/{relative_path}"
+                                                            files.append({
+                                                                'url': image_url,
+                                                                'name': file_name,
+                                                                'size': os.path.getsize(output_file_path),
+                                                                'type': 'image'
+                                                            })
+                                                            final_result = ""
                                                         elif file_extension == '.wav':
                                                             relative_path = f"{datetime.now().strftime('%Y-%m-%d')}/{file_name}"
+                                                            audio_url = f"{url}/static/output/{relative_path}"
+                                                            files.append({
+                                                                'url': audio_url,
+                                                                'name': file_name,
+                                                                'size': os.path.getsize(output_file_path),
+                                                                'type': 'audio'
+                                                            })
+                                                            final_result = ""
                                                         else:
                                                             relative_path = f"{file_name}"
+                                                            file_url = f"{url}/static/output/{relative_path}"
+                                                            files.append({
+                                                                'url': file_url,
+                                                                'name': file_name,
+                                                                'size': os.path.getsize(output_file_path),
+                                                                'type': 'file'
+                                                            })
+                                                            final_result = ""
 
-                                                        file_info = {
-                                                            "url": f"{url}/static/output/{relative_path}",
-                                                            "filename": file_name,
-                                                            "size": os.path.getsize(output_file_path)
-                                                        }
-
-                                                        if file_extension in ['.png', '.jpg', '.jpeg', '.gif']:
-                                                            processed_result = {
-                                                                'type': 'mixed',
-                                                                'text': '生成的图片如下：',
-                                                                'images': [{'url': file_info['url']}]
-                                                            }
-                                                        elif file_extension in ['.wav', '.mp3']:
-                                                            processed_result = {
-                                                                'type': 'mixed',
-                                                                'text': '音频处理完成：',
-                                                                'files': [{
-                                                                    'url': file_info['url'],
-                                                                    'name': file_info['filename'],
-                                                                    'size': file_info['size']
-                                                                }]
-                                                            }
-                                                        else:
-                                                            processed_result = {
-                                                                'type': 'mixed',
-                                                                'text': '文件转换完成：',
-                                                                'files': [{
-                                                                    'url': file_info['url'],
-                                                                    'name': file_info['filename'],
-                                                                    'size': file_info['size']
-                                                                }]
-                                                            }
                                                     else:
                                                         logger.error(f"输出文件不存在: {output_file_path}")
                                                 except Exception as e:
@@ -446,6 +439,17 @@ class MasterAgent:
                                                  conv['conversation_id'] == conversation_id),
                                                 None
                                             )
+
+                                            processed_result = {
+                                                'type': 'mixed',
+                                                'text': final_result
+                                            }
+
+                                            if link_text:
+                                                processed_result['text'] = final_result + "\n" + link_text
+
+                                            if files:
+                                                processed_result['files'] = files
 
                                             new_message = {
                                                 'query': processed_query.query,
@@ -480,8 +484,9 @@ class MasterAgent:
                                 yield {
                                     "type": "result",
                                     "message_id": message_id,
-                                    "content": final_result
+                                    "content": processed_result['text']
                                 }
+
                         elif "type" in result:
                             # 转发带类型的消息
                             if result["type"] == "thinking_process":

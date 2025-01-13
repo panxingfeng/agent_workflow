@@ -11,6 +11,7 @@ All rights reserved.
 import asyncio
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, Type, Optional
 import json
 import logging
@@ -24,18 +25,23 @@ from agent_workflow.tools.tool.base import BaseTool
 from agent_workflow.tools.result_formatter import ResultFormatter
 from agent_workflow.tools.base import UserQuery
 from agent_workflow.tools.base import FeishuUserQuery
-from config.bot import TOOL_INTENT_PARSER, PARAMETER_OPTIMIZER
+from config.bot import TOOL_INTENT_PARSER, PARAMETER_OPTIMIZER, TOOL_RULES
 from config.config import OLLAMA_DATA
 
 ollama_model = OLLAMA_DATA['inference_model']
 
-
 # 配置带颜色的logging
-def setup_colored_logger(name, level=logging.INFO):
+def setup_colored_logger(name, level=logging.INFO, log_file='agent_workflow.log'):
+    # 确保日志文件所在目录存在
+    log_dir = os.path.dirname(os.path.abspath(log_file))
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
     logger = colorlog.getLogger(name)
     if not logger.handlers:
-        handler = colorlog.StreamHandler()
-        handler.setFormatter(colorlog.ColoredFormatter(
+        # 控制台处理器（带颜色）
+        console_handler = colorlog.StreamHandler()
+        console_handler.setFormatter(colorlog.ColoredFormatter(
             '%(log_color)s%(message)s',
             log_colors={
                 'INFO': 'cyan',  # 使用青色显示一般信息
@@ -44,13 +50,23 @@ def setup_colored_logger(name, level=logging.INFO):
                 'ERROR': 'red',  # 使用红色显示错误
             }
         ))
-        logger.addHandler(handler)
+
+        # 文件处理器（不带颜色）
+        # FileHandler会自动创建不存在的日志文件
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(name)s - %(message)s'
+        ))
+
+        logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
+
     logger.setLevel(level)
     logger.propagate = False
     return logger
 
 
-# 创建不同类型的日志记录器
+# 创建不同类型的日志记录器，共用同一个日志文件
 logger = setup_colored_logger('tool_executor', logging.INFO)
 result_logger = setup_colored_logger('result', logging.INFO)
 intent_logger = setup_colored_logger('intent', logging.WARNING)
@@ -91,6 +107,7 @@ class ToolRegistry:
 
         # 获取项目根目录
         project_root = ToolRegistry.get_project_root()
+        logger.info(f"\n=== 新会话开始 {datetime.now()} ===\n")
         logger.info(f"📂 项目根目录: {project_root}")
 
         # 构建工具目录的完整路径
@@ -158,7 +175,8 @@ class ToolIntentParser:
         self.tool_descriptions = {}
         for tool_name, tool_class in tools.items():
             tool_instance = tool_class()
-            self.tool_descriptions[tool_name] = json.loads(tool_instance.get_description())
+            tool_info = json.loads(tool_instance.get_description())
+            self.tool_descriptions[tool_info["name"]] = tool_info["description"]
 
         # 简化后的意图识别模板，专注于执行顺序
         self.intent_template = ChatPromptTemplate.from_messages([
@@ -168,67 +186,82 @@ class ToolIntentParser:
     def format_tool_list(self) -> str:
         """格式化工具列表信息，只包含名称和描述"""
         tool_list = []
-        for tool_name, desc in self.tool_descriptions.items():
+        for tool_name, description in self.tool_descriptions.items():
             tool_list.append(f"工具名称: {tool_name}")
-            tool_list.append(f"描述: {desc.get('description', '无描述')}")
+            tool_list.append(f"描述: {description}")
             tool_list.append("")
         return "\n".join(tool_list)
 
-    def parse_intent(self, query: UserQuery | FeishuUserQuery, verbose: bool) -> Dict[str, Any]:
+    def parse_intent(self, query: UserQuery | FeishuUserQuery, history, verbose: bool) -> Dict[str, Any]:
         """解析用户意图，返回工具执行顺序"""
-        try:
-            start_time = time.time()
-            messages = self.intent_template.format_messages(
-                tool_list=self.format_tool_list(),
-                query=query
-            )
+        max_retries = 3
+        current_retry = 0
 
-            response = self.llm.invoke(messages)
-            content = response.content.strip()
+        while current_retry < max_retries:
+            try:
+                start_time = time.time()
+                messages = self.intent_template.format_messages(
+                    tool_list=self.format_tool_list(),
+                    history=history,
+                    query=query
+                )
 
-            if verbose:
-                result_logger.info(f"意图推理用时: {time.time() - start_time:.3f} 秒")
+                response = self.llm.invoke(messages)
+                content = response.content.strip()
 
-            # 清理响应内容
-            content = self._clean_response(content)
-            result = json.loads(content)
+                if verbose:
+                    result_logger.info(f"意图推理用时: {time.time() - start_time:.3f} 秒")
 
-            # 验证和规范化任务
-            valid_tasks = []
-            for task in result.get("tasks", []):
-                if not isinstance(task, dict):
-                    continue
+                # 清理响应内容
+                content = self._clean_response(content)
+                result = json.loads(content)
 
-                tool_name = task.get("tool_name")
-                if tool_name not in self.tools:
-                    continue
+                # 验证和规范化任务
+                valid_tasks = []
+                for task in result.get("tasks", []):
+                    if not isinstance(task, dict):
+                        continue
 
-                valid_tasks.append({
-                    "id": task.get("id", f"task_{len(valid_tasks) + 1}"),
-                    "tool_name": tool_name,
-                    "reason": task.get("reason", ""),
-                    "order": task.get("order", len(valid_tasks) + 1),
-                    "depends_on": task.get("depends_on", [])
-                })
+                    tool_name = task.get("tool_name")
+                    if tool_name not in self.tools:
+                        continue
 
-            execution_info = {
-                "tasks": valid_tasks,
-                "execution_mode": result.get("execution_mode", "串行"),
-                "execution_strategy": result.get("execution_strategy", {
-                    "parallel_groups": [],
-                    "reason": "默认串行执行"
-                })
-            }
+                    valid_tasks.append({
+                        "id": task.get("id", f"task_{len(valid_tasks) + 1}"),
+                        "tool_name": tool_name,
+                        "reason": task.get("reason", ""),
+                        "order": task.get("order", len(valid_tasks) + 1),
+                        "depends_on": task.get("depends_on", [])
+                    })
 
-            if verbose:
-                logger.info("任务规划方案:\n%s",
-                            json.dumps(execution_info, indent=2, ensure_ascii=False))
+                execution_info = {
+                    "tasks": valid_tasks,
+                    "execution_mode": result.get("execution_mode", "串行"),
+                    "execution_strategy": result.get("execution_strategy", {
+                        "parallel_groups": [],
+                        "reason": "默认串行执行"
+                    })
+                }
 
-            return execution_info
+                if verbose:
+                    logger.info("任务规划方案:\n%s",
+                                json.dumps(execution_info, indent=2, ensure_ascii=False))
 
-        except Exception as e:
-            logger.error(f"意图解析失败: {str(e)}")
-            return {"tasks": []}
+                return execution_info
+
+            except Exception as e:
+                current_retry += 1
+                self.logger.error(f"意图解析失败 (尝试 {current_retry}/{max_retries}): {str(e)}")
+
+                # 如果达到最大重试次数，返回空任务列表
+                if current_retry >= max_retries:
+                    self.logger.warning(f"达到最大重试次数 ({max_retries})，返回空任务列表")
+                    return {"tasks": []}
+
+                # 重试前等待一段时间，时间随重试次数增加
+                time.sleep(1 * current_retry)
+
+        return {"tasks": []}
 
     def _clean_response(self, content: str) -> str:
         """清理LLM响应内容"""
@@ -262,7 +295,7 @@ class ParameterOptimizer:
 
     def __init__(self, llm: Optional[ChatOllama] = None):
         self.llm = llm or ChatOllama(model=ollama_model)
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
         self.message_id = None
 
         self.parameter_template = ChatPromptTemplate.from_messages([
@@ -279,8 +312,6 @@ class ParameterOptimizer:
                 start_time = time.time()
 
                 await asyncio.sleep(0.1)
-
-                formatted_description = self._format_tool_description(tool_description)
 
                 cleaned_context = []
                 for item in context.get("history", []):
@@ -312,7 +343,11 @@ class ParameterOptimizer:
                     "history": cleaned_context,
                     "intent": cleaned_intent
                 }
-
+                tool_rules = TOOL_RULES.get(tool_description["name"], """
+                - 根据工具描述确定所需参数
+                - 参数值要符合工具的输入要求
+                - 确保配置完整且合理
+                """)
                 try:
                     context_json = json.dumps(formatted_context, ensure_ascii=False,
                                               default=str, separators=(',', ':'))
@@ -320,10 +355,12 @@ class ParameterOptimizer:
                     messages = self.parameter_template.format_messages(
                         query=query,
                         tool_name=tool_name,
-                        tool_description=formatted_description,
+                        tool_description=tool_description,
+                        tool_rules=tool_rules,
                         context=context_json,
                         intent_result=json.dumps(cleaned_intent, ensure_ascii=False)
                     )
+
                 except Exception as json_error:
                     self.logger.error(f"尝试 {current_retry + 1}/{max_retries} - JSON序列化失败: {json_error}")
                     raise
@@ -542,8 +579,9 @@ class ToolExecutor:
         }
 
     async def _execute_single_tool(self, task_info: Dict, context: Dict, verbose: bool,
-                                   query: UserQuery | FeishuUserQuery, history, intent_result,chat_ui) -> AsyncGenerator[
-        Dict[str, Any], None]:
+                                   query: UserQuery | FeishuUserQuery, history, intent_result, chat_ui) -> \
+            AsyncGenerator[
+                Dict[str, Any], None]:
         """执行单个工具"""
         tool_name = task_info["tool_name"]
         task_id = task_info["id"]
@@ -579,7 +617,6 @@ class ToolExecutor:
                     logger.info(f"执行工具 {tool_name} 的优化参数:\n{json.dumps(optimized_result, ensure_ascii=False)}")
 
                     # 执行工具
-                    # 执行工具
                     result = await self.tools[tool_name]().run(**optimized_result[tool_name])
 
                     # 检查结果是否为空
@@ -597,7 +634,7 @@ class ToolExecutor:
                             raise ValueError("工具执行多次返回空结果")
 
                     try:
-                        formatted_result = await self.format_result(tool_name, result,chat_ui)
+                        formatted_result = await self.format_result(tool_name, result, chat_ui)
                     except Exception:
                         if current_retry < max_retries - 1:
                             yield {
@@ -649,6 +686,7 @@ class ToolExecutor:
                     }
                     await asyncio.sleep(1)
 
+
     async def execute_tools(self, query: UserQuery | FeishuUserQuery, history,chat_ui) -> AsyncGenerator[
         Dict[str, Any], None]:
         """执行工具链"""
@@ -667,7 +705,7 @@ class ToolExecutor:
             await asyncio.sleep(0.1)
 
             # 获取执行计划
-            intent_result = self.intent_parser.parse_intent(processed_query, self.verbose)
+            intent_result = self.intent_parser.parse_intent(processed_query, history, self.verbose)
 
             yield {
                 "type": "thinking_process",
