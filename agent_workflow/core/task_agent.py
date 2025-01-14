@@ -2,8 +2,8 @@
 """
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2025-1-11
-@version: 2.0.0
+@date: 2025-1-15
+@version: 2.1.0
 @license: MIT License
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
@@ -43,6 +43,7 @@ upload_dir = project_root / 'upload'
 upload_images_dir = upload_dir / 'images'
 upload_files_dir = upload_dir / 'files'
 history_data_dir = project_root / 'data'
+rag_data_dir = history_data_dir / 'rag_data'
 
 # 配置日志
 logger = loadingInfo("task_agent")
@@ -559,6 +560,7 @@ class MasterAgent:
         upload_images_dir.mkdir(exist_ok=True)
         upload_files_dir.mkdir(exist_ok=True)
         upload_dir.mkdir(exist_ok=True)
+        rag_data_dir.mkdir(exist_ok=True)
 
         # 配置静态文件目录
         app.mount("/static/output", StaticFiles(directory=str(output_dir)), name="static")
