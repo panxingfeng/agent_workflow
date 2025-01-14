@@ -19,7 +19,7 @@ def create_event_loop():
 
 
 def asyncio_run(demo):
-    logger = loadingInfo()
+    logger = loadingInfo("asyncio_run")
     loop = create_event_loop()
     try:
         loop.run_until_complete(demo)

@@ -17,9 +17,10 @@ import time
 import threading
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
-from agent_workflow.utils.loading import LoadingIndicator
+from agent_workflow.utils.loading import LoadingIndicator, loadingInfo
 from config.tool_config import COMFYUI_MODEL_PATH, COMFYUI_PATH
 
+logger = loadingInfo("comfyui_api")
 
 class ComfyuiAPI:
     """AI图像生成客户端类
@@ -86,7 +87,7 @@ class ComfyuiAPI:
             return self.ensure_connection(timeout=10)
 
         except Exception as e:
-            print(f"重新初始化连接时出错: {e}")
+            logger.error(f"重新初始化连接时出错: {e}")
             return False
 
     def _setup_websocket(self) -> None:
@@ -110,19 +111,18 @@ class ComfyuiAPI:
         try:
             self.ws.run_forever()
         except Exception as e:
-            print(f"WebSocket运行错误: {e}")
+            logger.error(f"WebSocket运行错误: {e}")
             self.is_connected = False
             self.connection_event.clear()
 
     def _on_open(self, ws) -> None:
         """WebSocket连接建立时的回调"""
-        print("WebSocket连接已建立")
         self.is_connected = True
         self.connection_event.set()
 
     def _on_error(self, ws, error) -> None:
         """WebSocket错误处理回调"""
-        print(f"WebSocket错误: {error}")
+        logger.info(f"WebSocket错误: {error}")
         self.is_connected = False
         self.connection_event.clear()
         if self.loading:
@@ -131,7 +131,7 @@ class ComfyuiAPI:
 
     def _on_close(self, ws, close_status_code, close_msg) -> None:
         """WebSocket关闭时的回调"""
-        print(f"WebSocket连接已关闭（状态码：{close_status_code}，消息：{close_msg}）")
+        logger.info(f"WebSocket连接已关闭（状态码：{close_status_code}，消息：{close_msg}）")
         self.is_connected = False
         self.connection_event.clear()
         if self.loading:
@@ -235,7 +235,7 @@ class ComfyuiAPI:
             row = workflow_map[workflow_map['chinese_name'] == chinese_name]
 
             if row.empty:
-                print(f"未找到工作流配置：{chinese_name}")
+                logger.info(f"未找到工作流配置：{chinese_name}")
                 return None, None
 
             json_name = row['json_name'].values[0]
@@ -244,7 +244,7 @@ class ComfyuiAPI:
             # 加载工作流JSON文件
             file_path = Path("config/json_file") / f"{json_name}.json"
             if not file_path.exists():
-                print(f"找不到配置文件: {file_path}")
+                logger.info(f"找不到配置文件: {file_path}")
                 return None, None
 
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -256,7 +256,7 @@ class ComfyuiAPI:
                 return workflow_data, checkpoint
 
         except Exception as e:
-            print(f"加载工作流配置文件失败: {e}")
+            logger.error(f"加载工作流配置文件失败: {e}")
             return None, None
 
     def _update_workflow_params(self, data: Any, params: Dict) -> None:
@@ -291,7 +291,7 @@ class ComfyuiAPI:
             recursive_update(data)
 
         except Exception as e:
-            print(f"参数更新错误: {str(e)}")
+            logger.info(f"参数更新错误: {str(e)}")
 
     def _save_image_async(self, img_response, full_path: Path) -> None:
         """异步保存图片"""
@@ -339,15 +339,15 @@ class ComfyuiAPI:
         try:
             response = requests.get(f"http://{self.server_url}/", timeout=5)
             if not response.ok:
-                print("错误：ComfyUI服务器未响应")
+                logger.error("错误：ComfyUI服务器未响应")
                 return False
         except requests.exceptions.RequestException as e:
-            print(f"错误：无法连接到ComfyUI服务器：{e}")
+            logger.error(f"错误：无法连接到ComfyUI服务器：{e}")
             return False
 
         # 等待WebSocket连接
         if not self.wait_for_connection(timeout):
-            print(f"错误：WebSocket连接超时（{timeout}秒）")
+            logger.error(f"错误：WebSocket连接超时（{timeout}秒）")
             return False
 
         return True
@@ -370,9 +370,9 @@ class ComfyuiAPI:
                 self.loading.stop()
             self.is_connected = False
             self.connection_event.clear()
-            print("已关闭所有连接并清理资源")
+            logger.info("已关闭所有连接并清理资源")
         except Exception as e:
-            print(f"关闭连接时出错: {e}")
+            logger.error(f"关闭连接时出错: {e}")
 
     def run(self,
             task_mode: str = "基础文生图",
@@ -395,7 +395,7 @@ class ComfyuiAPI:
         try:
             # 基本检查
             if not prompt_text or not self.is_connected:
-                print("警告: 参数无效或未连接")
+                logger.info("警告: 参数无效或未连接")
                 return None
 
             # 加载工作流

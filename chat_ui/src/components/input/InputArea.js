@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Send, Image, Paperclip, XCircle } from 'lucide-react';
 import { API_CONFIG } from "../../constants";
+import RagUploadDialog from "./RagUploadDialog";
 
 const InputArea = ({
   onInputChange,
@@ -15,10 +16,12 @@ const InputArea = ({
   handleDeleteFile,
   quickTools,
   maxMemory,
+  onRagFilesUpload,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef(null);
   const inputHeightRef = useRef(null);
+  const [usedRags, setUsedRags] = useState(new Set());
 
   const handleLocalInputChange = (e) => {
     const value = e.target.value;
@@ -148,7 +151,7 @@ const InputArea = ({
   const handleLocalSend = async () => {
     try {
       const text = inputValue.trim();
-      if (!text && uploadedImages.length === 0 && uploadedFiles.length === 0) {
+      if (!text && uploadedImages.length === 0 && uploadedFiles.length === 0 && usedRags.size === 0) {
         return;
       }
 
@@ -157,11 +160,11 @@ const InputArea = ({
         query: text,
         context_length: maxMemory,
         images: uploadedImages.map(img => img.file.serverPath),
-        files: uploadedFiles.map(file => file.file.serverPath)
+        files: uploadedFiles.map(file => file.file.serverPath),
+        rags: Array.from(usedRags)
       };
 
       await handleSend(messageData);
-
       setInputValue('');
       inputRef.current?.focus();
 
@@ -178,32 +181,53 @@ const InputArea = ({
     handleKeyPress?.(e);
   };
 
+  const handleRagUse = (ragName) => {
+    if (ragName === null) {
+      setUsedRags(new Set());
+    } else {
+      setUsedRags(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(ragName)) {
+          newSet.delete(ragName);
+        } else {
+          newSet.add(ragName);
+        }
+        return newSet;
+      });
+    }
+  };
+
   const isDisabled = isLoading ||
-    (!inputValue.trim() && (!uploadedImages?.length) && (!uploadedFiles?.length));
+    (!inputValue.trim() && !uploadedImages?.length && !uploadedFiles?.length && !usedRags.size);
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <div className="p-2 flex flex-col space-y-2 rounded-xl" style={{ backgroundColor: 'transparent' }}>
-        {/* 快捷工具栏 */}
         {quickTools?.length > 0 && (
-          <div className="flex items-center space-x-2 px-2">
-            {quickTools.map((tool, index) => {
-              if (tool.component) {
-                const ToolComponent = tool.component;
-                return <ToolComponent key={index} {...tool.props} />;
-              }
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center space-x-2">
+              {quickTools.map((tool, index) => {
+                if (tool.component) {
+                  const ToolComponent = tool.component;
+                  return <ToolComponent key={index} {...tool.props} />;
+                }
+                return (
+                  <button
+                    key={index}
+                    onClick={tool.action}
+                    className="text-gray-500 hover:text-gray-800 text-sm flex items-center space-x-1"
+                  >
+                    {tool.icon && <tool.icon size={14} />}
+                    <span>{tool.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-              return (
-                <button
-                  key={index}
-                  onClick={tool.action}
-                  className="text-gray-500 hover:text-gray-800 text-sm flex items-center space-x-1"
-                >
-                  {tool.icon && <tool.icon size={14} />}
-                  <span>{tool.label}</span>
-                </button>
-              );
-            })}
+            <RagUploadDialog
+              onFilesUploaded={onRagFilesUpload}
+              onRagUse={handleRagUse}
+            />
           </div>
         )}
 

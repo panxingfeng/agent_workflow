@@ -13,12 +13,13 @@ class InputType(str, Enum):
     FILE = "files"
     URL = "url",
     AUDIO = "audio"
+    RAG = "rag"
 
 
 @dataclass
 class Input:
     type: InputType
-    content: str
+    content: str | list[str]
 
 
 @dataclass
@@ -74,12 +75,13 @@ class UserQuery:
 
 
 class MessageInput:
-    def __init__(self, query: str, images: List[str] = None, files: List[str] = None, urls: List[str] = None):
+    def __init__(self, query: str, images: List[str] = None, files: List[str] = None, urls: List[str] = None,rags: List[str] = None):
         self.query = query
         # 处理输入列表，确保列表元素是字符串类型
         self.images = self._process_input_list(images) if images and any(images) else None
         self.files = self._process_input_list(files) if files and any(files) else None
         self.urls = self._process_input_list(urls) if urls and any(urls) else None
+        self.rags = self._process_input_list(rags) if rags and any(rags) else None
         self.supported_extensions = {
             InputType.IMAGE: ['.jpg', '.png', '.jpeg', '.gif'],  # 添加前端支持的格式
             InputType.FILE: ['.txt', '.pdf', '.doc', '.docx', '.md', '.json'],  # 添加 json 支持
@@ -186,6 +188,33 @@ class MessageInput:
             return False
         return validators.url(url) is True
 
+    def validate_rag(self, rag_name: str) -> bool:
+        """
+        验证 RAG 知识库是否存在
+        Args:
+            rag_name: 知识库名称
+        Returns:
+            bool: 验证结果
+        """
+        if not rag_name:
+            return False
+
+        try:
+            # 确保处理的是字符串类型
+            rag_name = str(rag_name)
+
+            # 验证知识库目录是否存在
+            rag_dir = os.path.join('data', 'rag_data', rag_name)
+            if not os.path.exists(rag_dir):
+                print(f"[Warning] 知识库不存在: {rag_dir}")
+                return False
+
+            return True
+
+        except Exception as e:
+            print(f"[Error] 验证知识库失败: {str(e)}")
+            return False
+
     def process_input(self) -> UserQuery:
         """
         处理输入并生成用户查询对象
@@ -215,12 +244,21 @@ class MessageInput:
                     if url and self.validate_url(url):
                         attachments.append(Input(type=InputType.URL, content=url))
 
+            # 处理 RAG 知识库
+            if self.rags:
+                print("rags:", self.rags)
+                validated_rags = []
+                for rag in self.rags:
+                    if rag and self.validate_rag(rag):
+                        validated_rags.append(rag)
+                if validated_rags:
+                    attachments.append(Input(type=InputType.RAG, content=validated_rags))
+
             query = UserQuery(text=self.query, attachments=attachments)
             return query
 
         except Exception as e:
             print(f"[Error] 处理输入失败: {str(e)}")
-            # 发生错误时返回只包含文本的查询对象
             return UserQuery(text=self.query, attachments=[])
 
     def __str__(self) -> str:
@@ -232,8 +270,11 @@ class MessageInput:
             parts.append(f"files={self.files}")
         if self.urls:
             parts.append(f"urls={self.urls}")
+        if self.rags:
+            parts.append(f"rags={self.rags}")
         return f"MessageInput({', '.join(parts)})"
 
     def __repr__(self) -> str:
         """提供详细的对象表示"""
         return str(self)
+

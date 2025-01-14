@@ -9,15 +9,12 @@ Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
 import asyncio
-import re
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Type, Optional
 import json
 import logging
-import colorlog
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 import os
@@ -28,52 +25,17 @@ from agent_workflow.tools.tool.base import BaseTool
 from agent_workflow.tools.result_formatter import ResultFormatter
 from agent_workflow.tools.base import UserQuery
 from agent_workflow.tools.base import FeishuUserQuery
+from agent_workflow.utils import loadingInfo
 from config.bot import TOOL_INTENT_PARSER, PARAMETER_OPTIMIZER, TOOL_RULES
 from config.config import OLLAMA_DATA
 
 ollama_model = OLLAMA_DATA['inference_model']
 
-# 配置带颜色的logging
-def setup_colored_logger(name, level=logging.INFO, log_file='agent_workflow.log'):
-    # 确保日志文件所在目录存在
-    log_dir = os.path.dirname(os.path.abspath(log_file))
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    logger = colorlog.getLogger(name)
-    if not logger.handlers:
-        # 控制台处理器（带颜色）
-        console_handler = colorlog.StreamHandler()
-        console_handler.setFormatter(colorlog.ColoredFormatter(
-            '%(log_color)s%(message)s',
-            log_colors={
-                'INFO': 'cyan',  # 使用青色显示一般信息
-                'SUCCESS': 'green',  # 使用绿色显示成功信息
-                'WARNING': 'yellow',  # 使用黄色显示警告
-                'ERROR': 'red',  # 使用红色显示错误
-            }
-        ))
-
-        # 文件处理器（不带颜色）
-        # FileHandler会自动创建不存在的日志文件
-        file_handler = logging.FileHandler(log_file, encoding='utf-8')
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s - %(name)s - %(message)s'
-        ))
-
-        logger.addHandler(console_handler)
-        logger.addHandler(file_handler)
-
-    logger.setLevel(level)
-    logger.propagate = False
-    return logger
-
-
 # 创建不同类型的日志记录器，共用同一个日志文件
-logger = setup_colored_logger('tool_executor', logging.INFO)
-result_logger = setup_colored_logger('result', logging.INFO)
-intent_logger = setup_colored_logger('intent', logging.WARNING)
-param_logger = setup_colored_logger('param', logging.DEBUG)
+logger = loadingInfo('tool_executor', logging.INFO)
+result_logger = loadingInfo('result', logging.INFO)
+intent_logger = loadingInfo('intent', logging.WARNING)
+param_logger = loadingInfo('param', logging.DEBUG)
 
 
 class ToolRegistry:

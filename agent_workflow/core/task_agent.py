@@ -10,11 +10,9 @@ All rights reserved.
 """
 import asyncio
 import json
-import logging
 import os
 import re
 import shutil
-import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -34,16 +32,9 @@ from config.tool_config import LOCAL_PORT_ADDRESS, UI_HOST, UI_PORT
 from .FeiShu import Feishu
 from .VChat import VChat
 from .tool_executor import ToolExecutor
-
-
-# 获取项目根目录
-def get_project_root():
-    current_file = Path(__file__).resolve()
-    for parent in current_file.parents:
-        if (parent / 'main.py').exists():
-            return parent
-    raise RuntimeError("Could not find project root directory")
-
+from ..rag.lightrag_mode import DocumentProcessor
+from ..utils import loadingInfo
+from ..utils.read_files import get_project_root
 
 # 获取项目根目录和输出目录
 project_root = get_project_root()
@@ -54,8 +45,7 @@ upload_files_dir = upload_dir / 'files'
 history_data_dir = project_root / 'data'
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = loadingInfo("task_agent")
 
 
 class AgentStatus(Enum):
@@ -91,19 +81,39 @@ class HistoryRecord(BaseModel):
     pinned: bool = False
     starred: bool = False
 
+class RagProcessRequest(BaseModel):
+    """处理 RAG 任务的请求模型。"""
+    files: List[str]
+    rag_name: str
+
+class DeleteRequest(BaseModel):
+    """删除 RAG 相关数据或目录的请求模型。"""
+    rag_name: str
+
+
+def check_and_rename(filename: str, directory: Path) -> str:
+    """
+    检查文件是否存在，如果存在则在末尾添加递增的数字
+    """
+    # 分离文件名和扩展名
+    name = Path(filename).stem
+    suffix = Path(filename).suffix
+
+    counter = 1
+    new_filename = filename
+
+    # 循环检查文件是否存在，如果存在则递增数字
+    while (directory / new_filename).exists():
+        new_filename = f"{name}{counter}{suffix}"
+        counter += 1
+
+    return new_filename
 
 class MasterAgent:
     """
     主控代理类
-
     负责管理和协调多个子代理，实现智能任务分发和执行。
     支持多种平台接入（FastAPI、飞书、微信）。
-
-    属性:
-        agents: 可用代理字典，key为代理类名，value为代理实例
-        llm: 语言模型实例，用于智能选择代理
-        status: 当前代理状态
-        execution_mode: 执行模式
     """
 
     def __init__(self, tool_executor: ToolExecutor, verbose: bool):
@@ -269,7 +279,7 @@ class MasterAgent:
                     data_dir = Path(data_dir)
                 data_dir.mkdir(exist_ok=True, parents=True)
             except Exception as e:
-                print(f"[Error] 创建数据目录失败: {str(e)}")
+                logger.error(f"创建数据目录失败: {str(e)}")
                 raise
 
             # 开始处理
@@ -311,9 +321,9 @@ class MasterAgent:
                                             'size': os.path.getsize(path)
                                         })
                                     else:
-                                        print(f"[Warning] 图片文件不存在: {path}")
+                                        logger.info(f"图片文件不存在: {path}")
                             except Exception as e:
-                                print(f"[Error] 处理图片路径失败: {str(e)}")
+                                logger.error(f"处理图片路径失败: {str(e)}")
                                 continue
 
                     # 处理文件路径
@@ -334,16 +344,16 @@ class MasterAgent:
                                             'size': os.path.getsize(path)
                                         })
                                     else:
-                                        print(f"[Warning] 文件不存在: {path}")
+                                        logger.info(f"文件不存在: {path}")
                             except Exception as e:
-                                print(f"[Error] 处理文件路径失败: {str(e)}")
+                                logger.error(f"处理文件路径失败: {str(e)}")
                                 continue
                 else:
                     processed_query = input_msg
-                    print(f"[Debug] 直接使用输入作为查询: {processed_query}")
+                    logger.info(f"直接使用输入作为查询: {processed_query}")
 
             except Exception as e:
-                print(f"[Error] 处理用户输入时出错: {str(e)}")
+                logger.error(f"处理用户输入时出错: {str(e)}")
                 raise
 
             # 使用执行器处理任务
@@ -472,7 +482,7 @@ class MasterAgent:
                                                 await f.write(json.dumps(history_data, ensure_ascii=False, indent=2))
 
                                     except Exception as e:
-                                        print(f"[Error] 保存历史记录失败: {str(e)}")
+                                        logger.error(f"保存历史记录失败: {str(e)}")
 
                                 # 返回结果
                                 yield {
@@ -507,9 +517,9 @@ class MasterAgent:
             except Exception as e:
                 self.status = AgentStatus.FAILED
                 error_msg = f"处理失败: {str(e)}"
-                print(f"[Error] {error_msg}")
+                logger.error(f"{error_msg}")
                 import traceback
-                print(f"[Debug] 错误详情: {traceback.format_exc()}")
+                logger.info(f"[Debug] 错误详情: {traceback.format_exc()}")
                 yield {
                     "type": "error",
                     "message_id": message_id,
@@ -519,9 +529,9 @@ class MasterAgent:
         except Exception as e:
             self.status = AgentStatus.FAILED
             error_msg = f"处理失败: {str(e)}"
-            print(f"[Error] {error_msg}")
+            logger.error(f"{error_msg}")
             import traceback
-            print(f"[Debug] 错误详情: {traceback.format_exc()}")
+            logger.error(f"错误详情: {traceback.format_exc()}")
             yield {
                 "type": "error",
                 "message_id": message_id,
@@ -621,11 +631,11 @@ class MasterAgent:
                     }
 
                 # 如果所有位置都没找到文件
-                print(f"[Debug] 文件不存在: {file_name}")
+                logger.info(f"文件不存在: {file_name}")
                 raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
 
             except Exception as e:
-                print(f"Error in get_file_url: {str(e)}")
+                logger.error(f"Error in get_file_url: {str(e)}")
                 raise HTTPException(status_code=500, detail=str(e))
 
         @app.post("/api/upload")
@@ -640,10 +650,9 @@ class MasterAgent:
                 if images:
                     for image in images:
                         try:
-                            # 生成唯一文件名但保留原始文件名
-                            original_name = image.filename
-                            unique_filename = f"{uuid.uuid4()}{Path(original_name).suffix}"
-                            file_path = upload_images_dir / unique_filename
+                            # 检查文件名是否存在
+                            filename = check_and_rename(image.filename, upload_images_dir)
+                            file_path = upload_images_dir / filename
 
                             # 保存文件
                             async with aiofiles.open(file_path, 'wb') as f:
@@ -651,46 +660,48 @@ class MasterAgent:
                                 await f.write(content)
 
                             # 获取文件URL
-                            file_info = await get_file_url(f"images/{unique_filename}")
+                            file_info = await get_file_url(f"images/{filename}")
                             results.append({
                                 "url": file_info['url'],
-                                "path": str(unique_filename),  # 只保存文件名部分
-                                "name": original_name,
+                                "path": str(filename),
+                                "name": image.filename,  # 保存原始文件名
                                 "size": file_info['size']
                             })
 
                         except Exception as e:
-                            print(f"[Error] Failed to upload images {image.filename}: {e}")
+                            logger.error(f"Failed to upload image {image.filename}: {e}")
+                            raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
                 # 处理文件上传
                 if files:
                     for file in files:
                         try:
-                            original_name = file.filename
-                            unique_filename = f"{uuid.uuid4()}{Path(original_name).suffix}"
-                            file_path = upload_files_dir / unique_filename  # 使用 files_dir
+                            # 检查文件名是否存在
+                            filename = check_and_rename(file.filename, upload_files_dir)
+                            file_path = upload_files_dir / filename
 
                             async with aiofiles.open(file_path, 'wb') as f:
                                 content = await file.read()
                                 await f.write(content)
 
-                            file_info = await get_file_url(f"files/{unique_filename}")
+                            file_info = await get_file_url(f"files/{filename}")
                             results.append({
                                 "url": file_info['url'],
-                                "path": str(unique_filename),
-                                "name": original_name,
+                                "path": str(filename),
+                                "name": file.filename,  # 保存原始文件名
                                 "size": file_info['size']
                             })
 
                         except Exception as e:
-                            print(f"[Error] Failed to upload files {file.filename}: {e}")
+                            logger.error(f"Failed to upload file {file.filename}: {e}")
+                            raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
 
                 return {
                     "files": results
                 }
 
             except Exception as e:
-                print(f"[Error] Upload failed: {e}")
+                logger.error(f"Upload failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
         @app.delete("/api/delete")
@@ -702,9 +713,9 @@ class MasterAgent:
 
                 # 判断文件类型和路径
                 if any(path.lower().endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif']):
-                    file_path = project_root / 'upload' / 'images' / path
+                    file_path = (project_root / 'upload' / 'images' / path).resolve()
                 else:
-                    file_path = project_root / 'upload' / 'files' / path
+                    file_path = (project_root / 'upload' / 'files' / path).resolve()
 
                 # 规范化路径
                 file_path = file_path.resolve()
@@ -712,15 +723,15 @@ class MasterAgent:
 
                 # 安全检查：确保文件在上传目录中
                 if not str(file_path).startswith(str(upload_dir)):
-                    print(f"[Error] Access denied - files path: {file_path} not in upload dir: {upload_dir}")
+                    logger.error(f"Access denied - files path: {file_path} not in upload dir: {upload_dir}")
                     raise HTTPException(status_code=403, detail="Access denied")
 
                 if not file_path.exists():
-                    print(f"[Warning] File not found: {file_path}")
+                    logger.info(f"File not found: {file_path}")
                     raise HTTPException(status_code=404, detail="File not found")
 
                 if not file_path.is_file():
-                    print(f"[Error] Path is not a files: {file_path}")
+                    logger.error(f"Path is not a files: {file_path}")
                     raise HTTPException(status_code=400, detail="Not a files")
 
                 # 删除文件
@@ -738,6 +749,233 @@ class MasterAgent:
                 print(f"[Error] Delete failed: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Failed to delete files: {str(e)}")
 
+        @app.get("/api/rag/list")
+        async def list_rags():
+            try:
+                rag_base_dir = (project_root / 'data' / 'rag_data').resolve()
+                if not rag_base_dir.exists():
+                    return {
+                        "success": True,
+                        "rags": []
+                    }
+
+                rags_info = []
+                for rag_dir in rag_base_dir.iterdir():
+                    if rag_dir.is_dir():
+                        metadata_file = (project_root / 'data' / 'rag_data.json').resolve()
+                        try:
+                            if metadata_file.exists():
+                                with open(metadata_file, 'r', encoding='utf-8') as f:
+                                    metadata = json.load(f)
+                                    rags_info.append({
+                                        "name": rag_dir.name,
+                                        "created_at": metadata.get('created_at'),
+                                        "files_info": metadata.get('files', []),
+                                        "processed_files": metadata.get('processed_files', [])
+                                    })
+                            else:
+                                rags_info.append({
+                                    "name": rag_dir.name,
+                                    "files_info": []
+                                })
+                        except Exception as e:
+                            logger.error(f"Error reading metadata for {rag_dir.name}: {str(e)}")
+                            rags_info.append({
+                                "name": rag_dir.name,
+                                "error": str(e)
+                            })
+
+                return {
+                    "success": True,
+                    "rags": rags_info
+                }
+            except Exception as e:
+                logger.error(f"Failed to list RAGs: {str(e)}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        # @app.post("/api/rag/rename")
+        # async def rename_rag(old_name: str, new_name: str):
+        #     try:
+        #         rag_base_dir = (project_root / 'data' / 'rag_data').resolve()
+        #         rag_data_dir = (project_root / 'data').resolve()
+        #         old_path = (rag_base_dir / old_name).resolve()
+        #         new_path = (rag_base_dir / new_name).resolve()
+        #
+        #         if not old_path.exists():
+        #             raise HTTPException(status_code=404, detail="RAG not found")
+        #
+        #         if new_path.exists():
+        #             raise HTTPException(status_code=400, detail="New name already exists")
+        #
+        #         old_path.rename(new_path)
+        #
+        #         rag_data_file = rag_data_dir / 'rag_data.json'
+        #         if rag_data_file.exists():
+        #             with open(rag_data_file, 'r', encoding='utf-8') as f:
+        #                 metadata = json.load(f)
+        #                 metadata['rag_name'] = new_name
+        #
+        #             with open(rag_data_file, 'w', encoding='utf-8') as f:
+        #                 json.dump(metadata, f, ensure_ascii=False, indent=2)
+        #
+        #         return {
+        #             "success": True,
+        #             "new_name": new_name
+        #         }
+        #
+        #     except HTTPException:
+        #         raise
+        #     except Exception as e:
+        #         logger.error(f"Failed to rename RAG: {str(e)}")
+        #         raise HTTPException(status_code=500, detail=str(e))
+
+        @app.post("/api/rag/process")
+        async def process_rag_files(request: RagProcessRequest):
+            try:
+                if not request.files:
+                    raise HTTPException(status_code=400, detail="No files provided")
+
+                if not request.rag_name:
+                    raise HTTPException(status_code=400, detail="RAG name is required")
+
+                rag_dir = (project_root / 'data' / 'rag_data' / request.rag_name).resolve()
+                metadata_file = (project_root / 'data' / 'rag_data.json').resolve()
+
+                # 检查 RAG 目录是否已存在
+                if rag_dir.exists():
+                    logger.info(f"RAG directory already exists: {rag_dir}")
+                    try:
+                        with open(metadata_file, 'r', encoding='utf-8') as f:
+                            metadata = json.load(f)
+                            return {
+                                "success": True,
+                                "message": "RAG already exists",
+                                "rag_name": metadata.get('rag_name', []),
+                                "save_path": str(rag_dir),
+                                "files_info": metadata.get('files', []),
+                                "created_at": metadata.get('created_at'),
+                                "skipped": True
+                            }
+                    except (FileNotFoundError, json.JSONDecodeError) as e:
+                        logger.warning(f"Failed to read metadata file: {str(e)}")
+                        return {
+                            "success": True,
+                            "message": "RAG exists but metadata not available",
+                            "rag_name": request.rag_name,
+                            "save_path": str(rag_dir),
+                            "skipped": True
+                        }
+
+                full_paths = []
+                files_info = []
+
+                for file_path in request.files:
+                    if not file_path or '..' in file_path:
+                        raise HTTPException(status_code=400, detail=f"Invalid path: {file_path}")
+
+                    source_path = (project_root / 'upload' / 'files' / file_path).resolve()
+
+                    if not source_path.exists():
+                        raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+
+                    full_paths.append(str(source_path))
+                    files_info.append({
+                        "name": request.original_filenames[file_path] if hasattr(request,
+                                                                                 'original_filenames') else os.path.basename(
+                            file_path),
+                        "size": os.path.getsize(source_path),
+                        "created_at": datetime.fromtimestamp(os.path.getctime(source_path)).isoformat()
+                    })
+
+                processor = DocumentProcessor(
+                    path_name=str(rag_dir),
+                    files_path_name=None
+                )
+
+                try:
+                    results = await processor.process_documents_async(full_paths)
+
+                    # 验证 results 存在且格式正确
+                    if not results or not isinstance(results, dict):
+                        raise HTTPException(
+                            status_code=500,
+                            detail="Invalid processing results format"
+                        )
+
+                    # 验证必要的键存在
+                    if 'success' not in results or 'failed' not in results:
+                        raise HTTPException(
+                            status_code=500,
+                            detail="Missing required result categories"
+                        )
+
+                    # 检查是否有成功处理的文件
+                    successful_files = results.get('success', [])
+                    failed_files = results.get('failed', [])
+
+                    if not successful_files and failed_files:
+                        failed_filenames = [
+                            result.filename for result in failed_files
+                            if hasattr(result, 'filename')
+                        ]
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"Failed to process files: {', '.join(failed_filenames)}"
+                        )
+
+                    metadata = {
+                        "rag_name": request.rag_name,
+                        "created_at": datetime.now().isoformat(),
+                        "files": files_info,
+                        "processed_files": [
+                            result.filename for result in successful_files
+                            if hasattr(result, 'filename')
+                        ]
+                    }
+
+                    # 确保目录存在
+                    rag_dir.mkdir(parents=True, exist_ok=True)
+                    with open(metadata_file, 'w', encoding='utf-8') as f:
+                        json.dump(metadata, f, ensure_ascii=False, indent=2)
+
+                    return {
+                        "success": True,
+                        "message": "RAG processing completed successfully",
+                        "rag_name": request.rag_name,
+                        "save_path": str(rag_dir),
+                        "files_info": files_info,
+                        "processed_files": metadata["processed_files"],
+                        "created_at": metadata["created_at"],
+                        "skipped": False
+                    }
+
+                finally:
+                    processor.cleanup()
+
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"RAG processing failed: {str(e)}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @app.post("/api/rag/delete")
+        async def delete_rag(request: DeleteRequest):
+            try:
+                rag_name = request.rag_name
+                rag_dir = (project_root / 'data' / 'rag_data' / rag_name).resolve()
+
+                if rag_dir.exists() and rag_dir.is_dir():
+                    shutil.rmtree(rag_dir)
+                    logger.info(f"<{rag_name}>文件已删除 ")
+                else:
+                    return {"success": False, "message": "Directory does not exist or is not a folder"}
+
+                return {"success": True}
+            except OSError as e:
+                return {"success": False, "message": f"Failed to delete directory: {str(e)}"}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         # 聊天消息
         @app.post("/api/chat")
         async def process_message(
@@ -746,7 +984,8 @@ class MasterAgent:
                 context_length: int = Form(default=10),
                 conversation_id: str = Form(...),
                 images: List[str] = Form(default=[]),
-                files: List[str] = Form(default=[])
+                files: List[str] = Form(default=[]),
+                rags: List[str] = Form(default=[])  # 添加 rags 参数
         ):
             """处理新消息"""
             try:
@@ -756,35 +995,49 @@ class MasterAgent:
                     for image_path in images:
                         if image_path:
                             try:
-                                # 构造完整的文件路径
-                                full_path = str(upload_dir / 'images' / image_path)
+                                full_path = (upload_dir / 'images' / image_path).resolve()
                                 if Path(full_path).exists():
                                     processed_images.append(full_path)
-                                    print(f"[Debug] 成功处理图片路径: {full_path}")
+                                    logger.info(f"成功处理图片路径: {full_path}")
                                 else:
-                                    print(f"[Warning] 图片文件不存在: {full_path}")
+                                    logger.error(f"图片文件不存在: {full_path}")
                             except Exception as e:
-                                print(f"[Error] 处理图片路径失败: {str(e)}")
+                                logger.error(f"处理图片路径失败: {str(e)}")
 
                 processed_files = []
                 if files:
                     for files_path in files:
                         if files_path:
                             try:
-                                # 构造完整的文件路径
-                                full_path = str(upload_dir / 'files' / files_path)
+                                full_path = (upload_dir / 'files' / files_path).resolve()
                                 if Path(full_path).exists():
                                     processed_files.append(full_path)
                                 else:
-                                    print(f"[Warning] 图片文件不存在: {full_path}")
+                                    print(f"[Warning] 文件不存在: {full_path}")
                             except Exception as e:
-                                print(f"[Error] 处理图片路径失败: {str(e)}")
+                                print(f"[Error] 处理文件路径失败: {str(e)}")
+
+                # 处理 RAG 文件名称
+                processed_rags = []
+                if rags:
+                    for rag_name in rags:
+                        if rag_name:
+                            try:
+                                rag_dir = (project_root / 'data' / 'rag_data' / rag_name).resolve()
+                                if rag_dir.exists():
+                                    processed_rags.append(rags)
+                                    logger.info(f"成功处理RAG文件: {rags}")
+                                else:
+                                    logger.error(f"RAG目录不存在: {rags}")
+                            except Exception as e:
+                                logger.error(f"处理RAG路径失败: {str(e)}")
 
                 # 创建消息输入
                 input_msg = MessageInput(
                     query=query,
                     images=processed_images if processed_images else None,
-                    files=processed_files if processed_files else None
+                    files=processed_files if processed_files else None,
+                    rags=processed_rags if processed_rags else None
                 )
 
                 async def generate():
@@ -893,7 +1146,7 @@ class MasterAgent:
         async def get_all_conversations():
             if history_mode == "json":
                 try:
-                    history_file = history_data_dir / 'chat_history.json'
+                    history_file = (history_data_dir / 'chat_history.json').resolve()
 
                     if not history_file.exists():
                         return []
@@ -918,7 +1171,7 @@ class MasterAgent:
             """获取指定会话的历史记录"""
             if history_mode == "json":
                 try:
-                    history_file = history_data_dir / 'chat_history.json'
+                    history_file = (history_data_dir / 'chat_history.json').resolve()
 
                     if not history_file.exists():
                         return {"messages": [], "title": "新对话"}
@@ -937,7 +1190,7 @@ class MasterAgent:
 
                     if not conversation:
                         return {"messages": [], "title": "新对话"}
-
+                    logger.info(f"获取会话id <{conversation_id}> 成功")
                     return {
                         "conversation_id": conversation['conversation_id'],
                         "title": conversation.get('title', "新对话"),
@@ -959,7 +1212,7 @@ class MasterAgent:
             """删除指定会话"""
             if history_mode == "json":
                 try:
-                    history_file = history_data_dir / 'chat_history.json'
+                    history_file = (history_data_dir / 'chat_history.json').resolve()
 
                     if not history_file.exists():
                         return {"success": True, "message": "无历史记录"}
@@ -982,7 +1235,7 @@ class MasterAgent:
                     temp_dir = project_root / 'temp' / conversation_id
                     if temp_dir.exists():
                         shutil.rmtree(temp_dir)
-
+                    logger.info(f"会话id <{conversation_id}> 会话删除成功")
                     return {"success": True, "message": "会话删除成功"}
 
                 except Exception as e:

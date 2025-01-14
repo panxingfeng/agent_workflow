@@ -10,7 +10,6 @@ All rights reserved.
 """
 import base64
 import json
-import logging
 import os
 
 import torch
@@ -24,18 +23,17 @@ from pydantic import BaseModel, Field
 from agent_workflow.llm.llm import LLM
 from agent_workflow.rag.lightrag_mode import LightsRAG
 from agent_workflow.tools.tool.base import BaseTool, images_tool_prompts, get_prompts
+from agent_workflow.utils import loadingInfo
 from agent_workflow.utils.forge_webui_generator import ForgeImageGenerator
 from agent_workflow.utils.forge_api import  ForgeAPI
 from agent_workflow.utils.comfyui_api import ComfyuiAPI
 from config.tool_config import QUALITY_PROMPTS, NEGATIVE_PROMPTS, COMFYUI_MODEL, FORGE_MODEL, IMAGE_GEN_TOOL_DATA, \
     DESCRIPTION_IMAGE_TOOL_DATA
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 os.environ['OMP_NUM_THREADS'] = '1'
 
+logger = loadingInfo("image_tool")
 
 class DescriptionModelType(str, Enum):
     LLAMA = "llama3.2-vision"

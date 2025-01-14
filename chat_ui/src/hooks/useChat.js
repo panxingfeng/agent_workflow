@@ -31,9 +31,7 @@ export const useChat = () => {
   };
 
 const handleSend = async (message) => {
-  if (isLoading) {
-    return;
-  }
+  if (isLoading) return;
 
   try {
     setIsLoading(true);
@@ -91,6 +89,14 @@ const handleSend = async (message) => {
       message.files.forEach((path) => {
         if (path) {
           formData.append('files', path);
+        }
+      });
+    }
+
+    if (message.rags?.length > 0) {
+      message.rags.forEach((ragName) => {
+        if (ragName) {
+          formData.append('rags', ragName);
         }
       });
     }

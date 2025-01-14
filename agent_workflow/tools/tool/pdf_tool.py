@@ -27,10 +27,12 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 from agent_workflow.tools.tool.base import BaseTool
+from agent_workflow.utils import loadingInfo
 
 # 设置Ghostscript环境变量
 os.environ["PATH"] += r";C:\Program Files\gs\gs10.04.0\bin"
 
+logger = loadingInfo("file_converter_tool")
 
 class ConversionType(str, Enum):
     """
@@ -200,7 +202,7 @@ class FileConverterTool(BaseTool):
         for directory in directories:
             if not os.path.exists(directory):
                 os.makedirs(directory)
-                print(f"Created directory: {directory}")
+                logger.info(f"Created directory: {directory}")
 
 
     def _check_poppler(self) -> bool:
@@ -235,7 +237,7 @@ class FileConverterTool(BaseTool):
         - 解压错误处理
         - 权限问题处理
         """
-        print("\nDownloading Poppler...")
+        logger.info("\nDownloading Poppler...")
 
         try:
             # 下载Poppler
@@ -249,23 +251,23 @@ class FileConverterTool(BaseTool):
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-            print("Extracting Poppler...")
+            logger.info("Extracting Poppler...")
             with zipfile.ZipFile(temp_zip, 'r') as zip_ref:
                 poppler_dir = os.path.join(self.base_dir, "poppler")
                 zip_ref.extractall(poppler_dir)
 
             # 清理临时文件
             os.remove(temp_zip)
-            print("Poppler installation completed!")
+            logger.info("Poppler installation completed!")
 
             # 环境变量配置
             if sys.platform == 'win32':
                 os.environ['PATH'] = f"{self.poppler_path};{os.environ['PATH']}"
 
         except Exception as e:
-            print(f"Failed to download Poppler: {str(e)}")
-            print("Please download manually from: https://github.com/oschwartz10612/poppler-windows/releases")
-            print(f"And extract to: {self.poppler_path}")
+            logger.info(f"Failed to download Poppler: {str(e)}")
+            logger.info("Please download manually from: https://github.com/oschwartz10612/poppler-windows/releases")
+            logger.info(f"And extract to: {self.poppler_path}")
 
 
     def _generate_output_path(self, prefix: str, extension: str) -> str:
@@ -332,7 +334,7 @@ class FileConverterTool(BaseTool):
             return False
 
         except Exception as e:
-            print(f"LibreOffice conversion failed: {str(e)}")
+            logger.error(f"LibreOffice conversion failed: {str(e)}")
             return False
 
 
@@ -358,7 +360,7 @@ class FileConverterTool(BaseTool):
 
             return os.path.exists(output_file)
         except Exception as e:
-            print(f"Unoconv conversion failed: {str(e)}")
+            logger.error(f"Unoconv conversion failed: {str(e)}")
             return False
 
 
@@ -380,11 +382,11 @@ class FileConverterTool(BaseTool):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            stdout, stderr = process.communicate()
+            process.communicate()
 
             return os.path.exists(output_file)
         except Exception as e:
-            print(f"Pandoc conversion failed: {str(e)}")
+            logger.error(f"Pandoc conversion failed: {str(e)}")
             return False
 
 
@@ -486,7 +488,7 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except Exception as e:
-            print(f"Failed to convert PDF to PDF/A: {str(e)}")
+            logger.error(f"Failed to convert PDF to PDF/A: {str(e)}")
             return None
 
 
@@ -522,7 +524,7 @@ class FileConverterTool(BaseTool):
                 )
                 await process.communicate()
             except Exception as e:
-                print(f"Failed to install browsers: {e}")
+                logger.error(f"Failed to install browsers: {e}")
                 return None
 
             async with async_playwright() as p:
@@ -568,8 +570,8 @@ class FileConverterTool(BaseTool):
                 return output_path
 
         except Exception as e:
-            print(f"URL to PDF conversion failed: {str(e)}")
-            print(f"Detailed error: {traceback.format_exc()}")
+            logger.error(f"URL to PDF conversion failed: {str(e)}")
+            logger.error(f"Detailed error: {traceback.format_exc()}")
             return None
 
 
@@ -604,7 +606,7 @@ class FileConverterTool(BaseTool):
                 upload_dir = os.path.join(os.getcwd(), self.sub_upload_dir)
                 if os.path.exists(upload_dir):
                     files = os.listdir(upload_dir)
-                    print(f"Upload目录中的文件: {files}")
+                    logger.info(f"Upload目录中的文件: {files}")
                 raise FileNotFoundError(f"文件未找到: {full_file_path}")
 
             if os.path.getsize(full_file_path) == 0:
@@ -638,15 +640,15 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except FileNotFoundError as e:
-            print(f"Failed to convert PDF to Word: {str(e)}")
+            logger.error(f"Failed to convert PDF to Word: {str(e)}")
             return None
         except ValueError as e:
-            print(f"Failed to convert PDF to Word: {str(e)}")
+            logger.error(f"Failed to convert PDF to Word: {str(e)}")
             return None
         except Exception as e:
-            print(f"Failed to convert PDF to Word: {str(e)}")
+            logger.error(f"Failed to convert PDF to Word: {str(e)}")
             import traceback
-            print(f"Detailed error: {traceback.format_exc()}")
+            logger.error(f"Detailed error: {traceback.format_exc()}")
             return None
 
 
@@ -690,7 +692,7 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except Exception as e:
-            print(f"PDF to text conversion failed: {str(e)}")
+            logger.error(f"PDF to text conversion failed: {str(e)}")
             return None
 
 
@@ -784,7 +786,7 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except Exception as e:
-            print(f"Failed to convert PDF to presentation: {str(e)}")
+            logger.error(f"Failed to convert PDF to presentation: {str(e)}")
             return None
 
 
@@ -806,7 +808,7 @@ class FileConverterTool(BaseTool):
         """
         try:
             if not self._check_poppler():
-                print("\nPoppler is not properly installed.")
+                logger.info("\nPoppler is not properly installed.")
                 self._download_poppler()
                 if not self._check_poppler():
                     return None
@@ -829,7 +831,7 @@ class FileConverterTool(BaseTool):
 
             # 检查文件是否存在
             if not os.path.exists(full_pdf_path):
-                print(f"文件不存在: {full_pdf_path}")
+                logger.info(f"文件不存在: {full_pdf_path}")
                 return None
 
             # 创建临时目录
@@ -865,11 +867,11 @@ class FileConverterTool(BaseTool):
                 try:
                     shutil.rmtree(temp_dir)
                 except Exception as e:
-                    print(f"Warning: Failed to clean up temporary directory: {e}")
+                    logger.info(f"Warning: Failed to clean up temporary directory: {e}")
 
         except Exception as e:
-            print(f"\nPDF to image conversion failed: {str(e)}")
-            print(f"Detailed error: {traceback.format_exc()}")
+            logger.error(f"\nPDF to image conversion failed: {str(e)}")
+            logger.error(f"Detailed error: {traceback.format_exc()}")
             return None
 
 
@@ -912,7 +914,7 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except Exception as e:
-            print(f"PDF to Markdown conversion failed: {str(e)}")
+            logger.error(f"PDF to Markdown conversion failed: {str(e)}")
             return None
 
 
@@ -939,8 +941,8 @@ class FileConverterTool(BaseTool):
             # 配置wkhtmltopdf路径
             path_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
             if not os.path.isfile(path_wkhtmltopdf):
-                print(f"Error: wkhtmltopdf not found at '{path_wkhtmltopdf}'")
-                print("Please install from https://wkhtmltopdf.org/downloads.html")
+                logger.info(f"Error: wkhtmltopdf not found at '{path_wkhtmltopdf}'")
+                logger.info("Please install from https://wkhtmltopdf.org/downloads.html")
                 return None
 
             config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
@@ -1001,7 +1003,7 @@ class FileConverterTool(BaseTool):
             return output_path
 
         except Exception as e:
-            print(f"Markdown to PDF conversion failed: {str(e)}")
+            logger.error(f"Markdown to PDF conversion failed: {str(e)}")
             return None
 
 
@@ -1033,7 +1035,7 @@ class FileConverterTool(BaseTool):
 
             # 检查文件存在性
             if not os.path.exists(full_file_path):
-                print(f"File not found: {full_file_path}")
+                logger.info(f"File not found: {full_file_path}")
                 return None
 
             # 尝试不同的转换方法
@@ -1052,12 +1054,12 @@ class FileConverterTool(BaseTool):
                 except Exception:
                     continue
 
-            print("File to PDF conversion failed")
+            logger.info("File to PDF conversion failed")
             return None
 
         except Exception as e:
-            print(f"File to PDF conversion failed: {str(e)}")
-            print(f"Detailed error: {traceback.format_exc()}")
+            logger.error(f"File to PDF conversion failed: {str(e)}")
+            logger.error(f"Detailed error: {traceback.format_exc()}")
             return None
 
 

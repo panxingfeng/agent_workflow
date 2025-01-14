@@ -30,15 +30,12 @@ from lightrag.utils import EmbeddingFunc
 import chardet
 
 from agent_workflow.rag.base import BaseRAG
+from agent_workflow.utils import loadingInfo
+from agent_workflow.utils.read_files import get_project_root
 from config.config import OLLAMA_DATA
 
-
-def get_project_root() -> str:
-    current_path = os.path.abspath(__file__)
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_path)))
-    logging.info(f"Project root path: {project_root}")
-    return project_root
-
+# 配置日志
+logger = loadingInfo("lightrag_mode")
 
 def get_upload_dir(path_name:str = None) -> str:
     """获取上传文件夹路径"""
@@ -54,18 +51,18 @@ def get_upload_dir(path_name:str = None) -> str:
 
 def get_files_from_upload(path_name:str = None) -> List[str]:
     upload_dir = get_upload_dir(path_name)
-    logging.info(f"扫描上传目录: {upload_dir}")
+    logger.info(f"扫描上传目录: {upload_dir}")
     supported_files = []
     supported_extensions = {ft.value for ft in FileType}
 
     for filename in os.listdir(upload_dir):
         ext = os.path.splitext(filename)[1].lower().lstrip('.')
         filepath = os.path.join(upload_dir, filename)
-        logging.info(f"检查文件: {filepath}")
+        logger.info(f"检查文件: {filepath}")
 
         if os.path.isfile(filepath) and ext in supported_extensions:
             supported_files.append(filepath)
-            logging.info(f"找到支持的文件: {filepath}")
+            logger.info(f"找到支持的文件: {filepath}")
 
     return sorted(supported_files)
 
@@ -100,7 +97,7 @@ class DocumentProcessor(BaseRAG):
     def __init__(self, path_name: str = "document_rag",files_path_name:str = None):
         self.output_dir = os.path.join(get_project_root(), path_name)
         self.rag = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
         self.whisper_model = None
         self.files_path_name = files_path_name
 
@@ -166,11 +163,23 @@ class DocumentProcessor(BaseRAG):
     def _process_txt(self, file_path: str) -> str:
         """处理TXT文件"""
         try:
+            self.logger.info(f"开始读取文本文件: {file_path}")
             with open(file_path, 'r', encoding='utf-8') as file:
-                return file.read()
-        except UnicodeDecodeError as e:
-            self.logger.error(f"文件 {file_path} 编码错误: {str(e)}")
-            raise
+                content = file.read()
+                self.logger.info(f"文件内容长度: {len(content)}")
+                return content
+        except UnicodeDecodeError:
+            self.logger.warning(f"UTF-8编码失败，尝试检测编码: {file_path}")
+            try:
+                with open(file_path, 'rb') as file:
+                    raw_data = file.read()
+                    result = chardet.detect(raw_data)
+                    encoding = result['encoding']
+                    self.logger.info(f"检测到编码: {encoding}")
+                    return raw_data.decode(encoding)
+            except Exception as e:
+                self.logger.error(f"文件编码处理失败: {str(e)}")
+                raise
 
     def _process_html(self, file_path: str) -> str:
         """处理HTML文件"""
@@ -258,9 +267,12 @@ class DocumentProcessor(BaseRAG):
         try:
             file_type = self._get_file_type(file_path)
             if not file_type:
-                raise ValueError(f"不支持的文件类型: {os.path.splitext(file_path)[1]}")
+                return ProcessResult(
+                    filename=os.path.basename(file_path),
+                    success=False,
+                    error=f"不支持的文件类型: {os.path.splitext(file_path)[1]}"
+                )
 
-            # 根据文件类型选择处理方法
             content = None
             if file_type == FileType.DOCX:
                 content = await asyncio.to_thread(self._process_docx, file_path)
@@ -279,15 +291,28 @@ class DocumentProcessor(BaseRAG):
             elif file_type == FileType.JSON:
                 content = await asyncio.to_thread(self._process_json, file_path)
             else:
-                raise ValueError(f"暂不支持处理 {file_type.value} 类型的文件")
-
-            if content:
                 return ProcessResult(
                     filename=os.path.basename(file_path),
-                    success=True,
-                    content=content,
+                    success=False,
+                    error=f"暂不支持处理 {file_type.value} 类型的文件",
                     file_type=file_type
                 )
+
+            # 确保总是返回 ProcessResult
+            if not content:
+                return ProcessResult(
+                    filename=os.path.basename(file_path),
+                    success=False,
+                    error="文件内容为空",
+                    file_type=file_type
+                )
+
+            return ProcessResult(
+                filename=os.path.basename(file_path),
+                success=True,
+                content=content,
+                file_type=file_type
+            )
 
         except Exception as e:
             self.logger.error(f"处理文件 {os.path.basename(file_path)} 时发生错误: {str(e)}")
@@ -300,35 +325,59 @@ class DocumentProcessor(BaseRAG):
 
     async def process_documents_async(self, input_files: List[str]) -> Dict[str, List[ProcessResult]]:
         """异步批量处理文档"""
-        self._setup_rag()
-        results = {'success': [], 'failed': []}
-        processed_contents = []
+        try:
+            self.logger.info("开始设置RAG...")
+            self._setup_rag()
 
-        # 并发处理所有文件
-        tasks = [self._process_file(file_path) for file_path in input_files]
-        file_results = await asyncio.gather(*tasks)
+            results = {'success': [], 'failed': []}
+            processed_contents = []
 
-        # 整理处理结果
-        for result in file_results:
-            if result.success:
-                results['success'].append(result)
-                processed_contents.append(result.content)
-            else:
-                results['failed'].append(result)
+            self.logger.info(f"开始处理文件，文件数量: {len(input_files)}")
+            tasks = [self._process_file(file_path) for file_path in input_files]
+            file_results = await asyncio.gather(*tasks)
 
-        # 批量插入知识库
-        if processed_contents:
-            try:
-                await asyncio.to_thread(self.rag.insert, processed_contents)
-                self.logger.info(f"成功将 {len(processed_contents)} 个文档插入知识库")
-            except Exception as e:
-                self.logger.error(f"插入知识库时发生错误: {str(e)}")
-                for result in results['success']:
-                    result.success = False
-                    result.error = f"插入知识库失败: {str(e)}"
-                results['failed'].extend(results.pop('success'))
+            self.logger.info(f"文件处理完成，结果数量: {len(file_results)}")
+            for result in file_results:
+                self.logger.info(
+                    f"处理结果: filename={result.filename}, success={result.success}, error={result.error if not result.success else 'None'}")
+                if result.success:
+                    results['success'].append(result)
+                    if result.content:
+                        self.logger.info(f"文件 {result.filename} 内容长度: {len(result.content)}")
+                        processed_contents.append(result.content)
+                    else:
+                        self.logger.warning(f"文件 {result.filename} 内容为空")
+                else:
+                    results['failed'].append(result)
 
-        return results
+            if processed_contents:
+                try:
+                    self.logger.info(f"开始插入知识库，文档数量: {len(processed_contents)}")
+
+                    # 验证文档内容
+                    if not all(isinstance(content, str) and content.strip()
+                               for content in processed_contents):
+                        raise ValueError("存在无效的文档内容")
+
+                    # 执行插入，不检查返回值
+                    await asyncio.to_thread(self.rag.insert, processed_contents)
+                    await asyncio.sleep(0)  # 等待异步操作完成
+
+                    self.logger.info(f"成功插入知识库，文档数量: {len(processed_contents)}")
+
+                except Exception as e:
+                    self.logger.error(f"插入知识库失败: {str(e)}", exc_info=True)
+                    for result in results['success']:
+                        result.success = False
+                        result.error = f"插入知识库失败: {str(e)}"
+                    results['failed'].extend(results.pop('success'))
+
+            return results
+
+        except Exception as e:
+            self.logger.error(f"处理文档时发生错误: {str(e)}", exc_info=True)
+            return {'success': [], 'failed': []}
+
 
     async def run(self):
         """启动处理流程"""
@@ -355,23 +404,25 @@ class DocumentProcessor(BaseRAG):
             failed_count = len(results['failed'])
             total_count = success_count + failed_count
 
-            print(f"\n处理结果:")
+            self.logger.info(f"\n处理结果:")
+
             if results['success']:
-                print("\n成功处理的文件:")
+                self.logger.info("\n成功处理的文件:")
                 for result in results['success']:
-                    print(f"- {result.filename}")
+                    self.logger.info(f"  - {result.filename}")
 
             if results['failed']:
-                print("\n处理失败的文件:")
+                self.logger.info("\n处理失败的文件:")
                 for result in results['failed']:
-                    print(
-                        f"- {result.filename} ({result.file_type.value if result.file_type else '未知类型'}): {result.error}")
+                    self.logger.info(
+                        f"  - {result.filename} ({result.file_type.value if result.file_type else '未知类型'}): {result.error}"
+                    )
 
-            print(f"\n统计信息:")
-            print(f"总文件数: {total_count}")
-            print(f"成功数量: {success_count}")
-            print(f"失败数量: {failed_count}")
-            print(f"成功率: {(success_count / total_count * 100 if total_count else 0):.2f}%")
+            self.logger.info(f"\n统计信息:")
+            self.logger.info(f"  - 总文件数: {total_count}")
+            self.logger.info(f"  - 成功数量: {success_count}")
+            self.logger.info(f"  - 失败数量: {failed_count}")
+            self.logger.info(f"  - 成功率: {(success_count / total_count * 100 if total_count else 0):.2f}%")
 
         except Exception as e:
             self.logger.error(f"处理过程中发生错误: {str(e)}", exc_info=True)
@@ -400,11 +451,11 @@ class LightsRAG(BaseRAG):
         初始化问答系统
 
         Args:
-            rag_path: RAG知识库路径
+            path_name: 知识库名称
         """
         self.output_dir = os.path.join(get_project_root(), path_name)
         self.rag = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
         self._setup_rag()
 
     def _setup_rag(self):

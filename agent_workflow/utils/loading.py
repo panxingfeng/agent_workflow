@@ -1,7 +1,10 @@
 import logging
+import os
 import sys
 import time
 from threading import Thread
+
+import colorlog
 
 
 class LoadingIndicator:
@@ -31,10 +34,38 @@ class LoadingIndicator:
         sys.stdout.write('\r' + ' ' * (len(self.message) + 10) + '\r')
         sys.stdout.flush()
 
-def loadingInfo():
-    logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s'
-        )
-    logger = logging.getLogger(__name__)
+# 配置带颜色的logging
+def loadingInfo(name, level=logging.INFO, log_file='agent_workflow.log'):
+    # 确保日志文件所在目录存在
+    log_dir = os.path.dirname(os.path.abspath(log_file))
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    logger = colorlog.getLogger(name)
+    if not logger.handlers:
+        # 控制台处理器（带颜色）
+        console_handler = colorlog.StreamHandler()
+        console_handler.setFormatter(colorlog.ColoredFormatter(
+            '%(log_color)s%(message)s',
+            log_colors={
+                'INFO': 'cyan',  # 使用青色显示一般信息
+                'SUCCESS': 'green',  # 使用绿色显示成功信息
+                'WARNING': 'yellow',  # 使用黄色显示警告
+                'ERROR': 'red',  # 使用红色显示错误
+            }
+        ))
+
+        # 文件处理器（不带颜色）
+        # FileHandler会自动创建不存在的日志文件
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(name)s - %(message)s'
+        ))
+
+        logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
+
+    logger.setLevel(level)
+    logger.propagate = False
     return logger
+

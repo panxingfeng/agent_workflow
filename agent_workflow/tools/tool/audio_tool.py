@@ -102,7 +102,7 @@ class AudioTool(BaseTool):
         self._sovits_host = sovits_host
         self.model = model
         self.timeout = timeout
-        self.logger = loadingInfo()
+        self.logger = loadingInfo("audio_tool")
         self.project_root = project_root or self._find_project_root()
 
         # 延迟初始化的客户端
