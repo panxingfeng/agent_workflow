@@ -30,7 +30,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from agent_workflow.tools.base import MessageInput
-from config.config import LOCAL_PORT_ADDRESS, UI_HOST, UI_PORT
+from config.tool_config import LOCAL_PORT_ADDRESS, UI_HOST, UI_PORT
 from .FeiShu import Feishu
 from .VChat import VChat
 from .tool_executor import ToolExecutor

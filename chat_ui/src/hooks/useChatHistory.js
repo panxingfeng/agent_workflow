@@ -28,7 +28,7 @@ export const useChatHistory = () => {
       const response = await fetch(`${API_CONFIG.baseUrl}/chat/history`);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch histories: ${response.statusText}`);
+        throw new Error(`获取历史记录失败: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -48,10 +48,10 @@ export const useChatHistory = () => {
 
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.log('Request was aborted');
+        console.log('请求已被中止');
         return;
       }
-      console.error('Error fetching histories:', error);
+      console.error('获取历史记录出错:', error);
       setError(error.message);
       return [];
     } finally {
@@ -71,7 +71,7 @@ export const useChatHistory = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update history: ${response.statusText}`);
+        throw new Error(`更新历史记录出错: ${response.statusText}`);
       }
 
       // 乐观更新本地状态
@@ -98,7 +98,7 @@ export const useChatHistory = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to delete history: ${response.statusText}`);
+        throw new Error(`删除历史记录失败: ${response.statusText}`);
       }
 
       setHistories(prev =>
@@ -107,7 +107,7 @@ export const useChatHistory = () => {
 
       return await response.json();
     } catch (error) {
-      console.error('Error deleting history:', error);
+      console.error('删除历史记录出错:', error);
       setError(error.message);
       throw error;
     }

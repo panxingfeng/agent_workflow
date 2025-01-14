@@ -24,9 +24,11 @@ from pydantic import BaseModel, Field
 from agent_workflow.llm.llm import LLM
 from agent_workflow.rag.lightrag_mode import LightsRAG
 from agent_workflow.tools.tool.base import BaseTool, images_tool_prompts, get_prompts
-from agent_workflow.utils import ForgeImageGenerator, ForgeAPI
+from agent_workflow.utils.forge_webui_generator import ForgeImageGenerator
+from agent_workflow.utils.forge_api import  ForgeAPI
 from agent_workflow.utils.comfyui_api import ComfyuiAPI
-from config.config import QUALITY_PROMPTS, NEGATIVE_PROMPTS, COMFYUI_MODEL, FORGE_MODEL
+from config.tool_config import QUALITY_PROMPTS, NEGATIVE_PROMPTS, COMFYUI_MODEL, FORGE_MODEL, IMAGE_GEN_TOOL_DATA, \
+    DESCRIPTION_IMAGE_TOOL_DATA
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -74,7 +76,6 @@ class GenerationModelType(str, Enum):
     FLUX_1_DEV = "flux"
     SD3_5_LARGE = "sd3"
     SDWEBUI_FORGE = "sdwebui_forge"
-    SDWEBUI = "sdwebui"
     COMFYUI = "comfyui"
 
     def __str__(self):
@@ -375,7 +376,7 @@ class DescriptionImageTool(BaseTool):
                 glm-edge-v-5b: 智谱开源、中英双语支持
                 MiniCPM-V-2_6: 清华开源、支持图文理解
         """
-        self.model = model
+        self.model = DESCRIPTION_IMAGE_TOOL_DATA['model'] if DESCRIPTION_IMAGE_TOOL_DATA['model'] else model
         self.model_components = None
 
     def get_description(self) -> str:
@@ -917,10 +918,10 @@ class ImageGeneratorTool(BaseTool):
             prompt_gen_mode: 提示词生成模式
             use_local: 是否使用本地模型
         """
-        self.model_type = model_type
+        self.model_type = IMAGE_GEN_TOOL_DATA['model_type'] if IMAGE_GEN_TOOL_DATA['model_type'] else model_type
         self.use_local = use_local
-        self.prompt_mode = prompt_gen_mode
-        if model_type not in [GenerationModelType.SDWEBUI_FORGE, GenerationModelType.SDWEBUI,GenerationModelType.COMFYUI]:
+        self.prompt_mode = IMAGE_GEN_TOOL_DATA['prompt_mode'] if IMAGE_GEN_TOOL_DATA['prompt_mode'] else prompt_gen_mode
+        if model_type not in [GenerationModelType.SDWEBUI_FORGE,GenerationModelType.COMFYUI]:
             self._setup_model()
 
     def get_description(self) -> str:

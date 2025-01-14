@@ -21,9 +21,9 @@ import asyncio
 from pydub import AudioSegment
 from gradio_client import Client, handle_file
 
-from agent_workflow.tools.tool import BaseTool
+from agent_workflow.tools.tool.base import BaseTool
 from agent_workflow.utils import loadingInfo
-from config.config import F5_TTS_PORT, GPT_SoVITS_PORT
+from config.tool_config import F5_TTS_PORT, GPT_SoVITS_PORT
 
 
 class TTSModel(str, Enum):
@@ -328,7 +328,7 @@ class AudioTool(BaseTool):
             except Exception as e:
                 self.logger.warning(f"Error cleaning up {path}: {str(e)}")
 
-    async def sovits_tts(self, input_file: str, config: AudioConfig) -> Dict[str, Any]:
+    async def sovits_tts(self, config: AudioConfig) -> Dict[str, Any]:
         """GPT-SoVITS模型的TTS处理"""
         try:
             # 获取SoVITS配置
@@ -453,7 +453,7 @@ class AudioTool(BaseTool):
         """根据选择的模型调用相应的TTS处理方法"""
         global temp_path
         if config.model == TTSModel.SOVITS:
-            return await self.sovits_tts(input_file, config)
+            return await self.sovits_tts(config)
         else:
             max_retries = 3
             retry_delay = 2  # 秒

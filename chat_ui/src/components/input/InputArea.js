@@ -53,7 +53,6 @@ const InputArea = ({
       if (!response.ok) throw new Error('Upload failed');
 
       const result = await response.json();
-      console.log('[Debug] 图片上传响应:', result);
 
       if (result.files && result.files.length > 0) {
         const fileList = result.files.map((serverFile) => ({
@@ -65,8 +64,6 @@ const InputArea = ({
           name: serverFile.name,
           previewUrl: serverFile.url
         }));
-
-        console.log('[Debug] 构造的图片对象:', fileList);
 
         await handleImageUpload({
           target: {
@@ -99,7 +96,6 @@ const InputArea = ({
       if (!response.ok) throw new Error('Upload failed');
 
       const result = await response.json();
-      console.log('[Debug] 文件上传响应:', result);
 
       if (result.files && result.files.length > 0) {
         const fileList = files.map((originalFile, index) => {
@@ -125,7 +121,6 @@ const InputArea = ({
     try {
       const image = uploadedImages[index];
       if (image?.file?.serverPath) {
-        console.log('[Debug] 删除服务器图片:', image.file.serverPath);
         await fetch(`${API_CONFIG.baseUrl}/delete?path=${encodeURIComponent(image.file.serverPath)}`, {
           method: 'DELETE'
         });
@@ -140,7 +135,6 @@ const InputArea = ({
     try {
       const file = uploadedFiles[index];
       if (file?.file?.serverPath) {
-        console.log('[Debug] 删除服务器文件:', file.file.serverPath);
         await fetch(`${API_CONFIG.baseUrl}/delete?path=${encodeURIComponent(file.file.serverPath)}`, {
           method: 'DELETE'
         });
@@ -172,7 +166,7 @@ const InputArea = ({
       inputRef.current?.focus();
 
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('发送消息失败:', error);
     }
   };
 

@@ -16,7 +16,7 @@ from typing import Optional, Tuple, List
 import httpx
 from pydantic import BaseModel, Field
 
-from config.config import GAODE_WEATHER_API_KEY
+from config.tool_config import GAODE_WEATHER_API_KEY
 from agent_workflow.tools.tool.base import BaseTool
 
 

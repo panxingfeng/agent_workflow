@@ -33,8 +33,8 @@ export const UPLOAD_CONFIG = {
 
 // API配置
 export const API_CONFIG = {
-  baseUrl_port:'https://panllq.cpolar.top',
-  baseUrl: 'https://panllq.cpolar.top/api',
+  baseUrl_port:'http://localhost:8000',
+  baseUrl: 'http://localhost:8000/api',
   endpoints: {
     chat: '/chat',
   },

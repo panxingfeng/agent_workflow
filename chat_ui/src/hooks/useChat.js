@@ -132,21 +132,43 @@ const handleSend = async (message) => {
                     const toolResult = data.result;
 
                     let images = [];
-                    if (toolResult.result) {
-                      const imagePath = toolResult.result.replace('output\\', '');
+                    let files = [];
 
-                      if (imagePath.match(/\.(png|jpg|jpeg|gif)$/i)) {
-                        images.push({
-                          url: `${API_CONFIG.baseUrl.replace('/api', '')}/static/output/${imagePath}`,
-                          name: imagePath
-                        });
+                    if (toolResult.result && typeof toolResult.result === 'string') {
+                      const resultValue = toolResult.result.trim();
+
+                      // 修改：匹配 output 及其后面的所有内容
+                      const match = resultValue.match(/output[\/\\](.+)$/);
+                      const filePath = match ? match[1].replace(/\\/g, '/') : null;
+
+                      if (filePath) {
+                        const encodedPath = encodeURIComponent(filePath);
+                        const fileUrl = `${API_CONFIG.baseUrl_port}/static/output/${encodedPath}`;
+
+                        // 获取文件名
+                        const fileName = filePath.split('/').pop();
+
+                        // 检测文件类型
+                        if (fileName.match(/\.(png|jpg|jpeg|gif)$/i)) {
+                          // 图片文件
+                          images.push({
+                            url: fileUrl,
+                            name: fileName
+                          });
+                        } else {
+                          // 其他所有类型文件（包括音频）都放入 files
+                          files.push({
+                            url: fileUrl,
+                            name: fileName
+                          });
+                        }
                       }
                     }
 
                     const content = {
                       type: 'mixed',
-                      text: '',
-                      files: [],
+                      text: toolResult.formatted_result,
+                      files: files,
                       images: images
                     };
 

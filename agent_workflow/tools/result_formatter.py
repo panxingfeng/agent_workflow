@@ -10,7 +10,7 @@ All rights reserved.
 """
 import logging
 import os
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Union
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -148,21 +148,39 @@ class ResultFormatter:
                 f"\n输出路径：{full_path}\n"
             ])
 
-    def format_audio_results(self, result: str, output: List[str],chat_ui):
+    def format_audio_results(self, result: Union[str, dict], output: List[str], chat_ui):
         """
         格式化音频处理结果
 
         Args:
-            result: 音频处理结果（通常是输出路径）
+            result: 音频处理结果（可能是输出路径字符串或错误信息字典）
             output: 输出列表
+            chat_ui: 聊天界面标志
         """
+        # 首先检查 result 是否是错误信息字典
+        if isinstance(result, dict) and 'error' in result:
+            output.extend([
+                f"处理失败: {result['error']}\n"
+            ])
+            return
+
+        # 处理正常的字符串结果
         if chat_ui:
-            parts = result.split('output')
-            if len(parts) > 1:
+            if isinstance(result, str):  # 确保 result 是字符串
+                parts = result.split('output')
+                if len(parts) > 1:
+                    output.extend([
+                        f"输出路径：{'output' + parts[1]}\n"
+                    ])
+                else:
+                    output.extend([
+                        f"输出路径：{result}\n"
+                    ])
+            else:
                 output.extend([
-                    f"输出路径：{'output' + parts[1]}\n"
+                    f"输出格式异常: {str(result)}\n"
                 ])
         else:
             output.extend([
-                f"输出路径：{result if result else '未生成'}\n"
+                f"输出路径：{result if result and isinstance(result, str) else '未生成'}\n"
             ])

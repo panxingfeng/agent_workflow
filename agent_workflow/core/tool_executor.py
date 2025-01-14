@@ -9,9 +9,11 @@ Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
 import asyncio
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Type, Optional
 import json
 import logging
@@ -21,6 +23,7 @@ from langchain_ollama import ChatOllama
 import os
 import importlib
 import inspect
+
 from agent_workflow.tools.tool.base import BaseTool
 from agent_workflow.tools.result_formatter import ResultFormatter
 from agent_workflow.tools.base import UserQuery
@@ -583,6 +586,7 @@ class ToolExecutor:
             AsyncGenerator[
                 Dict[str, Any], None]:
         """执行单个工具"""
+        global relative_path, image_name
         tool_name = task_info["tool_name"]
         task_id = task_info["id"]
         max_retries = 3  # 最大重试次数
@@ -661,7 +665,6 @@ class ToolExecutor:
                             "links": formatted_result["links"]
                         }
                     }
-
                     yield final_result
                     break  # 成功执行后跳出重试循环
 

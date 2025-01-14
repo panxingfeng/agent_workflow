@@ -1,39 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@files: comfyui_api.py
-@author: PanXingFeng
-@contact: 1115005803@qq.com、canomiguelittle@gmail.com
-@date: 2024-12-22
-@version: 1.0.0
+@author: [PanXingFeng]
+@contact: [1115005803@qq.com、canomiguelittle@gmail.com]
+@date: 2025-1-11
+@version: 2.0.0
 @license: MIT License
-
-@description:
-ComfyUI图像生成工具类 (ComfyuiAPI)
-
-模型支持:
-- checkpoint模型系列支持
-- 各类Lora模型支持
-- VAE优化模型支持
-- ControlNet系列模型支持
-
-功能特性:
-1. 工作流管理:
-    - 多工作流配置支持
-    - 动态参数更新
-    - 工作流模板管理
-
-2. 图像生成:
-    - 文本生图(Text2Image)
-    - 图生图(Image2Image)
-    - 高级参数控制
-    - 批量生成支持
-
-3. 系统集成:
-    - WebSocket实时连接
-    - 异步图像保存
-    - 状态监控和回调
-    - 错误处理和恢复
-
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
@@ -47,7 +18,7 @@ import threading
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
 from agent_workflow.utils.loading import LoadingIndicator
-from config.config import COMFYUI_MODEL_PATH, COMFYUI_PATH
+from config.tool_config import COMFYUI_MODEL_PATH, COMFYUI_PATH
 
 
 class ComfyuiAPI:

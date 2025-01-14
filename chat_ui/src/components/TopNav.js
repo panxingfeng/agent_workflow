@@ -91,7 +91,7 @@ const TopNav = ({
             if (typeof createNewConversation === 'function') {
               createNewConversation();
             } else {
-              console.warn('[Debug] createNewConversation is not a function:', createNewConversation);
+              console.warn('createNewConversation 不是一个函数:', createNewConversation);
             }
           }}
           className="flex items-center space-x-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"

@@ -31,7 +31,7 @@ export const HistoryList = ({
       await deleteHistory(conversationId);
       await fetchHistories();
     } catch (error) {
-      console.error('Failed to delete history:', error);
+      console.error('删除历史记录失败:', error);
     }
   };
 
@@ -40,7 +40,7 @@ export const HistoryList = ({
       await updateHistory(conversationId, updates);
       await fetchHistories();
     } catch (error) {
-      console.error('Failed to update history:', error);
+      console.error('消息记录更新失败', error);
     }
   };
 

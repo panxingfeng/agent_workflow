@@ -8,12 +8,9 @@
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
 """
-import json
 from typing import Generator, Optional
 
-from config.bot import CHATBOT_PROMPT_DATA, BOT_DATA
 from config.config import OLLAMA_DATA, CHATGPT_DATA
-from agent_workflow.tools.tool.base import BaseTool
 from ..llm.base import get_llm_instance
 
 

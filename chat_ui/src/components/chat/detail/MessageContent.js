@@ -131,7 +131,7 @@ const ImageContent = ({ url, index }) => {
   };
 
   const handleError = () => {
-    console.error('Image failed to load:', url);
+    console.error('图像加载失败:', url);
     setError(true);
     setIsLoading(false);
   };

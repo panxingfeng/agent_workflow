@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from config.config import FORGE_SDWEBUI_USERNAME, FORGE_SDWEBUI_PASSWORD, FORGE_SDWEBUI_PORT
+from config.tool_config import FORGE_SDWEBUI_USERNAME, FORGE_SDWEBUI_PASSWORD, FORGE_SDWEBUI_PORT
 
 from typing import List, Tuple, Dict, Any
 import requests

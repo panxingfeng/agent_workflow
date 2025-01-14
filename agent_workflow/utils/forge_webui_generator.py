@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from config.config import FORGE_SDWEBUI_PORT
+from config.tool_config import FORGE_SDWEBUI_PORT
 
 
 class ForgeImageGenerator:

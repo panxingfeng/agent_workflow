@@ -55,7 +55,7 @@ const ChatArea = ({ messages, error, messagesEndRef }) => {
                                                                         alt={image.original_name || `Preview ${imgIndex + 1}`}
                                                                         className="max-w-[150px] h-auto rounded-lg"
                                                                         onError={(e) => {
-                                                                            console.error('[Debug] Image load failed:', image);
+                                                                            console.error('图像加载失败:', image);
                                                                             e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150"><rect width="150" height="150" fill="%23eee"/></svg>';
                                                                         }}
                                                                     />
