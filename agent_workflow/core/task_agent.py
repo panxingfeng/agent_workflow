@@ -2,8 +2,8 @@
 """
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2025-1-11
-@version: 2.0.0
+@date: 2025-1-15
+@version: 2.1.0
 @license: MIT License
 Copyright (c) 2024 [PanXingFeng]
 All rights reserved.
