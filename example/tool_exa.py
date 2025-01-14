@@ -72,18 +72,6 @@ class CustomTool(BaseTool):
         }
         return json.dumps(tool_info, ensure_ascii=False)
 
-    def get_parameter_rules(self) -> str:
-        """返回参数设置规则说明"""
-        return """
-        CustomTool 参数规则:
-        - param1: 参数1说明
-          - 示例: "示例值"
-          - 规则: 参数规则说明
-        - param2: 参数2说明
-          - 示例: "示例值"
-          - 规则: 参数规则说明
-        """
-
     def _format_result(self, response: CustomResponse) -> str:
         """格式化结果输出"""
         # 实现结果格式化逻辑
