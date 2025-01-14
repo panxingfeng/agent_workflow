@@ -176,6 +176,7 @@ Perplexica 是一个强大的搜索工具，推荐：
 
 ### 🔧 开发者资源
 - 📝 示例代码：查看 `example` 目录下的工具代码的参考实现
+  -  工具描述信息在config/bot.py的TOOL_RULES中增加
 - 💾 资源下载：[百度网盘链接](https://pan.baidu.com/s/1NL8GLMGwu7jjuI0k-iAvtg?pwd=sczs)
   - 包含：模型文件、环境包
   - 环境配置提示：可直接复制到 conda 创建的目录下
