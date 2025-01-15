@@ -2,7 +2,7 @@
 """
 @author: [PanXingFeng]
 @contact: [1115005803@qq.com、canomiguelittle@gmail.com]
-@date: 2025-1-15
+@date: 2025-1-16
 @version: 2.1.0
 @license: MIT License
 Copyright (c) 2024 [PanXingFeng]
@@ -10,24 +10,32 @@ All rights reserved.
 """
 import asyncio
 import json
+import logging
 import os
 import re
 import shutil
+import subprocess
+import tempfile
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Dict, Any, Optional, AsyncGenerator
+from typing import Dict, Any, Optional, AsyncGenerator, TypeVar, Generic
 from typing import List
 
 import aiofiles
+import psutil
 import uvicorn
 from fastapi import HTTPException, FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from faster_whisper import WhisperModel
 from pydantic import BaseModel
 
 from agent_workflow.tools.base import MessageInput
+from config.config import MAX_CONCURRENT
 from config.tool_config import LOCAL_PORT_ADDRESS, UI_HOST, UI_PORT
 from .FeiShu import Feishu
 from .VChat import VChat
@@ -35,6 +43,7 @@ from .tool_executor import ToolExecutor
 from ..rag.lightrag_mode import DocumentProcessor
 from ..utils import loadingInfo
 from ..utils.read_files import get_project_root
+import weakref
 
 # 获取项目根目录和输出目录
 project_root = get_project_root()
@@ -92,23 +101,279 @@ class DeleteRequest(BaseModel):
     rag_name: str
 
 
+class Segment(BaseModel):
+    """语音识别片段模型"""
+    start: float
+    end: float
+    text: str
+
+class TranscriptionInfo(BaseModel):
+    """转录信息模型"""
+    language: str
+    language_probability: float
+
+class TranscriptionResponse(BaseModel):
+    """完整的转录响应模型"""
+    segments: List[Segment]
+    info: TranscriptionInfo
+    full_text: str
+
+# 支持的音频格式
+SUPPORTED_AUDIO_FORMATS = {
+    '.mp3', '.wav', '.m4a', '.ogg', '.flac'
+}
+
 def check_and_rename(filename: str, directory: Path) -> str:
     """
     检查文件是否存在，如果存在则在末尾添加递增的数字
     """
-    # 分离文件名和扩展名
     name = Path(filename).stem
     suffix = Path(filename).suffix
 
     counter = 1
     new_filename = filename
 
-    # 循环检查文件是否存在，如果存在则递增数字
     while (directory / new_filename).exists():
         new_filename = f"{name}{counter}{suffix}"
         counter += 1
 
     return new_filename
+
+sys_monitor_logger = loadingInfo(
+    name="system_monitor",
+    level=logging.INFO,
+    log_file='system_monitor.log'
+)
+
+monitor_handler = RotatingFileHandler(
+    filename='system_monitor.log',
+    maxBytes=10 * 1024 * 1024,  # 10MB
+    backupCount=5,
+    encoding='utf-8'
+)
+
+monitor_handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+))
+
+for handler in sys_monitor_logger.handlers[:]:
+    if isinstance(handler, logging.FileHandler) and not isinstance(handler, RotatingFileHandler):
+        sys_monitor_logger.removeHandler(handler)
+sys_monitor_logger.addHandler(monitor_handler)
+
+
+@dataclass
+class SystemLoad:
+    """系统负载信息"""
+    cpu_percent: float
+    memory_percent: float
+    disk_usage_percent: float
+    num_threads: int
+    process_count: int
+    timestamp: datetime
+
+
+class SystemMonitor:
+    """系统负载监控器"""
+    def __init__(self,
+                 cpu_threshold: float = 80.0,
+                 memory_threshold: float = 85.0,
+                 disk_threshold: float = 90.0):
+        self.cpu_threshold = cpu_threshold
+        self.memory_threshold = memory_threshold
+        self.disk_threshold = disk_threshold
+        self._monitoring = False
+        self._current_load = None
+
+    def get_current_load(self) -> SystemLoad:
+        """获取当前系统负载"""
+        try:
+            # CPU 使用率
+            cpu_percent = psutil.cpu_percent(interval=1)
+
+            # 内存使用率
+            memory = psutil.virtual_memory()
+            memory_percent = memory.percent
+
+            # 磁盘使用率
+            disk = psutil.disk_usage('/')
+            disk_percent = disk.percent
+
+            # 线程和进程数量
+            current_process = psutil.Process()
+            num_threads = current_process.num_threads()
+            process_count = len(psutil.pids())
+
+            self._current_load = SystemLoad(
+                cpu_percent=cpu_percent,
+                memory_percent=memory_percent,
+                disk_usage_percent=disk_percent,
+                num_threads=num_threads,
+                process_count=process_count,
+                timestamp=datetime.now()
+            )
+
+            return self._current_load
+
+        except Exception as e:
+            sys_monitor_logger.error(f"获取系统负载失败: {e}")
+            raise
+
+    def is_system_overloaded(self) -> bool:
+        """检查系统是否过载"""
+        try:
+            load = self.get_current_load()
+            is_overloaded = (load.cpu_percent > self.cpu_threshold or
+                             load.memory_percent > self.memory_threshold or
+                             load.disk_usage_percent > self.disk_threshold)
+
+            if is_overloaded:
+                sys_monitor_logger.warning(f"系统负载过高! CPU: {load.cpu_percent}%, "
+                                           f"内存: {load.memory_percent}%, "
+                                           f"磁盘: {load.disk_usage_percent}%")
+            return is_overloaded
+        except Exception as e:
+            sys_monitor_logger.error(f"检查系统负载失败: {e}")
+            return True
+
+    def get_detailed_status(self) -> Dict[str, Any]:
+        """获取详细的系统状态"""
+        try:
+            memory = psutil.virtual_memory()
+            cpu_freq = psutil.cpu_freq()
+            disk = psutil.disk_usage('/')
+
+            status = {
+                'cpu': {
+                    'percent': psutil.cpu_percent(interval=1),
+                    'count': psutil.cpu_count(),
+                    'freq_current': cpu_freq.current if cpu_freq else None,
+                    'freq_max': cpu_freq.max if cpu_freq else None
+                },
+                'memory': {
+                    'total': memory.total,
+                    'available': memory.available,
+                    'percent': memory.percent,
+                    'used': memory.used
+                },
+                'disk': {
+                    'total': disk.total,
+                    'used': disk.used,
+                    'free': disk.free,
+                    'percent': disk.percent
+                },
+                'process': {
+                    'count': len(psutil.pids()),
+                    'threads': psutil.Process().num_threads()
+                },
+                'timestamp': datetime.now().isoformat()
+            }
+
+            return status
+
+        except Exception as e:
+            sys_monitor_logger.error(f"获取系统详细状态失败: {e}")
+            raise
+
+    async def start_monitoring(self, interval: float = 5.0):
+        """开始持续监控系统负载"""
+        self._monitoring = True
+        while self._monitoring:
+            try:
+                load = self.get_current_load()
+                status = self.get_detailed_status()
+
+                # 检查是否需要报警
+                if self.is_system_overloaded():
+                    sys_monitor_logger.warning(
+                        f"系统负载警告 - "
+                        f"CPU({self.cpu_threshold}%): {status['cpu']['percent']}% | "
+                        f"内存({self.memory_threshold}%): {status['memory']['percent']}% | "
+                        f"磁盘({self.disk_threshold}%): {status['disk']['percent']}%"
+                    )
+
+                await asyncio.sleep(interval)
+
+            except Exception as e:
+                sys_monitor_logger.error(f"监控过程中出错: {e}")
+                await asyncio.sleep(interval)
+
+    def stop_monitoring(self):
+        """停止监控"""
+        self._monitoring = False
+
+# 定义泛型类型
+T = TypeVar('T')
+
+
+class WeakSetManager(Generic[T]):
+    """WeakSet管理器，支持类型提示"""
+
+    def __init__(self):
+        self._items: weakref.WeakSet = weakref.WeakSet()
+
+    def add(self, item: T) -> None:
+        """添加项目到集合"""
+        self._items.add(item)
+
+    def remove(self, item: T) -> None:
+        """从集合中移除项目"""
+        self._items.discard(item)
+
+    def __len__(self) -> int:
+        """获取集合大小"""
+        return len(self._items)
+
+    def __iter__(self):
+        """迭代集合项目"""
+        yield from self._items
+
+
+class ResourceManager:
+    """资源管理器"""
+    def __init__(self, max_concurrent: int = 3):
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.active_tasks: WeakSetManager[asyncio.Task] = WeakSetManager()
+        self._lock = asyncio.Lock()
+        self.system_monitor = SystemMonitor(
+            cpu_threshold=80.0,
+            memory_threshold=85.0,
+            disk_threshold=90.0
+        )
+        asyncio.create_task(self.system_monitor.start_monitoring(interval=5.0))
+
+    async def acquire(self) -> bool:
+        """获取资源"""
+        # 检查系统负载
+        if self.system_monitor.is_system_overloaded():
+            sys_monitor_logger.warning("系统负载过高，拒绝新任务")
+            return False
+
+        await self.semaphore.acquire()
+        async with self._lock:
+            current_task = asyncio.current_task()
+            if current_task:
+                self.active_tasks.add(current_task)
+                sys_monitor_logger.info(f"任务获取资源 - 当前活动任务数: {len(self.active_tasks)}")
+        return True
+
+    async def release(self) -> None:
+        """释放资源"""
+        self.semaphore.release()
+        async with self._lock:
+            if current_task := asyncio.current_task():
+                self.active_tasks.remove(current_task)
+                sys_monitor_logger.info(f"任务释放资源 - 当前活动任务数: {len(self.active_tasks)}")
+
+    def get_active_tasks(self) -> int:
+        """获取当前活动任务数"""
+        count = len(self.active_tasks)
+        sys_monitor_logger.debug(f"当前活动任务数: {count}")
+        return count
+
+    def get_system_status(self) -> Dict[str, Any]:
+        """获取系统状态"""
+        return self.system_monitor.get_detailed_status()
 
 class MasterAgent:
     """
@@ -130,47 +395,112 @@ class MasterAgent:
         self.message_id = None
         self.verbose = verbose
 
-        # 创建任务执行器
         self.executor = tool_executor
+        self.resource_manager = ResourceManager(max_concurrent=MAX_CONCURRENT)
+        self.task_queue = asyncio.Queue()
+
+        asyncio.create_task(self._process_task_queue())
+
+    async def _process_task_queue(self):
+        """处理任务队列的后台任务"""
+        while True:
+            try:
+                task_data = await self.task_queue.get()
+                await asyncio.create_task(self._handle_single_task(task_data))
+            except Exception as e:
+                logger.error(f"任务处理错误: {e}")
+            finally:
+                self.task_queue.task_done()
+
+    async def _handle_single_task(self, task_data: Dict):
+        """处理单个任务"""
+        try:
+            if not await self.resource_manager.acquire():
+                sys_monitor_logger.warning(f"资源不足，任务 {task_data.get('message_id')} 重新排队")
+                await self.task_queue.put(task_data)
+                await asyncio.sleep(1)
+                return
+
+            try:
+                sys_monitor_logger.info(f"开始处理任务 {task_data.get('message_id')}")
+
+                async for result in self.chat_ui_process(**task_data):
+                    if isinstance(result, dict):
+                        result_type = result.get("type")
+                        if result_type == "error":
+                            sys_monitor_logger.error(f"任务执行错误: {result.get('content')}")
+                        elif result_type == "result":
+                            sys_monitor_logger.info(f"任务产生结果: {result.get('content')[:100]}...")
+                        elif result_type == "thinking_process":
+                            sys_monitor_logger.debug(f"任务处理中: {result.get('content')}")
+
+                sys_monitor_logger.info(f"完成任务 {task_data.get('message_id')}")
+
+            except asyncio.CancelledError:
+                sys_monitor_logger.warning(f"任务 {task_data.get('message_id')} 被取消")
+                raise
+            except Exception as inner_e:
+                sys_monitor_logger.error(f"任务执行出错: {str(inner_e)}")
+                raise
+            finally:
+                await self.resource_manager.release()
+                sys_monitor_logger.debug(f"释放任务 {task_data.get('message_id')} 资源")
+
+        except Exception as e:
+            sys_monitor_logger.error(f"任务处理失败: {str(e)}")
+            try:
+                import traceback
+                sys_monitor_logger.error(f"错误详情: {traceback.format_exc()}")
+            except Exception:
+                pass
 
     async def process(self, message_input: MessageInput) -> str:
         """处理用户消息"""
-        async with self._execution_lock:
+        try:
+            # 检查系统负载
+            if self.resource_manager.get_active_tasks() >= 3:  # 可配置的阈值
+                return "系统负载较高，请稍后重试"
+
+            # 获取资源锁
+            if not await self.resource_manager.acquire():
+                return "资源暂时不可用，请稍后重试"
+
             try:
                 self.status = AgentStatus.RUNNING
 
-                # 获取生成器的最后一个结果
-                result = None
-                async for item in self.executor.execute_tools(
-                        message_input.process_input(),
-                        history=None,
-                        chat_ui=False
-                ):
-                    result = item
+                # 创建和等待任务结果
+                result_future = asyncio.Future()
+                await self.task_queue.put({
+                    'type': 'process',
+                    'input': message_input,
+                    'future': result_future
+                })
 
-                link = result["link"]
-                # 提取最后一个任务的结果
+                # 等待处理完成
+                result = await result_future
+
                 if isinstance(result, dict):
-                    # 如果有外层的 result 字段，先提取
+                    link = result.get("link", "")
                     if "result" in result and "status" in result:
-                        result = result["result"]
-
-                    if result:
-                        # 获取最后一个任务的结果
-                        last_task = list(result.values())[-1]
-                        final_result = last_task.get('result', '') + "\n" + link
-                        logger.info("最终结果: {}".format(final_result))
-                        self.status = AgentStatus.SUCCESS
-                        return final_result
+                        result_data = result["result"]
+                        if result_data:
+                            last_task = list(result_data.values())[-1]
+                            final_result = last_task.get('result', '') + "\n" + link
+                            logger.info("最终结果: {}".format(final_result))
+                            self.status = AgentStatus.SUCCESS
+                            return final_result
 
                 self.status = AgentStatus.FAILED
                 return "处理失败: 无法获取结果"
 
-            except Exception as e:
-                self.status = AgentStatus.FAILED
-                error_msg = f"处理失败: {str(e)}"
-                logger.error(error_msg)
-                return error_msg
+            finally:
+                await self.resource_manager.release()
+
+        except Exception as e:
+            self.status = AgentStatus.FAILED
+            error_msg = f"处理失败: {str(e)}"
+            logger.error(error_msg)
+            return error_msg
 
     async def vchat_demo(self):
         """启动VChat服务，实现微信接入"""
@@ -208,7 +538,7 @@ class MasterAgent:
             files: Optional[List[str]] = None  # 文件列表
             urls: Optional[List[str]] = None  # URL列表
 
-        @app.post("/api/process", response_model=None)
+        @app.post("/api/chat", response_model=None)
         async def process_message(message: MessageRequest):
             """
             处理消息的API接口
@@ -232,7 +562,7 @@ class MasterAgent:
                 result = await self.process(input_msg)
                 try:
                     match = re.search(r"输出路径：(.+)", str(result))
-                    result = match.group(1).strip()  # 提取出的文件路径
+                    result = match.group(1).strip()
 
                 except Exception:
                     result = result
@@ -255,117 +585,113 @@ class MasterAgent:
                               chat_ui) -> AsyncGenerator[Dict[str, Any], None]:
         global image_url, audio_url, file_url, file_name, output_file_path
         try:
-            self.status = AgentStatus.RUNNING
-            self.message_id = message_id
-            # 准备上下文
-            context_data = []
-            if history_mode == "json":
-                history_file = data_dir / 'chat_history.json'
-                if history_file.exists():
-                    async with aiofiles.open(history_file, 'r', encoding='utf-8') as f:
-                        content = await f.read()
-                        if content.strip():
-                            history_data = json.loads(content)
-                            conversation = next(
-                                (conv for conv in history_data if conv['conversation_id'] == conversation_id),
-                                None
-                            )
-                            if conversation and conversation['messages']:
-                                context = conversation['messages'][-context_length:]
-                                context_data = [{'query': msg['query'], 'response': msg['response']} for msg in context]
+            # 检查系统负载
+            if self.resource_manager.get_active_tasks() >= MAX_CONCURRENT:
+                yield {
+                    "type": "warning",
+                    "message_id": message_id,
+                    "content": "系统负载较高，请稍后重试..."
+                }
+                return
 
-            # 确保数据目录存在
+            # 获取资源锁
+            if not await self.resource_manager.acquire():
+                yield {
+                    "type": "error",
+                    "message_id": message_id,
+                    "content": "资源暂时不可用，请稍后重试"
+                }
+                return
+
             try:
+                self.status = AgentStatus.RUNNING
+                self.message_id = message_id
+
+                # 开始处理
+                yield {
+                    "type": "thinking_process",
+                    "message_id": message_id,
+                    "content": "正在准备资源..."
+                }
+
+                async def load_context():
+                    context_data = []
+                    if history_mode == "json":
+                        history_file = data_dir / 'chat_history.json'
+                        if history_file.exists():
+                            async with aiofiles.open(history_file, 'r', encoding='utf-8') as f:
+                                content = await f.read()
+                                if content.strip():
+                                    history_data = json.loads(content)
+                                    conversation = next(
+                                        (conv for conv in history_data if conv['conversation_id'] == conversation_id),
+                                        None
+                                    )
+                                    if conversation and conversation['messages']:
+                                        context = conversation['messages'][-context_length:]
+                                        context_data = [{'query': msg['query'], 'response': msg['response']} for msg in
+                                                        context]
+                    return context_data
+
+                async def process_attachments():
+                    attachments_info = {'images': [], 'files': []}
+                    attachments_info_history = {'images': [], 'files': []}
+
+                    async def process_single_file(file_path, file_type):
+                        try:
+                            if isinstance(file_path, str):
+                                path = Path(file_path)
+                                if path.exists():
+                                    size = await asyncio.to_thread(os.path.getsize, path)
+                                    info = {
+                                        'original_name': path.name,
+                                        'saved_path': str(path),
+                                        'size': size
+                                    }
+                                    history_info = {
+                                        'original_name': path.name,
+                                        'saved_path': str(f"{url}/static/upload/{file_type}/{path.name}"),
+                                        'size': size
+                                    }
+                                    return file_type, info, history_info
+                        except Exception as e:
+                            logger.error(f"处理文件失败 {file_path}: {e}")
+                            return None
+
+                    # 并行处理所有文件
+                    tasks = []
+                    if isinstance(input_msg, MessageInput):
+                        if input_msg.images:
+                            tasks.extend([process_single_file(img_path, 'images') for img_path in input_msg.images])
+                        if input_msg.files:
+                            tasks.extend([process_single_file(file_path, 'files') for file_path in input_msg.files])
+
+                    if tasks:
+                        results = await asyncio.gather(*tasks, return_exceptions=True)
+                        for result in results:
+                            if result and not isinstance(result, Exception):
+                                file_type, info, history_info = result
+                                attachments_info[file_type].append(info)
+                                attachments_info_history[file_type].append(history_info)
+
+                    return attachments_info, attachments_info_history
+
                 if not isinstance(data_dir, Path):
                     data_dir = Path(data_dir)
                 data_dir.mkdir(exist_ok=True, parents=True)
-            except Exception as e:
-                logger.error(f"创建数据目录失败: {str(e)}")
-                raise
 
-            # 开始处理
-            yield {
-                "type": "thinking_process",
-                "message_id": message_id,
-                "content": "正在思考..."
-            }
-            await asyncio.sleep(0.1)
+                context_data, (attachments_info, attachments_info_history) = await asyncio.gather(
+                    load_context(),
+                    process_attachments()
+                )
 
-            # 处理输入并处理附件信息
-            attachments_info = {
-                'images': [],
-                'files': []
-            }
-            attachments_info_history = {
-                'images': [],
-                'files': []
-            }
+                processed_query = input_msg
 
-            try:
-                if isinstance(input_msg, MessageInput):
-                    processed_query = input_msg
-                    # 处理图片路径
-                    if input_msg.images:
-                        for img_path in input_msg.images:
-                            try:
-                                if isinstance(img_path, str):
-                                    path = Path(img_path)
-                                    if path.exists():
-                                        attachments_info['images'].append({
-                                            'original_name': path.name,
-                                            'saved_path': str(path),
-                                            'size': os.path.getsize(path)
-                                        })
-                                        attachments_info_history['images'].append({
-                                            'original_name': path.name,
-                                            'saved_path': str(f"{url}/static/upload/images/{path.name}"),
-                                            'size': os.path.getsize(path)
-                                        })
-                                    else:
-                                        logger.info(f"图片文件不存在: {path}")
-                            except Exception as e:
-                                logger.error(f"处理图片路径失败: {str(e)}")
-                                continue
-
-                    # 处理文件路径
-                    if input_msg.files:
-                        for file_path in input_msg.files:
-                            try:
-                                if isinstance(file_path, str):
-                                    path = Path(file_path)
-                                    if path.exists():
-                                        attachments_info['files'].append({
-                                            'original_name': path.name,
-                                            'saved_path': str(path),
-                                            'size': os.path.getsize(path)
-                                        })
-                                        attachments_info_history['files'].append({
-                                            'original_name': path.name,
-                                            'saved_path': str(f"{url}/static/upload/files/{path.name}"),
-                                            'size': os.path.getsize(path)
-                                        })
-                                    else:
-                                        logger.info(f"文件不存在: {path}")
-                            except Exception as e:
-                                logger.error(f"处理文件路径失败: {str(e)}")
-                                continue
-                else:
-                    processed_query = input_msg
-                    logger.info(f"直接使用输入作为查询: {processed_query}")
-
-            except Exception as e:
-                logger.error(f"处理用户输入时出错: {str(e)}")
-                raise
-
-            # 使用执行器处理任务
-            try:
                 async for result in self.executor.execute_tools(
                         query=processed_query.process_input(),
                         history=context_data,
                         chat_ui=chat_ui
                 ):
-                    files = []
-                    images = []
                     if isinstance(result, dict):
                         if "error" in result:
                             yield {
@@ -376,10 +702,15 @@ class MasterAgent:
                             return
 
                         elif result.get("status") == "success" and "result" in result:
-                            tool_response = result.get("result", {})
-                            link_text  = result.get("link", {})
-                            if tool_response:
+                            async def process_result():
+                                tool_response = result.get("result", {})
+                                link_text = result.get("link", {})
+                                if not tool_response:
+                                    return None, None, None, None, None
+
                                 final_result = list(tool_response.values())[-1]["result"]
+                                files = []
+                                images = []
 
                                 if isinstance(final_result, str):
                                     if 'output\\' in final_result or 'output/' in final_result:
@@ -388,104 +719,65 @@ class MasterAgent:
                                             if match:
                                                 file_path = match.group(1).strip().replace('\\', '/')
                                                 file_extension = Path(file_path).suffix.lower()
+                                                file_name = Path(file_path).name
+                                                output_file_path = output_dir
 
-                                                try:
-                                                    # 构造 URL 和文件信息
-                                                    file_name = Path(file_path).name
-                                                    output_file_path = output_dir
-                                                    if output_file_path.exists():
-                                                        if file_extension in ['.png', '.jpg', '.jpeg', '.gif']:
-                                                            relative_path = f"{file_name}"
-                                                            image_url = f"{url}/static/output/{relative_path}"
-                                                            images.append({
-                                                                'url': image_url,
-                                                                'name': file_name
-                                                            })
-                                                            final_result = ""
-                                                        elif file_extension == '.wav':
-                                                            relative_path = f"{datetime.now().strftime('%Y-%m-%d')}/{file_name}"
-                                                            audio_url = f"{url}/static/output/{relative_path}"
-                                                            files.append({
-                                                                'url': audio_url,
-                                                                'name': file_name
-                                                            })
-                                                            final_result = ""
-                                                        else:
-                                                            relative_path = f"{file_name}"
-                                                            file_url = f"{url}/static/output/{relative_path}"
-                                                            files.append({
-                                                                'url': file_url,
-                                                                'name': file_name
-                                                            })
-                                                            final_result = ""
-
+                                                if output_file_path.exists():
+                                                    if file_extension in ['.png', '.jpg', '.jpeg', '.gif']:
+                                                        relative_path = f"{file_name}"
+                                                        image_url = f"{url}/static/output/{relative_path}"
+                                                        images.append({
+                                                            'url': image_url,
+                                                            'name': file_name
+                                                        })
+                                                        final_result = ""
+                                                    elif file_extension == '.wav':
+                                                        relative_path = f"{datetime.now().strftime('%Y-%m-%d')}/{file_name}"
+                                                        audio_url = f"{url}/static/output/{relative_path}"
+                                                        files.append({
+                                                            'url': audio_url,
+                                                            'name': file_name
+                                                        })
+                                                        final_result = ""
                                                     else:
-                                                        logger.error(f"输出文件不存在: {output_file_path}")
-                                                except Exception as e:
-                                                    logger.error(f"处理文件URL失败 {file_path}: {e}")
+                                                        relative_path = f"{file_name}"
+                                                        file_url = f"{url}/static/output/{relative_path}"
+                                                        files.append({
+                                                            'url': file_url,
+                                                            'name': file_name
+                                                        })
+                                                        final_result = ""
                                         except Exception as e:
-                                            logger.error(f"处理输出路径失败: {e}")
+                                            logger.error(f"处理文件失败: {e}")
 
-                                # 保存历史记录
+                                return final_result, files, images, tool_response, link_text
+
+                            final_result, files, images, tool_response, link_text = await process_result()
+                            if final_result is not None:
                                 if history_mode == "json":
-                                    try:
-                                        async with self._file_lock:
-                                            history_file = data_dir / 'chat_history.json'
+                                    await asyncio.create_task(self._save_history(
+                                        data_dir=data_dir,
+                                        conversation_id=conversation_id,
+                                        message_id=message_id,
+                                        final_result=final_result,
+                                        files=files,
+                                        images=images,
+                                        tool_response=tool_response,
+                                        link_text=link_text,
+                                        processed_query=processed_query,
+                                        attachments_info_history=attachments_info_history
+                                    ))
 
-                                            history_data = []
-                                            if history_file.exists():
-                                                async with aiofiles.open(history_file, 'r', encoding='utf-8') as f:
-                                                    content = await f.read()
-                                                    if content.strip():
-                                                        history_data = json.loads(content)
+                                processed_result = {
+                                    'type': 'mixed',
+                                    'text': final_result,
+                                    'files': files if files else [],
+                                    'images': images if images else [],
+                                }
 
-                                            current_time = datetime.now().isoformat()
-                                            conversation = next(
-                                                (conv for conv in history_data if
-                                                 conv['conversation_id'] == conversation_id),
-                                                None
-                                            )
+                                if link_text:
+                                    processed_result['text'] = final_result + "\n" + link_text
 
-                                            processed_result = {
-                                                'type': 'mixed',
-                                                'text': final_result,
-                                                'files': files if files else files,
-                                                'images': images if images else images,
-                                            }
-
-                                            if link_text:
-                                                processed_result['text'] = final_result + "\n" + link_text
-
-                                            new_message = {
-                                                'query': processed_query.query,
-                                                'response': processed_result,
-                                                'timestamp': current_time,
-                                                'reason': tool_response,
-                                                'attachments': attachments_info_history
-                                            }
-
-                                            if conversation:
-                                                conversation['timestamp'] = current_time
-                                                conversation['messages'].append(new_message)
-                                            else:
-                                                conversation = {
-                                                    'conversation_id': conversation_id,
-                                                    'message_id': message_id,
-                                                    'title': processed_query.query[:30] or '新对话',
-                                                    'timestamp': current_time,
-                                                    'pinned': False,
-                                                    'starred': False,
-                                                    'messages': [new_message]
-                                                }
-                                                history_data.append(conversation)
-
-                                            async with aiofiles.open(history_file, 'w', encoding='utf-8') as f:
-                                                await f.write(json.dumps(history_data, ensure_ascii=False, indent=2))
-
-                                    except Exception as e:
-                                        logger.error(f"保存历史记录失败: {str(e)}")
-
-                                # 返回结果
                                 yield {
                                     "type": "result",
                                     "message_id": message_id,
@@ -493,7 +785,6 @@ class MasterAgent:
                                 }
 
                         elif "type" in result:
-                            # 转发带类型的消息
                             if result["type"] == "thinking_process":
                                 yield {
                                     "type": "thinking_process",
@@ -501,13 +792,11 @@ class MasterAgent:
                                     "content": result.get("content", "处理中...")
                                 }
                             else:
-                                # 转发其他类型的消息
                                 yield {
                                     **result,
                                     "message_id": message_id
                                 }
 
-                # 完成处理
                 self.status = AgentStatus.SUCCESS
                 yield {
                     "type": "thinking_process",
@@ -515,17 +804,8 @@ class MasterAgent:
                     "content": "✓ 处理完成"
                 }
 
-            except Exception as e:
-                self.status = AgentStatus.FAILED
-                error_msg = f"处理失败: {str(e)}"
-                logger.error(f"{error_msg}")
-                import traceback
-                logger.info(f"[Debug] 错误详情: {traceback.format_exc()}")
-                yield {
-                    "type": "error",
-                    "message_id": message_id,
-                    "content": error_msg
-                }
+            finally:
+                await self.resource_manager.release()
 
         except Exception as e:
             self.status = AgentStatus.FAILED
@@ -539,11 +819,119 @@ class MasterAgent:
                 "content": error_msg
             }
 
+    async def _save_history(self, data_dir, conversation_id, message_id, final_result,
+                            files, images, tool_response, link_text, processed_query,
+                            attachments_info_history):
+        """异步保存历史记录"""
+        try:
+            async with self._file_lock:
+                history_file = data_dir / 'chat_history.json'
+                history_data = []
+
+                if history_file.exists():
+                    async with aiofiles.open(history_file, 'r', encoding='utf-8') as f:
+                        content = await f.read()
+                        if content.strip():
+                            history_data = json.loads(content)
+
+                current_time = datetime.now().isoformat()
+                conversation = next(
+                    (conv for conv in history_data if conv['conversation_id'] == conversation_id),
+                    None
+                )
+
+                processed_result = {
+                    'type': 'mixed',
+                    'text': final_result,
+                    'files': files if files else [],
+                    'images': images if images else [],
+                }
+
+                if link_text:
+                    processed_result['text'] = final_result + "\n" + link_text
+
+                new_message = {
+                    'query': processed_query.query,
+                    'response': processed_result,
+                    'timestamp': current_time,
+                    'reason': tool_response,
+                    'attachments': attachments_info_history
+                }
+
+                if conversation:
+                    conversation['timestamp'] = current_time
+                    conversation['messages'].append(new_message)
+                else:
+                    conversation = {
+                        'conversation_id': conversation_id,
+                        'message_id': message_id,
+                        'title': processed_query.query[:30] or '新对话',
+                        'timestamp': current_time,
+                        'pinned': False,
+                        'starred': False,
+                        'messages': [new_message]
+                    }
+                    history_data.append(conversation)
+
+                async with aiofiles.open(history_file, 'w', encoding='utf-8') as f:
+                    await f.write(json.dumps(history_data, ensure_ascii=False, indent=2))
+
+        except Exception as e:
+            logger.error(f"保存历史记录失败: {str(e)}")
+
     async def chat_ui_demo(self, url=LOCAL_PORT_ADDRESS, history_mode: str = "json"):
         """
         启动FastAPI服务器，提供HTTP接口和静态文件服务
         """
         app = FastAPI()
+
+        try:
+            model = WhisperModel(
+                model_size_or_path="large-v3",
+                device="cuda",
+                compute_type="float16"
+            )
+            logger.info("Whisper模型加载成功")
+        except Exception as e:
+            logger.error(f"加载Whisper模型失败: {str(e)}")
+            model = None
+
+        def check_ffmpeg():
+            try:
+                subprocess.run(['ffmpeg', '-version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return True
+            except FileNotFoundError:
+                logger.error("ffmpeg not found. Please install ffmpeg.")
+                return False
+
+        def convert_audio(input_path: str) -> str:
+            """转换音频到合适的格式"""
+            output_path = input_path + '.converted.wav'
+            try:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_path,
+                    '-ar', '16000',
+                    '-ac', '1',
+                    '-y',
+                    output_path
+                ]
+
+                process = subprocess.run(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+
+                if process.returncode != 0:
+                    logger.error(f"音频转换失败: {process.stderr}")
+                    raise Exception(f"音频转换失败: {process.stderr}")
+
+                return output_path
+            except Exception as e:
+                logger.error(f"音频转换出错: {str(e)}")
+                raise
 
         # CORS配置
         app.add_middleware(
@@ -565,6 +953,70 @@ class MasterAgent:
         # 配置静态文件目录
         app.mount("/static/output", StaticFiles(directory=str(output_dir)), name="static")
         app.mount("/static/upload", StaticFiles(directory=str(upload_dir)), name="static")
+
+        @app.post("/api/speech-to-text", response_model=TranscriptionResponse)
+        async def speech_to_text(audio_file: UploadFile):
+            """处理音频文件并返回识别结果"""
+            if not model:
+                raise HTTPException(status_code=500, detail="语音识别模型未正确加载")
+
+            if not check_ffmpeg():
+                raise HTTPException(status_code=500, detail="服务器未安装ffmpeg")
+
+            temp_input_path = None
+            temp_converted_path = None
+
+            try:
+                with tempfile.NamedTemporaryFile(delete=False,
+                                                 suffix=os.path.splitext(audio_file.filename)[1]) as temp_input:
+                    content = await audio_file.read()
+                    temp_input.write(content)
+                    temp_input_path = temp_input.name
+
+                temp_converted_path = convert_audio(temp_input_path)
+
+                segments, info = model.transcribe(
+                    temp_converted_path,
+                    beam_size=5,
+                    language="zh",
+                    vad_filter=True,
+                    vad_parameters=dict(
+                        min_silence_duration_ms=500
+                    )
+                )
+
+                segments_list = []
+                full_text = []
+
+                for segment in segments:
+                    segments_list.append(Segment(
+                        start=segment.start,
+                        end=segment.end,
+                        text=segment.text.strip()
+                    ))
+                    full_text.append(segment.text.strip())
+
+                response = TranscriptionResponse(
+                    segments=segments_list,
+                    info=TranscriptionInfo(
+                        language=info.language,
+                        language_probability=info.language_probability
+                    ),
+                    full_text=" ".join(full_text)
+                )
+                return response
+
+            except Exception as e:
+                logger.error(f"处理音频时发生错误: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"处理音频失败: {str(e)}")
+
+            finally:
+                for temp_file in [temp_input_path, temp_converted_path]:
+                    if temp_file and os.path.exists(temp_file):
+                        try:
+                            os.remove(temp_file)
+                        except Exception as e:
+                            logger.error(f"删除临时文件失败 {temp_file}: {str(e)}")
 
         @app.get("/api/file-url")
         async def get_file_url(file_path: str):
@@ -666,7 +1118,7 @@ class MasterAgent:
                             results.append({
                                 "url": file_info['url'],
                                 "path": str(filename),
-                                "name": image.filename,  # 保存原始文件名
+                                "name": image.filename,
                                 "size": file_info['size']
                             })
 
@@ -690,7 +1142,7 @@ class MasterAgent:
                             results.append({
                                 "url": file_info['url'],
                                 "path": str(filename),
-                                "name": file.filename,  # 保存原始文件名
+                                "name": file.filename,
                                 "size": file_info['size']
                             })
 
@@ -843,7 +1295,6 @@ class MasterAgent:
                 rag_dir = (project_root / 'data' / 'rag_data' / request.rag_name).resolve()
                 metadata_file = (project_root / 'data' / 'rag_data.json').resolve()
 
-                # 检查 RAG 目录是否已存在
                 if rag_dir.exists():
                     logger.info(f"RAG directory already exists: {rag_dir}")
                     try:
@@ -987,7 +1438,7 @@ class MasterAgent:
                 conversation_id: str = Form(...),
                 images: List[str] = Form(default=[]),
                 files: List[str] = Form(default=[]),
-                rags: List[str] = Form(default=[])  # 添加 rags 参数
+                rags: List[str] = Form(default=[])
         ):
             """处理新消息"""
             try:

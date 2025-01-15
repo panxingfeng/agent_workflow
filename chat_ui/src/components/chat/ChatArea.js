@@ -34,54 +34,55 @@ const ChatArea = ({ messages, error, messagesEndRef }) => {
                             <div className={`inline-block rounded-2xl shadow-sm ${
                                 isUser ? 'bg-blue-500 text-white rounded-tr-sm' : 'bg-white border border-gray-200 rounded-tl-sm'
                             }`}>
-                                <div className="p-4">
+                                <div className="p-4 pt-2 pb-0">
                                     {isUser ? (
                                         <div className="space-y-2">
                                             <div className="whitespace-pre-wrap break-words">
                                                 {typeof message.content === 'string'
-                                                    ? message.content
-                                                    : message.content?.text || message.query || ''
+                                                    ? message.content.trim()
+                                                    : message.content?.text?.trim() || message.query?.trim() || ''
                                                 }
                                             </div>
 
                                             {message.attachments && (
-                                                <div className="mt-2 space-y-2">
-                                                    {message.attachments?.images?.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {message.attachments.images.map((image, imgIndex) => (
-                                                                <div key={imgIndex} className="relative">
-                                                                    <img
-                                                                        src={image.saved_path || image.preview || image.url}
-                                                                        alt={image.original_name || `Preview ${imgIndex + 1}`}
-                                                                        className="max-w-[150px] h-auto rounded-lg"
-                                                                        onError={(e) => {
-                                                                            console.error('图像加载失败:', image);
-                                                                            e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150"><rect width="150" height="150" fill="%23eee"/></svg>';
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                              <>
+                                                {message.attachments?.images?.length > 0 && (
+                                                  <div className="flex flex-wrap gap-2">
+                                                    {message.attachments.images.map((image, imgIndex) => (
+                                                      <div key={imgIndex} className="relative">
+                                                        <img
+                                                          src={image.saved_path || image.preview || image.url}
+                                                          alt={image.original_name || `Preview ${imgIndex + 1}`}
+                                                          className="max-w-[150px] h-auto rounded-lg"
+                                                          onError={(e) => {
+                                                            console.error('图像加载失败:', image);
+                                                            e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150"><rect width="150" height="150" fill="%23eee"/></svg>';
+                                                          }}
+                                                        />
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                )}
 
-                                                    {message.attachments.files?.length > 0 && (
-                                                        <div className="space-y-2">
-                                                            {message.attachments.files.map((file, fileIndex) => (
-                                                                <div key={fileIndex} className="flex items-center gap-2 p-2 bg-white bg-opacity-10 rounded-lg">
-                                                                    <Paperclip className="text-white" size={16} />
-                                                                    <a
-                                                                        href={file.saved_path}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        className="text-sm text-white underline"
-                                                                    >
-                                                                        {file.original_name || file.name || 'File'}
-                                                                    </a>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                {message.attachments.files?.length > 0 && (
+                                                  <div className="space-y-2">
+                                                    {message.attachments.files.map((file, fileIndex) => (
+                                                      <div key={fileIndex}
+                                                           className="flex items-center gap-2 p-2 bg-white bg-opacity-10 rounded-lg">
+                                                        <Paperclip className="text-white" size={16}/>
+                                                        <a
+                                                          href={file.saved_path}
+                                                          target="_blank"
+                                                          rel="noopener noreferrer"
+                                                          className="text-sm text-white underline"
+                                                        >
+                                                          {file.original_name || file.name || 'File'}
+                                                        </a>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                )}
+                                              </>
                                             )}
                                         </div>
                                     ) : (
@@ -96,7 +97,7 @@ const ChatArea = ({ messages, error, messagesEndRef }) => {
                                     )}
                                 </div>
 
-                                <div className={`text-xs px-4 pb-2 ${isUser ? 'text-blue-100' : 'text-gray-400'}`}>
+                                <div className={`text-xs px-4 pb-1 ${isUser ? 'text-blue-100' : 'text-gray-400'}`}>
                                     {message.timestamp}
                                 </div>
                             </div>

@@ -32,6 +32,7 @@ Agent_Workflow 是一个基于 Ollama 的智能体框架，旨在帮助开发者
 
 ## 📆 更新日志
  - 2025-1-15 更新chat_ui的基于LightRAG本地知识库支持
+ - 2025-1-16 更新chat_ui的基于fast_whisper的实时转录语音支持
 
 ## 🚀 核心功能
 

@@ -640,97 +640,97 @@ const MessageContent = ({ messageId, content, type = 'text', thinkingProcess }) 
     if (!content) return null;
 
     return (
-      <div className="space-y-4 w-full">
-        {/* 显示主要内容 */}
-        {text && (
-          <div className="whitespace-pre-wrap text-gray-700">{text}</div>
-        )}
+        <div className="space-y-4 w-full">
+          {/* 显示主要内容 */}
+          {text && (
+              <div className="whitespace-pre-wrap text-gray-700">{text}</div>
+          )}
+          <div className="space-y-1">
+            {/* 显示链接预览 */}
+            {links?.length > 0 && <LinkPreviewList links={links}/>}
 
-        {/* 显示链接预览 */}
-        {links?.length > 0 && <LinkPreviewList links={links} />}
-
-        {/* 显示图片内容 */}
-        {images?.length > 0 && (
-          <div className="w-full max-w-[180px] xs:max-w-[220px] sm:max-w-[280px] md:max-w-[320px]">
-            <div className="w-full">
-              {images.map((image, index) => (
-                <ImageContent
-                  key={`${messageId}-img-${index}`}
-                  url={image.previewUrl || image.url}
-                  index={index}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 显示文件内容 */}
-        {files?.length > 0 && (
-          <div className="flex flex-col space-y-2 w-full max-w-[320px]">
-            {files.map((file, index) => {
-              const isAudio = file.name?.toLowerCase().endsWith('.mp3') ||
-                file.name?.toLowerCase().endsWith('.wav');
-
-              if (isAudio) {
-                return (
-                  <AudioPlayer
-                    key={`${messageId}-audio-${index}`}
-                    url={file.url}
-                    messageText={file.name}
-                  />
-                );
-              }
-
-              return (
-                <div
-                  key={`${messageId}-file-${index}`}
-                  className="flex items-center justify-between bg-gray-50 rounded-lg p-3 group hover:bg-gray-100 transition-colors cursor-pointer"
-                  onClick={() => {
-                    const a = document.createElement('a');
-                    a.href = file.url;
-                    a.download = file.name;
-                    a.target = '_blank';
-                    a.rel = 'noopener noreferrer';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                  }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Paperclip className="text-gray-400 group-hover:text-blue-500" size={16} />
-                    <span className="text-gray-700 group-hover:text-blue-600 text-sm">
-                      {file.name}
-                    </span>
-                  </div>
-                  <div className="text-gray-400 group-hover:text-blue-500">
-                    <Download size={16} />
+            {/* 显示图片内容 */}
+            {images?.length > 0 && (
+                <div className="w-full max-w-[180px] xs:max-w-[220px] sm:max-w-[280px] md:max-w-[320px]">
+                  <div className="w-full">
+                    {images.map((image, index) => (
+                        <ImageContent
+                            key={`${messageId}-img-${index}`}
+                            url={image.previewUrl || image.url}
+                            index={index}
+                        />
+                    ))}
                   </div>
                 </div>
-              );
-            })}
+            )}
+
+            {/* 显示文件内容 */}
+            {files?.length > 0 && (
+                <div className="flex flex-col space-y-2 w-full max-w-[320px]">
+                  {files.map((file, index) => {
+                    const isAudio = file.name?.toLowerCase().endsWith('.mp3') ||
+                        file.name?.toLowerCase().endsWith('.wav');
+
+                    if (isAudio) {
+                      return (
+                          <AudioPlayer
+                              key={`${messageId}-audio-${index}`}
+                              url={file.url}
+                              messageText={file.name}
+                          />
+                      );
+                    }
+
+                    return (
+                        <div
+                            key={`${messageId}-file-${index}`}
+                            className="flex items-center justify-between bg-gray-50 rounded-lg p-3 group hover:bg-gray-100 transition-colors cursor-pointer"
+                            onClick={() => {
+                              const a = document.createElement('a');
+                              a.href = file.url;
+                              a.download = file.name;
+                              a.target = '_blank';
+                              a.rel = 'noopener noreferrer';
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                            }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Paperclip className="text-gray-400 group-hover:text-blue-500" size={16}/>
+                            <span className="text-gray-700 group-hover:text-blue-600 text-sm">
+                      {file.name}
+                    </span>
+                          </div>
+                          <div className="text-gray-400 group-hover:text-blue-500">
+                            <Download size={16}/>
+                          </div>
+                        </div>
+                    );
+                  })}
+                </div>
+            )}
           </div>
-        )}
-
-        {/* 显示思考过程 */}
-        {currentSteps.length > 0 && (
-          <div className="mt-3 w-full">
-            <ThinkingProcess
-              messageId={messageId}
-              steps={currentSteps}
-              isExpanded={isThinkingExpanded}
-              onToggle={() => setIsThinkingExpanded(!isThinkingExpanded)}
-            />
+            {/* 显示思考过程 */}
+            {currentSteps.length > 0 && (
+                <div className="mt-3 w-full">
+                  <ThinkingProcess
+                      messageId={messageId}
+                      steps={currentSteps}
+                      isExpanded={isThinkingExpanded}
+                      onToggle={() => setIsThinkingExpanded(!isThinkingExpanded)}
+                  />
+                </div>
+            )}
           </div>
-        )}
-      </div>
-    );
-  };
+          );
+          };
 
-  return (
-    <div className="inline-flex flex-col w-full">
-      {renderContent()}
-    </div>
-  );
-};
+          return (
+          <div className="inline-flex flex-col w-full">
+            {renderContent()}
+          </div>
+          );
+          };
 
-export default React.memo(MessageContent);
+          export default React.memo(MessageContent);

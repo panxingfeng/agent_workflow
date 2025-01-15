@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import {API_CONFIG, UPLOAD_CONFIG} from '../constants';
+import {UPLOAD_CONFIG} from '../constants';
 
 export const useFileUpload = () => {
   const [uploadedImages, setUploadedImages] = useState([]);

@@ -136,6 +136,7 @@ class ToolIntentParser:
         self.llm = ChatOllama(model=ollama_model)
         self.logger = logging.getLogger(__name__)
         self.message_id = None
+
         # 创建工具描述列表
         self.tool_descriptions = {}
         for tool_name, tool_class in tools.items():
@@ -628,7 +629,7 @@ class ToolExecutor:
                         }
                     }
                     yield final_result
-                    break  # 成功执行后跳出重试循环
+                    break
 
             except Exception as e:
                 current_retry += 1
@@ -660,7 +661,7 @@ class ToolExecutor:
             # 处理查询
             processed_query = self._process_query(query)
             if self.verbose:
-                result_logger.info("开始处理查询: %s", processed_query)
+                logger.info("开始处理查询: %s", processed_query)
 
             yield {
                 "type": "thinking_process",

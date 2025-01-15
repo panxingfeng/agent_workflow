@@ -90,3 +90,6 @@ SEARCH_TOOL_EMBEDDING_CONFIG = {
     "provider": "ollama",
     "model": "bge-m3:latest"
 }
+
+# 任务允许资源数
+MAX_CONCURRENT = 3

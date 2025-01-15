@@ -49,6 +49,7 @@ const StreamingOutput = () => {
   const [showHistory, setShowHistory] = useState(false);
   const messagesEndRef = useRef(null);
   const [localError, setLocalError] = useState(null);
+  const inputAreaRef = useRef(null);
 
   const {
     messages,
@@ -218,22 +219,17 @@ const StreamingOutput = () => {
     }
 
     try {
-      if (messages.length >= maxMemory * 2) {
-        const keepMessages = messages.slice(-(maxMemory * 2 - 2)); // 减2是为了给新的一组留空间
-        setMessages(keepMessages);
-      }
+      const currentImages = [...uploadedImages];
+      const currentFiles = [...uploadedFiles];
 
-      const messageDataWithContext = {
-        ...formData,
-        context_length: maxMemory
-      };
-
-      await handleSend(messageDataWithContext);
       await clearUploads();
 
-      requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      await handleSend({
+        ...formData,
+        images: currentImages.map(img => img.file.serverPath),
+        files: currentFiles.map(file => file.file.serverPath),
       });
+
     } catch (error) {
       console.error('Failed to send message:', error);
       setLocalError('发送消息失败');
@@ -281,6 +277,7 @@ const StreamingOutput = () => {
           </div>
 
           <InputArea
+            ref={inputAreaRef}
             onInputChange={handleInputChange}
             isLoading={isLoading}
             handleSend={handleSendMessage}
