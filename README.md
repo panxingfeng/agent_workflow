@@ -28,7 +28,7 @@
 
 ## 📖 项目简介
 
-Agent_Workflow 是一个基于 Ollama 的智能体框架，旨在帮助开发者快速构建单/多智能体系统。项目提供了丰富的工具集成和便捷的部署方式。
+Agent_Workflow 项目旨在帮助开发者快速构建单/多智能体系统。项目提供了丰富的工具集成和便捷的部署方式。
 
 ## 📆 更新日志
  - 2025-1-15 更新chat_ui的基于[LightRAG](https://github.com/HKUDS/LightRAG)本地知识库支持
@@ -245,7 +245,6 @@ ps:工作流正在陆陆续续的搭建和测试中
 
 ## 🙏 鸣谢
 
-- [langchain](https://github.com/langchain-ai/langchain) - 提供项目框架基础
 - [VChat](https://github.com/z2z63/VChat) - 提供微信客户端接入支持
 - [ollama](https://github.com/ollama/ollama) - 提供本地模型部署支持
 - [Perplexica](https://github.com/ItzCrazyKns/Perplexica) - 提供搜索工具支持
