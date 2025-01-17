@@ -143,7 +143,6 @@ const handleSend = async (message) => {
                     if (toolResult.result && typeof toolResult.result === 'string') {
                       const resultValue = toolResult.result.trim();
 
-                      // 修改：匹配 output 及其后面的所有内容
                       const match = resultValue.match(/output[\/\\](.+)$/);
                       const filePath = match ? match[1].replace(/\\/g, '/') : null;
 
@@ -151,18 +150,14 @@ const handleSend = async (message) => {
                         const encodedPath = encodeURIComponent(filePath);
                         const fileUrl = `${API_CONFIG.baseUrl_port}/static/output/${encodedPath}`;
 
-                        // 获取文件名
                         const fileName = filePath.split('/').pop();
 
-                        // 检测文件类型
                         if (fileName.match(/\.(png|jpg|jpeg|gif)$/i)) {
-                          // 图片文件
                           images.push({
                             url: fileUrl,
                             name: fileName
                           });
                         } else {
-                          // 其他所有类型文件（包括音频）都放入 files
                           files.push({
                             url: fileUrl,
                             name: fileName
