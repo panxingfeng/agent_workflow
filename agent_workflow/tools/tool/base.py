@@ -20,47 +20,6 @@ class BaseTool(ABC):
         pass
 
 
-class ThreadPoolToolDecorator:
-    """线程池装饰器"""
-
-    def __init__(self, max_workers=10):
-        self._executor = ThreadPoolExecutor(max_workers=max_workers)
-        self._lock = Lock()
-
-    def __call__(self, tool_class: type) -> type:
-        original_run = tool_class.run
-
-        @wraps(original_run)
-        async def threaded_run(instance: Any, **kwargs) -> Union[str, AsyncGenerator[str, None]]:
-            if instance.stream:
-                # 对于流式响应，使用异步生成器
-                async def stream_wrapper():
-                    try:
-                        response = await original_run(instance, **kwargs)
-                        async for chunk in response:
-                            yield chunk
-                    except Exception as e:
-                        yield f"Stream error: {str(e)}"
-
-                return stream_wrapper()
-            else:
-                # 对于非流式响应，使用线程池
-                loop = asyncio.get_event_loop()
-                with self._lock:
-                    return await loop.run_in_executor(
-                        self._executor,
-                        lambda: asyncio.run(original_run(instance, **kwargs))
-                    )
-
-        def shutdown(instance: Any) -> None:
-            self._executor.shutdown()
-
-        tool_class.run = threaded_run
-        tool_class.shutdown = shutdown
-
-        return tool_class
-
-
 # 基于llm生成sd提示词的prompt
 images_tool_prompts = """
 # Stable Diffusion Prompt Assistant
