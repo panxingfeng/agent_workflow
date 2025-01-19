@@ -15,13 +15,12 @@ from typing import Optional, List
 
 from agent_workflow.llm import LLM
 from agent_workflow.rag import LightsRAG
-from agent_workflow.tools.tool.base import BaseTool, ThreadPoolToolDecorator
+from agent_workflow.tools.tool.base import BaseTool
 from agent_workflow.utils import loadingInfo
 from config.bot import CHATBOT_PROMPT_DATA, BOT_DATA
 
 logger = loadingInfo("chat_tool")
 
-@ThreadPoolToolDecorator(max_workers=20)
 class ChatTool(BaseTool):
     """聊天工具"""
 
