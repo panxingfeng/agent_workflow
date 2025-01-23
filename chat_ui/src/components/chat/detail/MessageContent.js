@@ -723,14 +723,14 @@ const MessageContent = ({ messageId, content, type = 'text', thinkingProcess }) 
                 </div>
             )}
           </div>
-          );
-          };
+    );  
+  };
 
-          return (
-          <div className="inline-flex flex-col w-full">
-            {renderContent()}
-          </div>
-          );
-          };
+  return (
+      <div className="inline-flex flex-col w-full">
+        {renderContent()}
+      </div>
+  );
+};
 
-          export default React.memo(MessageContent);
+export default React.memo(MessageContent);
